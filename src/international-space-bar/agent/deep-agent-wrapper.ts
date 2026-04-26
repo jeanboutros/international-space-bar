@@ -1,19 +1,10 @@
-import type { StructuredToolInterface } from "@langchain/core/tools";
 import type { MemorySaver } from "@langchain/langgraph";
-import type { FilesystemBackend } from "deepagents";
+import type { FilesystemBackend, SubAgent } from "deepagents";
 import { createDeepAgent } from "deepagents";
 import type { AgentResult, IAgent } from "../interfaces/agent.interface.js";
 import type { AppContext } from "../interfaces/app-context.interface.js";
 import type { AgentConfig } from "./agent-config.schema.js";
 import type { ToolEntry } from "./tool-registry.js";
-
-export interface SubAgentEntry {
-    readonly name: string;
-    readonly description: string;
-    readonly systemPrompt: string;
-    readonly model: string;
-    readonly tools?: StructuredToolInterface[];
-}
 
 export interface DeepAgentWrapperOpts {
     readonly id: string;
@@ -22,7 +13,7 @@ export interface DeepAgentWrapperOpts {
     readonly toolEntries: ToolEntry[];
     readonly backend: FilesystemBackend;
     readonly checkpointer: MemorySaver;
-    readonly subagents?: Record<string, SubAgentEntry>;
+    readonly subagents?: SubAgent[];
 }
 
 export class DeepAgentWrapper implements IAgent {
@@ -49,7 +40,7 @@ export class DeepAgentWrapper implements IAgent {
             backend: opts.backend,
             checkpointer: opts.checkpointer,
             skills: opts.config.skills.length > 0 ? opts.config.skills : undefined,
-            subagents: opts.subagents,
+            subagents: opts.subagents && opts.subagents.length > 0 ? opts.subagents : undefined,
             interruptOn:
                 Object.keys(opts.config.interrupt_on).length > 0
                     ? opts.config.interrupt_on

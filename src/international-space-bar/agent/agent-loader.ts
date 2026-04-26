@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join, parse } from "node:path";
 
+import type { SubAgent } from "deepagents";
 import { parse as parseYaml } from "yaml";
 import type { IAgent } from "../interfaces/agent.interface.js";
 import type { IConfig } from "../interfaces/config.interface.js";
@@ -40,21 +41,10 @@ export function loadAllAgents(config: IConfig): Map<string, IAgent> {
         const toolEntries: ToolEntry[] = agentConfig.tools.map((toolId) => getToolEntry(toolId));
         const resolvedModel = agentConfig.model ?? config.defaultModel;
 
-        // Build SubAgent dict for deepagents
-        let subagents:
-            | Record<
-                  string,
-                  {
-                      name: string;
-                      description: string;
-                      systemPrompt: string;
-                      model: string;
-                      tools?: ReturnType<typeof getToolEntry>["tool"][];
-                  }
-              >
-            | undefined;
+        // Build SubAgent array for deepagents
+        let subagents: SubAgent[] | undefined;
         if (agentConfig.subagents.length > 0) {
-            subagents = {};
+            subagents = [];
             for (const subId of agentConfig.subagents) {
                 const subConfig = parsed.get(subId);
                 if (!subConfig) {
@@ -63,13 +53,13 @@ export function loadAllAgents(config: IConfig): Map<string, IAgent> {
                     );
                 }
                 const subTools = subConfig.tools.map((toolId) => getToolEntry(toolId).tool);
-                subagents[subId] = {
+                subagents.push({
                     name: subConfig.display_name,
                     description: subConfig.short_description,
                     systemPrompt: subConfig.default_prompt,
                     model: subConfig.model ?? config.defaultModel,
                     tools: subTools.length > 0 ? subTools : undefined,
-                };
+                });
             }
         }
 
