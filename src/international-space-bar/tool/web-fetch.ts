@@ -2,26 +2,40 @@ import { tool } from "@langchain/core/tools";
 import { TavilySearch } from "@langchain/tavily";
 import { z } from "zod";
 
-
 const webFetchSchema = z.object({
     query: z.string(),
     maxResults: z.number().optional().default(5),
     topic: z.enum(["general", "news", "finance"]).default("general"),
-    includeRawContent: z.union([z.boolean(), z.literal("markdown"), z.literal("text")]).optional().default(false),
+    includeRawContent: z
+        .union([z.boolean(), z.literal("markdown"), z.literal("text")])
+        .optional()
+        .default(false),
 });
 
 type WebFetchSchema = z.infer<typeof webFetchSchema>;
 
 const webFetchToolSchema = {
     name: "web_fetch",
-    description: "Fetches relevant information from the web based on a query. Optionally specify the number of results, topic, and whether to include raw content.",
+    description:
+        "Fetches relevant information from the web based on a query. Optionally specify the number of results, topic, and whether to include raw content.",
     schema: webFetchSchema,
 };
 
-async function webFetchFunction({ query, maxResults = 5, topic = "general", includeRawContent = false }: WebFetchSchema) {
+async function webFetchFunction({
+    query,
+    maxResults = 5,
+    topic = "general",
+    includeRawContent = false,
+}: WebFetchSchema) {
     const validatedInput = webFetchSchema.parse({ query, maxResults, topic, includeRawContent });
     const tavily = new TavilySearch({
-        tavilyApiKey: process.env.TAVILY_API_KEY ?? (() => { throw new Error("TAVILY_API_KEY environment variable is required for webFetch tool") })(),
+        tavilyApiKey:
+            process.env.TAVILY_API_KEY ??
+            (() => {
+                throw new Error(
+                    "TAVILY_API_KEY environment variable is required for webFetch tool",
+                );
+            })(),
         topic: validatedInput.topic,
         includeRawContent: validatedInput.includeRawContent,
         maxResults: validatedInput.maxResults,
@@ -29,7 +43,6 @@ async function webFetchFunction({ query, maxResults = 5, topic = "general", incl
 
     return await tavily._call({ query });
 }
-
 
 const webFetch = tool(webFetchFunction, webFetchToolSchema);
 
@@ -43,4 +56,4 @@ If the user asks for information that may require up-to-date data or specific de
 **ALWAYS** if you see something that doesn't look right, stop and ask the user for clarification instead of making assumptions based on the tool output. See it, Say it, Sorted.
 `;
 
-export { webFetch, TOOL_INSTRUCTION, type WebFetchSchema };
+export { TOOL_INSTRUCTION, type WebFetchSchema, webFetch };
