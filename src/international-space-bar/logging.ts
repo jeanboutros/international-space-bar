@@ -1,8 +1,9 @@
 import pino, { type Logger } from "pino";
+import { build as prettyBuild } from "pino-pretty";
 import type { IConfig } from "./interfaces/config.interface.js";
 import type { ILogger } from "./interfaces/logger.interface.js";
 
-type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal" | "silent";
+type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
 
 const LOG_LEVELS: Record<LogLevel, number> = {
     trace: 10,
@@ -11,7 +12,6 @@ const LOG_LEVELS: Record<LogLevel, number> = {
     warn: 40,
     error: 50,
     fatal: 60,
-    silent: Infinity,
 };
 
 /**
@@ -91,24 +91,48 @@ export class Logging {
     }
 
     private static resolveLevel(config: IConfig): LogLevel {
-        if (config.nodeEnv === "production") return "warn";
-        if (config.nodeEnv === "test") return "silent";
+        if (config.nodeEnv === "production") return "info";
+        if (config.nodeEnv === "test") return "warn";
         return "debug";
     }
 
     private static initialize(config: IConfig): Logging {
         const level = Logging.resolveLevel(config);
 
-        const logger: ILogger =
-            config.loggerType === "pino"
-                ? new PinoLoggerAdapter(
-                      pino({
-                          level,
-                          timestamp: pino.stdTimeFunctions.isoTime,
-                          formatters: { level: (label) => ({ level: label }) },
-                      }),
-                  )
-                : new StdoutLoggerAdapter({}, level);
+        let logger: ILogger;
+
+        if (config.loggerType === "pino") {
+            const pinoOptions: pino.LoggerOptions = {
+                level,
+                timestamp: pino.stdTimeFunctions.isoTime,
+                formatters: { level: (label) => ({ level: label }) },
+            };
+
+            // Build the destination stream(s).
+            // pino-pretty runs in-process (no worker thread) so messages are never
+            // lost when the process exits — fixing the pino.transport() race on exit.
+            const streams: pino.StreamEntry[] = [];
+
+            if (config.nodeEnv === "development") {
+                // Pretty-print colourised text to stdout in development only.
+                streams.push({ stream: prettyBuild({ colorize: true, sync: true }), level });
+            } else {
+                // Structured JSON to stdout in non-development environments.
+                streams.push({ stream: pino.destination(1), level });
+            }
+
+            if (config.logFilePath) {
+                // Structured JSON lines to the configured log file (all environments).
+                streams.push({
+                    stream: pino.destination({ dest: config.logFilePath, mkdir: true }),
+                    level,
+                });
+            }
+
+            logger = new PinoLoggerAdapter(pino(pinoOptions, pino.multistream(streams)));
+        } else {
+            logger = new StdoutLoggerAdapter({}, level);
+        }
 
         return new Logging(logger);
     }
