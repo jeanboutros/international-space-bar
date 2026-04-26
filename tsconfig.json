@@ -10,6 +10,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "alwaysStrict": true,
+    "resolveJsonModule": true,
     "types": ["node"],
     "paths": {
         "@llm/*": ["./src/international-space-bar/llm/*"],

@@ -39,6 +39,8 @@ async function webFetchFunction({
         topic: validatedInput.topic,
         includeRawContent: validatedInput.includeRawContent,
         maxResults: validatedInput.maxResults,
+        autoParameters: true,
+        country: "united kingdom", // TODO: make this configurable
     });
 
     return await tavily._call({ query });
