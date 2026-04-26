@@ -71,6 +71,7 @@ export function loadAllAgents(config: IConfig): Map<string, IAgent> {
             backend,
             checkpointer,
             subagents,
+           
         });
 
         agentStore.set(id, agent);

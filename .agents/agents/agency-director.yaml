@@ -7,9 +7,11 @@ skills:
 subagents:
   - "orchestrator"
 interrupt_on:
-  read_file: false
+  ls: true
+  grep: true
+  read_file: true
   write_file: true
-  delete_file: true
+  edit_file: true
 default_prompt: |
   # IDENTITY
 

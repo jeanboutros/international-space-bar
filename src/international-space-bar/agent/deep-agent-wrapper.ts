@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { MemorySaver } from "@langchain/langgraph";
 import type { FilesystemBackend, SubAgent } from "deepagents";
 import { createDeepAgent } from "deepagents";
@@ -51,16 +52,20 @@ export class DeepAgentWrapper implements IAgent {
     async invoke(query: string, ctx: AppContext): Promise<AgentResult> {
         ctx.logger.info({ agentId: this.id, query }, "Invoking agent");
 
-        const result = await this.inner.invoke({
-            messages: [{ role: "user", content: query }],
-        });
+        const result = await this.inner.invoke(
+            { messages: [{ role: "user", content: query }] },
+            { configurable: { thread_id: randomUUID() } },
+        );
 
+        ctx.logger.info({ result }, "Raw agent response");
+        ctx.logger.info({ agentId: this.id }, "Agent invocation complete");
+        
         const messages = result.messages ?? [];
+        ctx.logger.debug({ messages }, "Raw agent messages");
+
         const last = messages.at(-1);
         const lastContent =
             typeof last?.content === "string" ? last.content : JSON.stringify(last?.content ?? "");
-
-        ctx.logger.info({ agentId: this.id }, "Agent invocation complete");
 
         return { messages, lastContent };
     }

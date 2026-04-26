@@ -23,7 +23,7 @@ async function main() {
         const ctx = App.getContext();
         const director = getAgent(ENTRY_AGENT);
         const result = await director.invoke(
-            "What was the weather like when tupac was announced dead?",
+            "What are the steps needed in this project to remove all the TODOs from the codebase? Create a plan and execute it.",
             ctx,
         );
         ctx.logger.info({ lastContent: result.lastContent }, "Director finished");
