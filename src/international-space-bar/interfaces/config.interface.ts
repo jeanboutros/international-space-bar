@@ -26,6 +26,14 @@ export interface IConfig {
      */
     readonly loggerType: "default" | "pino";
 
+    /**
+     * Absolute path to a file where pino writes JSON log lines.
+     * Only used when `loggerType === "pino"`. When set, pino runs two transports:
+     * structured JSON to this file and pretty-printed text to `process.stdout`.
+     * When unset, only the pretty-print stdout transport is active.
+     */
+    readonly logFilePath?: string;
+
     /** Base URL of the Ollama server. */
     readonly ollamaBaseUrl: URL;
 
@@ -34,4 +42,16 @@ export interface IConfig {
 
     /** Application version string (semver). */
     readonly appVersion: string;
+
+    /**
+     * Root directory for agent skills, relative to `process.cwd()`.
+     * Used as the `FilesystemBackend` root and the base path for skill loading.
+     */
+    readonly skillsRoot: string;
+
+    /**
+     * Directory containing agent YAML configuration files, relative to `process.cwd()`.
+     * The agent loader scans this directory for `*.yaml` files at startup.
+     */
+    readonly agentsConfigDir: string;
 }

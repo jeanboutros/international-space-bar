@@ -10,17 +10,24 @@
  */
 
 import { z } from "zod";
+import packageJson from "../../package.json" with { type: "json" };
+
+// The application version is injected from package.json at build time.
+const version = packageJson.version;
 
 const ConfigSchema = z.readonly(
     z.object({
         nodeEnv: z.enum(["development", "production", "test"]).default("development"),
         loggerType: z.enum(["default", "pino"]).default("default"),
+        logFilePath: z.string().optional(),
         ollamaBaseUrl: z
             .url()
             .transform((s) => new URL(s))
             .default(() => new URL("http://localhost:11434")),
         tavilyApiKey: z.string().min(1),
-        appVersion: z.string().default("1.0.0"),
+        appVersion: z.string().default(version),
+        skillsRoot: z.string().default(".agents/skills/"),
+        agentsConfigDir: z.string().default(".agents/agents/"),
     }),
 );
 
@@ -70,9 +77,13 @@ export class Config {
     private static initialize(): Config {
         const parsed = ConfigSchema.parse({
             nodeEnv: process.env.NODE_ENV,
+            logFilePath: process.env.LOG_FILE_PATH,
+            loggerType: process.env.LOGGER_TYPE,
             ollamaBaseUrl: process.env.OLLAMA_BASE_URL,
             tavilyApiKey: process.env.TAVILY_API_KEY,
             appVersion: process.env.APP_VERSION,
+            skillsRoot: process.env.SKILLS_ROOT,
+            agentsConfigDir: process.env.AGENTS_CONFIG_DIR,
         });
 
         return new Config(parsed);
