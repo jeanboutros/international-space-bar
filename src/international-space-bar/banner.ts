@@ -34,6 +34,7 @@ function buildRows(config: IConfig): Row[] {
         ["loggerType", config.loggerType],
         ["ollamaBaseUrl", config.ollamaBaseUrl.href],
         ["tavilyApiKey", config.tavilyApiKey, true],
+        ["defaultModel", config.defaultModel],
         ["logFilePath", config.logFilePath ?? "(none)"],
         ["skillsRoot", config.skillsRoot],
         ["agentsConfigDir", config.agentsConfigDir],

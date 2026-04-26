@@ -40,6 +40,12 @@ export interface IConfig {
     /** Tavily search API key. */
     readonly tavilyApiKey: string;
 
+    /**
+     * Default LLM model identifier used when an agent YAML does not specify its own model.
+     * Format: `"provider:model"` (e.g. `"ollama:gemma4:e2b"`).
+     */
+    readonly defaultModel: string;
+
     /** Application version string (semver). */
     readonly appVersion: string;
 

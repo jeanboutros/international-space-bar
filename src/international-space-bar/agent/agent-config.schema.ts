@@ -5,7 +5,7 @@ export const AgentConfigSchema = z.object({
     display_name: z.string().min(1),
     short_description: z.string().min(1),
     default_prompt: z.string().min(1),
-    model: z.string().min(1),
+    model: z.string().min(1).optional(),
     tools: z.array(z.string()).optional().default([]),
     skills: z.array(z.string()).optional().default([]),
     subagents: z.array(z.string()).optional().default([]),

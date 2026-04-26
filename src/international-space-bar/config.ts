@@ -25,6 +25,7 @@ const ConfigSchema = z.readonly(
             .transform((s) => new URL(s))
             .default(() => new URL("http://localhost:11434")),
         tavilyApiKey: z.string().min(1),
+        defaultModel: z.string().min(1).default("ollama:gemma4:e2b"),
         appVersion: z.string().default(version),
         skillsRoot: z.string().default(".agents/skills/"),
         agentsConfigDir: z.string().default(".agents/agents/"),
@@ -81,6 +82,7 @@ export class Config {
             loggerType: process.env.LOGGER_TYPE,
             ollamaBaseUrl: process.env.OLLAMA_BASE_URL,
             tavilyApiKey: process.env.TAVILY_API_KEY,
+            defaultModel: process.env.DEFAULT_MODEL,
             appVersion: process.env.APP_VERSION,
             skillsRoot: process.env.SKILLS_ROOT,
             agentsConfigDir: process.env.AGENTS_CONFIG_DIR,

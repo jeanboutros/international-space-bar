@@ -1,3 +1,4 @@
+import type { StructuredToolInterface } from "@langchain/core/tools";
 import type { MemorySaver } from "@langchain/langgraph";
 import type { FilesystemBackend } from "deepagents";
 import { createDeepAgent } from "deepagents";
@@ -6,16 +7,22 @@ import type { AppContext } from "../interfaces/app-context.interface.js";
 import type { AgentConfig } from "./agent-config.schema.js";
 import type { ToolEntry } from "./tool-registry.js";
 
+export interface SubAgentEntry {
+    readonly name: string;
+    readonly description: string;
+    readonly systemPrompt: string;
+    readonly model: string;
+    readonly tools?: StructuredToolInterface[];
+}
+
 export interface DeepAgentWrapperOpts {
     readonly id: string;
     readonly config: AgentConfig;
+    readonly resolvedModel: string;
     readonly toolEntries: ToolEntry[];
     readonly backend: FilesystemBackend;
     readonly checkpointer: MemorySaver;
-    readonly subagents?: Record<
-        string,
-        { name: string; description: string; systemPrompt: string }
-    >;
+    readonly subagents?: Record<string, SubAgentEntry>;
 }
 
 export class DeepAgentWrapper implements IAgent {
@@ -36,7 +43,7 @@ export class DeepAgentWrapper implements IAgent {
             : opts.config.default_prompt;
 
         this.inner = createDeepAgent({
-            model: opts.config.model,
+            model: opts.resolvedModel,
             tools,
             systemPrompt,
             backend: opts.backend,

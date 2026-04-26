@@ -38,10 +38,20 @@ export function loadAllAgents(config: IConfig): Map<string, IAgent> {
     // Pass 2 — resolve tool entries and subagent references, then instantiate
     for (const [id, agentConfig] of parsed) {
         const toolEntries: ToolEntry[] = agentConfig.tools.map((toolId) => getToolEntry(toolId));
+        const resolvedModel = agentConfig.model ?? config.defaultModel;
 
         // Build SubAgent dict for deepagents
         let subagents:
-            | Record<string, { name: string; description: string; systemPrompt: string }>
+            | Record<
+                  string,
+                  {
+                      name: string;
+                      description: string;
+                      systemPrompt: string;
+                      model: string;
+                      tools?: ReturnType<typeof getToolEntry>["tool"][];
+                  }
+              >
             | undefined;
         if (agentConfig.subagents.length > 0) {
             subagents = {};
@@ -52,10 +62,13 @@ export function loadAllAgents(config: IConfig): Map<string, IAgent> {
                         `Agent "${id}" references subagent "${subId}" which was not found in ${dir}`,
                     );
                 }
+                const subTools = subConfig.tools.map((toolId) => getToolEntry(toolId).tool);
                 subagents[subId] = {
                     name: subConfig.display_name,
                     description: subConfig.short_description,
                     systemPrompt: subConfig.default_prompt,
+                    model: subConfig.model ?? config.defaultModel,
+                    tools: subTools.length > 0 ? subTools : undefined,
                 };
             }
         }
@@ -63,6 +76,7 @@ export function loadAllAgents(config: IConfig): Map<string, IAgent> {
         const agent = new DeepAgentWrapper({
             id,
             config: agentConfig,
+            resolvedModel,
             toolEntries,
             backend,
             checkpointer,
