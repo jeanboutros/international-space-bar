@@ -1,6 +1,6 @@
-import { App } from "./app.js";
 // import { runGraph } from "./graph.js";
 import { runAgentLoop } from "./agent/orchestrator.agent.js";
+import { App } from "./app.js";
 
 async function main() {
     const app = App.getInstance();
@@ -10,6 +10,7 @@ async function main() {
 }
 
 main().catch((error) => {
+    // biome-ignore lint/suspicious/noConsole: top-level error handler before logger is available
     console.error("Error in main execution:", error);
     process.exit(1); // Exit the application if an error occurs
 });

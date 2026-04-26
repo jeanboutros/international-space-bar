@@ -24,7 +24,7 @@
  * await App.getInstance().run();
  * ```
  *
-* @example Injecting context into an agent
+ * @example Injecting context into an agent
  * ```typescript
  * const ctx = App.getContext();
  * const loop = createOrchestrator(ctx);
@@ -33,10 +33,10 @@
  * ```
  */
 import { Config } from "./config.js";
-import { Logging } from "./logging.js";
-import type { ILogger } from "./interfaces/logger.interface.js";
-import type { IConfig } from "./interfaces/config.interface.js";
 import type { AppContext } from "./interfaces/app-context.interface.js";
+import type { IConfig } from "./interfaces/config.interface.js";
+import type { ILogger } from "./interfaces/logger.interface.js";
+import { Logging } from "./logging.js";
 
 /**
  * Application singleton and lifecycle orchestrator.
@@ -86,6 +86,10 @@ export class App {
 
     private static async setupLogging() {
         if (!App.config) {
+            // Logger will create a fallback pre-init logger if the logging class has not been initialised yet.
+            Logging.getLogger("app").error(
+                "Config is not available during logging setup. This should never happen.",
+            );
             // This should never happen because of the initialisation order, but we check just in case.
             process.stderr.write("[fatal] Cannot initialize logging: config is not available\n");
             process.exit(1);
@@ -94,7 +98,10 @@ export class App {
         App.log.debug("Logging initialised.");
     }
 
-    private static initialisationStack: Array<{ callableName: string, callable: () => Promise<unknown> }> = [
+    private static initialisationStack: Array<{
+        callableName: string;
+        callable: () => Promise<unknown>;
+    }> = [
         {
             // Config must be first — logging reads config values to configure itself.
             callableName: "config",
@@ -139,7 +146,10 @@ export class App {
         App.initialisationStack.push({ callableName, callable });
     }
 
-    private static runnableStack: Array<{ runnableName: string, runnable: (ctx: AppContext) => Promise<unknown> }> = [
+    private static runnableStack: Array<{
+        runnableName: string;
+        runnable: (ctx: AppContext) => Promise<unknown>;
+    }> = [
         // Register the main application runnables here using addRunnable(),
         // or push directly into this array before calling app.run().
     ];

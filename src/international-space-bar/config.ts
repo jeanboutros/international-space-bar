@@ -1,10 +1,10 @@
 /**
  * This file is responsible for defining the configuration schema and parsing environment variables for the application.
  * It uses the Zod library to validate and provide default values for the configuration.
- * 
- * TODO: 
+ *
+ * TODO:
  * The configurations should be inside a yaml file and not inside environment variables.
- * Environment variables should only be used for base level configurations that have to precede the loading of the yaml file, 
+ * Environment variables should only be used for base level configurations that have to precede the loading of the yaml file,
  * such as the path to the yaml file.
  * Secrets should be managed by a secrets manager and not be stored in environment variables or yaml files.
  */
@@ -15,10 +15,14 @@ const ConfigSchema = z.readonly(
     z.object({
         nodeEnv: z.enum(["development", "production", "test"]).default("development"),
         loggerType: z.enum(["default", "pino"]).default("default"),
-        ollamaBaseUrl: z.url().transform(s => new URL(s)).default(() => new URL("http://localhost:11434")),
+        ollamaBaseUrl: z
+            .url()
+            .transform((s) => new URL(s))
+            .default(() => new URL("http://localhost:11434")),
         tavilyApiKey: z.string().min(1),
         appVersion: z.string().default("1.0.0"),
-    }));
+    }),
+);
 
 /**
  * Application configuration singleton.
@@ -110,7 +114,5 @@ export class Config {
         return this.config;
     }
 }
-
-
 
 export type ConfigType = z.infer<typeof ConfigSchema>;
