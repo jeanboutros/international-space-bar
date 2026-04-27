@@ -9,7 +9,7 @@ let backend: FilesystemBackend | undefined;
 let checkpointer: MemorySaver | undefined;
 
 export function createSharedBackend(_config: IConfig): FilesystemBackend {
-    backend ??= new FilesystemBackend({ rootDir: process.cwd() });
+    backend ??= new FilesystemBackend({ rootDir: process.cwd(), virtualMode: true });
     return backend;
 }
 

@@ -2,7 +2,7 @@ import pino, { type Logger } from "pino";
 import { build as prettyBuild } from "pino-pretty";
 import type { IConfig } from "./interfaces/config.interface.js";
 import type { ILogger } from "./interfaces/logger.interface.js";
-import { getLogRingBuffer } from "./tui/log-stream.js";
+import { getLogRingBuffer } from "./services/log-stream.js";
 
 type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
 
@@ -186,12 +186,19 @@ export class Logging {
      * {@link StdoutLoggerAdapter} at `debug` level so no messages are lost.
      * Once the singleton is initialised the configured backend is used instead.
      *
+     * The returned logger is a {@link LazyLogger} — a thin proxy that resolves
+     * the real backend on every call. This means callers can safely store the
+     * return value at module scope or in a `const` and it will automatically
+     * upgrade to the configured backend once init completes. No per-module
+     * lazy-loading wrappers are needed.
+     *
      * @param name - Optional dot-separated module name (e.g. `"tool.weather"`).
-     * @returns An {@link ILogger}, optionally scoped to `name`.
+     * @returns An {@link ILogger} proxy that always delegates to the current backend.
      *
      * @example
      * ```typescript
      * // Any module — no await, no AppContext required.
+     * // Safe to call at top level; automatically upgrades after init.
      * import { Logging } from "../logging.js";
      *
      * const logger = Logging.getLogger("tool.weather");
@@ -199,6 +206,17 @@ export class Logging {
      * ```
      */
     public static getLogger(name?: string): ILogger {
+        return new LazyLogger(name);
+    }
+
+    /**
+     * Resolves the current backend logger, falling back to the pre-init
+     * {@link StdoutLoggerAdapter} when the singleton has not yet been
+     * initialised. Called by {@link LazyLogger} on every method invocation.
+     *
+     * @internal
+     */
+    static resolveLogger(name?: string): ILogger {
         if (Logging.resolvedInstance) {
             return Logging.resolvedInstance.getLogger(name);
         }
@@ -224,6 +242,43 @@ export class Logging {
      */
     public getLogger(name?: string): ILogger {
         return name ? this.logger.child(name) : this.logger;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Lazy logger — proxy that resolves the real backend on each call.
+// Safe to store at module scope; automatically upgrades after init.
+// ---------------------------------------------------------------------------
+
+class LazyLogger implements ILogger {
+    constructor(private readonly name?: string) {}
+
+    private resolve(): ILogger {
+        return Logging.resolveLogger(this.name);
+    }
+
+    child(childName: string): ILogger {
+        const combined = this.name ? `${this.name}.${childName}` : childName;
+        return new LazyLogger(combined);
+    }
+
+    trace(contextOrMessage: Record<string, unknown> | string, message?: string): void {
+        this.resolve().trace(contextOrMessage as Record<string, unknown>, message as string);
+    }
+    debug(contextOrMessage: Record<string, unknown> | string, message?: string): void {
+        this.resolve().debug(contextOrMessage as Record<string, unknown>, message as string);
+    }
+    info(contextOrMessage: Record<string, unknown> | string, message?: string): void {
+        this.resolve().info(contextOrMessage as Record<string, unknown>, message as string);
+    }
+    warn(contextOrMessage: Record<string, unknown> | string, message?: string): void {
+        this.resolve().warn(contextOrMessage as Record<string, unknown>, message as string);
+    }
+    error(contextOrMessage: Record<string, unknown> | string, message?: string): void {
+        this.resolve().error(contextOrMessage as Record<string, unknown>, message as string);
+    }
+    fatal(contextOrMessage: Record<string, unknown> | string, message?: string): void {
+        this.resolve().fatal(contextOrMessage as Record<string, unknown>, message as string);
     }
 }
 

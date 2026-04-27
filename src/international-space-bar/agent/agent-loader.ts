@@ -12,6 +12,14 @@ import { getToolEntry, type ToolEntry } from "./tool-registry.js";
 
 const agentStore = new Map<string, IAgent>();
 
+// Tools that are loaded by defaults for DeepAgent, we don't need to load manually.
+// ls: false
+// grep: false
+// read_file: false
+// write_file: true
+// edit_file: true
+const defaultToolsToSkipLoading = ["read_file", "write_file", "edit_file", "ls", "grep", "glob"];
+
 /**
  * Two-pass YAML loader:
  * 1. Parse every `*.yaml` in `agentsConfigDir` and validate against {@link AgentConfigSchema}.
@@ -38,7 +46,9 @@ export function loadAllAgents(config: IConfig): Map<string, IAgent> {
 
     // Pass 2 — resolve tool entries and subagent references, then instantiate
     for (const [id, agentConfig] of parsed) {
-        const toolEntries: ToolEntry[] = agentConfig.tools.map((toolId) => getToolEntry(toolId));
+        const toolEntries: ToolEntry[] = agentConfig.tools
+            .filter((toolId) => !defaultToolsToSkipLoading.includes(toolId))
+            .map((toolId) => getToolEntry(toolId));
         const resolvedModel = agentConfig.model ?? config.defaultModel;
 
         // Build SubAgent array for deepagents
@@ -52,7 +62,9 @@ export function loadAllAgents(config: IConfig): Map<string, IAgent> {
                         `Agent "${id}" references subagent "${subId}" which was not found in ${dir}`,
                     );
                 }
-                const subTools = subConfig.tools.map((toolId) => getToolEntry(toolId).tool);
+                const subTools = subConfig.tools
+                    .filter((toolId) => !defaultToolsToSkipLoading.includes(toolId))
+                    .map((toolId) => getToolEntry(toolId).tool);
                 subagents.push({
                     name: subConfig.display_name,
                     description: subConfig.short_description,

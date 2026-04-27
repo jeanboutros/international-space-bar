@@ -9,6 +9,7 @@ export const colors = {
     user: "cyan",
     agent: "green",
     system: "yellow",
+    reasoning: "magenta",
 
     // Chrome
     border: "gray",
@@ -30,12 +31,14 @@ export const roleLabels = {
     user: "You",
     agent: "Agent",
     system: "System",
+    reasoning: "Thinking",
 } as const;
 
 export const roleColors = {
     user: colors.user,
     agent: colors.agent,
     system: colors.system,
+    reasoning: colors.reasoning,
 } as const;
 
 // ── Layout ──────────────────────────────────────────────────────────────────

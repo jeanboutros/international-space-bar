@@ -13,9 +13,68 @@ Agent orchestration platform for a software development agency. Runs a multi-age
 ## Project structure
 
 ```
-src/international-space-bar/   # Source files
-dist/                          # Compiled output (tsup)
+src/international-space-bar/
+  interfaces/    # Pure types, contracts, shared type utilities (innermost)
+  services/      # Shared application logic — cross-cutting utilities
+  agent/         # Agent implementations, loaders, classifiers
+  workflow/      # LangGraph workflows (director, council)
+  llm/           # LLM provider adapters
+  tool/          # Tool implementations
+  tui/           # Terminal UI — React/Ink components (outermost)
+  *.ts           # Composition root: app, config, logging, main
+dist/            # Compiled output (tsup)
 ```
+
+## Architecture — layered boundaries
+
+The codebase follows a layered architecture with a strict **dependency rule**:
+dependencies point inward. Outer layers may import from inner layers; inner
+layers must never import from outer layers.
+
+```
+┌───────────────────────────────────────────────┐
+│              Composition Root                  │  main.ts, app.ts, config.ts, logging.ts
+│  (can import from every layer to wire them)   │
+├───────────────────────────────────────────────┤
+│                    tui/                        │  Presentation — React/Ink components
+├───────────────────────────────────────────────┤
+│              workflow/                         │  Orchestration — LangGraph state-graphs
+├───────────────────────────────────────────────┤
+│       agent/    llm/    tool/                  │  Domain services — agents, LLM adapters, tools
+├───────────────────────────────────────────────┤
+│              services/                         │  Shared utilities — cross-cutting logic
+├───────────────────────────────────────────────┤
+│             interfaces/                        │  Contracts — pure types, no implementations
+└───────────────────────────────────────────────┘
+```
+
+### Allowed imports per layer
+
+| Layer | May import from |
+|-------|----------------|
+| `interfaces/` | Nothing (pure types only) |
+| `services/` | `interfaces/` |
+| `agent/` | `interfaces/`, `services/`, `llm/`, `tool/`, `agent/` (siblings) |
+| `llm/` | `interfaces/`, `services/` |
+| `tool/` | `interfaces/`, `services/` |
+| `workflow/` | `interfaces/`, `services/`, `agent/` |
+| `tui/` | `interfaces/`, `services/`, `tui/` (internal only) |
+| Composition root | Everything (wires layers together) |
+
+### Rules
+
+- **TUI never imports from `agent/`, `workflow/`, `llm/`, or `tool/`.**
+  The composition root injects dependencies (compiled workflows, agents)
+  into TUI components via props or callbacks.
+- **Infrastructure utilities** (log ring buffer, shared stream helpers) live at
+  the composition root level or in `services/`, never in `tui/`.
+- **`services/`** contains cross-cutting logic needed by multiple layers
+  (e.g. message parsing, token extraction). It depends only on `interfaces/`.
+- **`interfaces/`** is the innermost layer — pure type definitions and
+  contracts. It must have zero runtime dependencies on other project layers.
+- When a function is needed by two layers, move it to the lowest common
+  ancestor layer (usually `services/`). Never create a dependency from an
+  inner layer to an outer layer to share code.
 
 ## Commands
 

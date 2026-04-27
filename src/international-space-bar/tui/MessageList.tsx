@@ -5,7 +5,7 @@ import { colors, layout, roleColors, roleLabels } from "./theme.js";
 import { useMouseScroll } from "./use-mouse-scroll.js";
 
 export interface ChatMessage {
-    readonly role: "user" | "agent" | "system";
+    readonly role: "user" | "agent" | "system" | "reasoning";
     readonly content: string;
 }
 
@@ -94,12 +94,23 @@ export default function MessageList({ messages }: MessageListProps) {
             ) : null}
             {visible.map((msg, i) => (
                 <Box key={startIdx + i} flexDirection="column" marginBottom={layout.messageGap}>
-                    <Box>
-                        <Text color={roleColors[msg.role]} bold>
-                            {roleLabels[msg.role]}:{" "}
-                        </Text>
-                        <Text wrap="wrap">{msg.content}</Text>
-                    </Box>
+                    {msg.role === "reasoning" ? (
+                        <Box>
+                            <Text color={roleColors.reasoning} dimColor italic>
+                                {roleLabels.reasoning}:{" "}
+                            </Text>
+                            <Text wrap="wrap" dimColor italic>
+                                {msg.content}
+                            </Text>
+                        </Box>
+                    ) : (
+                        <Box>
+                            <Text color={roleColors[msg.role]} bold>
+                                {roleLabels[msg.role]}:{" "}
+                            </Text>
+                            <Text wrap="wrap">{msg.content}</Text>
+                        </Box>
+                    )}
                 </Box>
             ))}
         </Box>

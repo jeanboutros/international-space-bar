@@ -31,3 +31,24 @@ export interface IAgent {
         threadId: string,
     ): Promise<AgentResult>;
 }
+
+/**
+ * A compiled workflow that can be invoked with a user query.
+ *
+ * The TUI depends on this contract — the composition root provides the
+ * concrete implementation (backed by a LangGraph `CompiledStateGraph`).
+ */
+export interface IWorkflowRunner {
+    invoke(query: string): Promise<WorkflowResult>;
+}
+
+/**
+ * The raw output from a workflow invocation.
+ *
+ * Contains the full LangGraph message array (for reasoning extraction
+ * and token counting) plus a pre-assembled final response.
+ */
+export interface WorkflowResult {
+    readonly messages: unknown[];
+    readonly finalResponse: string;
+}

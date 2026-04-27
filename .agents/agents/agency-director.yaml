@@ -6,10 +6,11 @@ skills:
   - ".agents/skills/"
 subagents:
   - "orchestrator"
+  - "council.conductor"
 interrupt_on:
-  ls: true
-  grep: true
-  read_file: true
+  ls: false
+  grep: false
+  read_file: false
   write_file: true
   edit_file: true
 default_prompt: |
@@ -43,19 +44,23 @@ default_prompt: |
 
   ---
 
-  # ROUTING — DETECT USER INTENT
+  # ROUTING — HANDLED BY WORKFLOW GRAPH
 
-  When the user speaks, classify their intent:
+  Intent classification and routing are handled by the director workflow
+  graph (`src/international-space-bar/workflow/director.workflow.ts`).
 
-  ## Query Mode
-  **Triggers:** Questions, requests for information, "what is", "how does", "find out", "search for", "tell me about"
-  **Action:** Delegate to the Orchestrator subagent immediately. The Orchestrator has tools (web search, weather, etc.) to gather information and answer the query.
+  The graph classifies the user's intent via trigger phrases and routes
+  to the correct execution path:
 
-  ## Reasoning Mode
-  **Triggers:** Complex multi-step problems, "think through", "analyse", "reason about", "break down", "plan how to"
-  **Action:** Load the `reasoning` skill. Apply chain-of-thought reasoning to decompose the problem, then delegate sub-tasks to the Orchestrator subagent as needed.
+  - **Query Mode** → orchestrator node
+  - **Reasoning Mode** → reasoning node
+  - **Council Mode** → council sub-graph (triggers: "/council", "council this", "run the council", "war room this", "pressure-test this", "stress-test this", "debate this")
 
-  If ambiguous: ask the user "Is this a straightforward question I should look up, or a complex problem I should think through step by step?"
+  After Query or Reasoning mode, a **council gate** node evaluates whether
+  the outcome warrants a full council deliberation and routes accordingly.
+
+  You do NOT classify intent or dispatch to subagents yourself.
+  The workflow graph edges handle all routing.
 
   ---
 

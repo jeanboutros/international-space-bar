@@ -2,7 +2,9 @@ import { randomUUID } from "node:crypto";
 import { getAgent, loadAllAgents } from "./agent/agent-loader.js";
 import { App } from "./app.js";
 import { printBanner } from "./banner.js";
+import type { IWorkflowRunner, WorkflowResult } from "./interfaces/agent.interface.js";
 import { renderTui } from "./tui/render.js";
+import { buildDirectorWorkflow } from "./workflow/index.js";
 
 const ENTRY_AGENT = "agency-director";
 
@@ -25,7 +27,25 @@ async function main() {
         const ctx = App.getContext();
         const director = getAgent(ENTRY_AGENT);
         const threadId = randomUUID();
-        renderTui(director, ctx, threadId);
+
+        // Build the workflow and wrap it in an IWorkflowRunner adapter.
+        // This keeps workflow construction in the composition root — the TUI
+        // only depends on the IWorkflowRunner interface.
+        const graph = buildDirectorWorkflow(ctx.config);
+        const workflow: IWorkflowRunner = {
+            async invoke(query: string): Promise<WorkflowResult> {
+                const result = (await graph.invoke(
+                    { messages: [], query },
+                    { context: { ctx, thread_id: threadId } },
+                )) as { messages: unknown[]; finalResponse: string };
+                return {
+                    messages: result.messages ?? [],
+                    finalResponse: result.finalResponse ?? "",
+                };
+            },
+        };
+
+        renderTui(director, ctx, threadId, workflow);
     });
 
     // 4. Run — init executes first, then runnables

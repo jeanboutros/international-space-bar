@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Text, useBoxMetrics, useInput, type DOMElement } from "ink";
 import type { RefObject } from "react";
-import { getLogRingBuffer } from "./log-stream.js";
+import { getLogRingBuffer } from "../services/log-stream.js";
 import { colors, layout } from "./theme.js";
 
 // 1 row for the "Logs" header, 1 for top border = 2 rows of chrome

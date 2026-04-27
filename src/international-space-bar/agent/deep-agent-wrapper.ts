@@ -2,13 +2,9 @@ import type { MemorySaver } from "@langchain/langgraph";
 import { Command, INTERRUPT, type Interrupt } from "@langchain/langgraph";
 import type { FilesystemBackend, SubAgent } from "deepagents";
 import { createDeepAgent } from "deepagents";
-import type {
-    AgentResult,
-    IAgent,
-    InterruptInfo,
-    TokenUsage,
-} from "../interfaces/agent.interface.js";
+import type { AgentResult, IAgent, InterruptInfo } from "../interfaces/agent.interface.js";
 import type { AppContext } from "../interfaces/app-context.interface.js";
+import { extractTokenUsage } from "../services/message-utils.js";
 import type { AgentConfig } from "./agent-config.schema.js";
 import type { ToolEntry } from "./tool-registry.js";
 
@@ -46,22 +42,6 @@ function parseInterrupts(raw: Interrupt[]): InterruptInfo[] {
             allowedDecisions: review?.allowedDecisions ?? ["approve", "reject"],
         };
     });
-}
-
-function extractTokenUsage(messages: unknown[]): TokenUsage | undefined {
-    let inputTokens = 0;
-    let outputTokens = 0;
-    for (const msg of messages) {
-        const meta = (msg as Record<string, unknown>)?.usage_metadata as
-            | { input_tokens?: number; output_tokens?: number }
-            | undefined;
-        if (meta) {
-            inputTokens += meta.input_tokens ?? 0;
-            outputTokens += meta.output_tokens ?? 0;
-        }
-    }
-    if (inputTokens === 0 && outputTokens === 0) return undefined;
-    return { inputTokens, outputTokens, totalTokens: inputTokens + outputTokens };
 }
 
 function extractResult(result: Record<string, unknown>, logger: AppContext["logger"]): AgentResult {

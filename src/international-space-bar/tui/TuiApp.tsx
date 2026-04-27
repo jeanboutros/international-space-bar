@@ -1,21 +1,31 @@
 import React, { useCallback, useState } from "react";
 import { Box, useWindowSize } from "ink";
 import type { AppContext } from "../interfaces/app-context.interface.js";
-import type { IAgent, InterruptInfo, TokenUsage } from "../interfaces/agent.interface.js";
+import type {
+    IAgent,
+    InterruptInfo,
+    IWorkflowRunner,
+    TokenUsage,
+} from "../interfaces/agent.interface.js";
 import InputBar from "./InputBar.js";
 import InterruptPrompt from "./InterruptPrompt.js";
 import LogPane from "./LogPane.js";
 import MessageList, { type ChatMessage } from "./MessageList.js";
 import StatusPane from "./StatusPane.js";
 import { colors, layout } from "./theme.js";
+import {
+    extractTokenUsage,
+    mapWorkflowMessages,
+} from "./workflow-result-mapper.js";
 
 interface TuiAppProps {
     readonly agent: IAgent;
     readonly ctx: AppContext;
     readonly threadId: string;
+    readonly workflow: IWorkflowRunner;
 }
 
-export default function TuiApp({ agent, ctx, threadId }: TuiAppProps) {
+export default function TuiApp({ agent, ctx, threadId, workflow }: TuiAppProps) {
     const { columns, rows } = useWindowSize();
     const sidebarWidth = Math.max(layout.sidebarMinWidth, Math.floor(columns * layout.sidebarPercent));
     const mainWidth = columns - sidebarWidth;
@@ -27,8 +37,9 @@ export default function TuiApp({ agent, ctx, threadId }: TuiAppProps) {
     const [currentInterrupt, setCurrentInterrupt] = useState<InterruptInfo | null>(null);
     const [tokenUsage, setTokenUsage] = useState<TokenUsage | null>(null);
 
-    const appendMessage = useCallback((msg: ChatMessage) => {
-        setMessages((prev) => [...prev, msg]);
+    const appendMessage = useCallback((msg: ChatMessage | ChatMessage[]) => {
+        const items = Array.isArray(msg) ? msg : [msg];
+        setMessages((prev) => [...prev, ...items]);
     }, []);
 
     const accumulateTokens = useCallback((usage: TokenUsage | undefined) => {
@@ -46,19 +57,25 @@ export default function TuiApp({ agent, ctx, threadId }: TuiAppProps) {
 
     const handleSubmit = useCallback(
         async (query: string) => {
+            ctx.logger.info({ query }, "User submitted query");
             appendMessage({ role: "user", content: query });
             setIsProcessing(true);
 
             try {
-                const result = await agent.invoke(query, ctx, threadId);
-                accumulateTokens(result.tokenUsage);
+                const result = await workflow.invoke(query);
+                ctx.logger.info({ result }, "Workflow result");
 
-                if (result.lastContent) {
-                    appendMessage({ role: "agent", content: result.lastContent });
+                // Extract reasoning + content messages from the LangGraph message chain.
+                const chatMessages = mapWorkflowMessages(result.messages);
+                accumulateTokens(extractTokenUsage(result.messages));
+
+                if (chatMessages.length > 0) {
+                    appendMessage(chatMessages);
                 }
 
-                if (result.interrupts && result.interrupts.length > 0) {
-                    setCurrentInterrupt(result.interrupts[0]!);
+                // Fall back to finalResponse if no displayable messages were extracted.
+                if (chatMessages.length === 0 && result.finalResponse) {
+                    appendMessage({ role: "agent", content: result.finalResponse });
                 }
             } catch (err) {
                 const errMsg = err instanceof Error ? err.message : String(err);
@@ -69,7 +86,7 @@ export default function TuiApp({ agent, ctx, threadId }: TuiAppProps) {
                 }
             }
         },
-        [agent, ctx, threadId, appendMessage, accumulateTokens, currentInterrupt],
+        [workflow, ctx, appendMessage, accumulateTokens, currentInterrupt],
     );
 
     const handleInterruptDecision = useCallback(
@@ -87,12 +104,16 @@ export default function TuiApp({ agent, ctx, threadId }: TuiAppProps) {
                 const result = await agent.resume(decision, ctx, threadId);
                 accumulateTokens(result.tokenUsage);
 
-                if (result.lastContent) {
+                const chatMessages = mapWorkflowMessages(result.messages);
+                if (chatMessages.length > 0) {
+                    appendMessage(chatMessages);
+                } else if (result.lastContent) {
                     appendMessage({ role: "agent", content: result.lastContent });
                 }
 
                 if (result.interrupts && result.interrupts.length > 0) {
-                    setCurrentInterrupt(result.interrupts[0]!);
+                    const next = result.interrupts[0];
+                    if (next) setCurrentInterrupt(next);
                 }
             } catch (err) {
                 const errMsg = err instanceof Error ? err.message : String(err);
