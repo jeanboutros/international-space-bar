@@ -1,6 +1,8 @@
+import { randomUUID } from "node:crypto";
 import { getAgent, loadAllAgents } from "./agent/agent-loader.js";
 import { App } from "./app.js";
 import { printBanner } from "./banner.js";
+import { renderTui } from "./tui/render.js";
 
 const ENTRY_AGENT = "agency-director";
 
@@ -18,15 +20,12 @@ async function main() {
         ctx.logger.info("All agents loaded from YAML");
     });
 
-    // 3. Register the main runnable — invokes the entry-point agent
-    App.addRunnable("agency-director", async () => {
+    // 3. Launch the interactive TUI
+    App.addRunnable("tui", () => {
         const ctx = App.getContext();
         const director = getAgent(ENTRY_AGENT);
-        const result = await director.invoke(
-            "What are the steps needed in this project to remove all the TODOs from the codebase? Create a plan and execute it.",
-            ctx,
-        );
-        ctx.logger.info({ lastContent: result.lastContent }, "Director finished");
+        const threadId = randomUUID();
+        renderTui(director, ctx, threadId);
     });
 
     // 4. Run — init executes first, then runnables
