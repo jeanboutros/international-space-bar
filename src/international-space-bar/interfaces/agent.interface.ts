@@ -8,10 +8,17 @@ export interface InterruptInfo {
     readonly allowedDecisions: string[];
 }
 
+export interface TokenUsage {
+    readonly inputTokens: number;
+    readonly outputTokens: number;
+    readonly totalTokens: number;
+}
+
 export interface AgentResult {
     readonly messages: unknown[];
     readonly lastContent: string;
     readonly interrupts?: InterruptInfo[];
+    readonly tokenUsage?: TokenUsage;
 }
 
 export interface IAgent {

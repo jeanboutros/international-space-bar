@@ -2,7 +2,12 @@ import type { MemorySaver } from "@langchain/langgraph";
 import { Command, INTERRUPT, type Interrupt } from "@langchain/langgraph";
 import type { FilesystemBackend, SubAgent } from "deepagents";
 import { createDeepAgent } from "deepagents";
-import type { AgentResult, IAgent, InterruptInfo } from "../interfaces/agent.interface.js";
+import type {
+    AgentResult,
+    IAgent,
+    InterruptInfo,
+    TokenUsage,
+} from "../interfaces/agent.interface.js";
 import type { AppContext } from "../interfaces/app-context.interface.js";
 import type { AgentConfig } from "./agent-config.schema.js";
 import type { ToolEntry } from "./tool-registry.js";
@@ -43,6 +48,22 @@ function parseInterrupts(raw: Interrupt[]): InterruptInfo[] {
     });
 }
 
+function extractTokenUsage(messages: unknown[]): TokenUsage | undefined {
+    let inputTokens = 0;
+    let outputTokens = 0;
+    for (const msg of messages) {
+        const meta = (msg as Record<string, unknown>)?.usage_metadata as
+            | { input_tokens?: number; output_tokens?: number }
+            | undefined;
+        if (meta) {
+            inputTokens += meta.input_tokens ?? 0;
+            outputTokens += meta.output_tokens ?? 0;
+        }
+    }
+    if (inputTokens === 0 && outputTokens === 0) return undefined;
+    return { inputTokens, outputTokens, totalTokens: inputTokens + outputTokens };
+}
+
 function extractResult(result: Record<string, unknown>, logger: AppContext["logger"]): AgentResult {
     const interruptData = result[INTERRUPT] as Interrupt[] | undefined;
     const interrupts =
@@ -58,7 +79,9 @@ function extractResult(result: Record<string, unknown>, logger: AppContext["logg
     const lastContent =
         typeof last?.content === "string" ? last.content : JSON.stringify(last?.content ?? "");
 
-    return { messages, lastContent, interrupts };
+    const tokenUsage = extractTokenUsage(messages);
+
+    return { messages, lastContent, interrupts, tokenUsage };
 }
 
 export class DeepAgentWrapper implements IAgent {
@@ -100,6 +123,8 @@ export class DeepAgentWrapper implements IAgent {
             { messages: [{ role: "user", content: query }] },
             { configurable: { thread_id: threadId } },
         )) as Record<string, unknown>;
+
+        ctx.logger.debug({ rawResult: result }, "Raw result from agent");
 
         return extractResult(result, ctx.logger);
     }
