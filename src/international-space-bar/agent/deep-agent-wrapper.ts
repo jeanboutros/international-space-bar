@@ -1,8 +1,8 @@
-import { randomUUID } from "node:crypto";
 import type { MemorySaver } from "@langchain/langgraph";
+import { Command, INTERRUPT, type Interrupt } from "@langchain/langgraph";
 import type { FilesystemBackend, SubAgent } from "deepagents";
 import { createDeepAgent } from "deepagents";
-import type { AgentResult, IAgent } from "../interfaces/agent.interface.js";
+import type { AgentResult, IAgent, InterruptInfo } from "../interfaces/agent.interface.js";
 import type { AppContext } from "../interfaces/app-context.interface.js";
 import type { AgentConfig } from "./agent-config.schema.js";
 import type { ToolEntry } from "./tool-registry.js";
@@ -15,6 +15,50 @@ export interface DeepAgentWrapperOpts {
     readonly backend: FilesystemBackend;
     readonly checkpointer: MemorySaver;
     readonly subagents?: SubAgent[];
+}
+
+function parseInterrupts(raw: Interrupt[]): InterruptInfo[] {
+    return raw.map((entry) => {
+        const val = entry.value as Record<string, unknown> | undefined;
+        const actionRequests = (val?.actionRequests ?? []) as {
+            name: string;
+            args: unknown;
+            description?: string;
+        }[];
+        const reviewConfigs = (val?.reviewConfigs ?? []) as {
+            actionName: string;
+            allowedDecisions: string[];
+        }[];
+
+        const first = actionRequests[0];
+        const review = reviewConfigs.find((r) => r.actionName === first?.name);
+
+        return {
+            id: entry.id ?? "",
+            toolName: first?.name ?? "unknown",
+            args: first?.args ?? {},
+            description: first?.description ?? "",
+            allowedDecisions: review?.allowedDecisions ?? ["approve", "reject"],
+        };
+    });
+}
+
+function extractResult(result: Record<string, unknown>, logger: AppContext["logger"]): AgentResult {
+    const interruptData = result[INTERRUPT] as Interrupt[] | undefined;
+    const interrupts =
+        interruptData && interruptData.length > 0 ? parseInterrupts(interruptData) : undefined;
+
+    const messages = (result.messages ?? []) as unknown[];
+    logger.debug(
+        { messageCount: messages.length, hasInterrupts: !!interrupts },
+        "Extracting result",
+    );
+
+    const last = messages.at(-1) as { content?: unknown } | undefined;
+    const lastContent =
+        typeof last?.content === "string" ? last.content : JSON.stringify(last?.content ?? "");
+
+    return { messages, lastContent, interrupts };
 }
 
 export class DeepAgentWrapper implements IAgent {
@@ -49,24 +93,28 @@ export class DeepAgentWrapper implements IAgent {
         });
     }
 
-    async invoke(query: string, ctx: AppContext): Promise<AgentResult> {
-        ctx.logger.info({ agentId: this.id, query }, "Invoking agent");
+    async invoke(query: string, ctx: AppContext, threadId: string): Promise<AgentResult> {
+        ctx.logger.info({ agentId: this.id, query, threadId }, "Invoking agent");
 
-        const result = await this.inner.invoke(
+        const result = (await this.inner.invoke(
             { messages: [{ role: "user", content: query }] },
-            { configurable: { thread_id: randomUUID() } },
-        );
+            { configurable: { thread_id: threadId } },
+        )) as Record<string, unknown>;
 
-        ctx.logger.info({ result }, "Raw agent response");
-        ctx.logger.info({ agentId: this.id }, "Agent invocation complete");
+        return extractResult(result, ctx.logger);
+    }
 
-        const messages = result.messages ?? [];
-        ctx.logger.debug({ messages }, "Raw agent messages");
+    async resume(
+        decision: Record<string, unknown>,
+        ctx: AppContext,
+        threadId: string,
+    ): Promise<AgentResult> {
+        ctx.logger.info({ agentId: this.id, decision, threadId }, "Resuming agent from interrupt");
 
-        const last = messages.at(-1);
-        const lastContent =
-            typeof last?.content === "string" ? last.content : JSON.stringify(last?.content ?? "");
+        const result = (await this.inner.invoke(new Command({ resume: decision }), {
+            configurable: { thread_id: threadId },
+        })) as Record<string, unknown>;
 
-        return { messages, lastContent };
+        return extractResult(result, ctx.logger);
     }
 }

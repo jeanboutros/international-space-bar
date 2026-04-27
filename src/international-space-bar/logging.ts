@@ -2,6 +2,7 @@ import pino, { type Logger } from "pino";
 import { build as prettyBuild } from "pino-pretty";
 import type { IConfig } from "./interfaces/config.interface.js";
 import type { ILogger } from "./interfaces/logger.interface.js";
+import { getLogRingBuffer } from "./tui/log-stream.js";
 
 type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
 
@@ -128,6 +129,16 @@ export class Logging {
                     level,
                 });
             }
+
+            // Ring buffer for the TUI log pane — pretty-printed, always active.
+            streams.push({
+                stream: prettyBuild({
+                    colorize: false,
+                    sync: true,
+                    destination: getLogRingBuffer(),
+                }),
+                level,
+            });
 
             logger = new PinoLoggerAdapter(pino(pinoOptions, pino.multistream(streams)));
         } else {
