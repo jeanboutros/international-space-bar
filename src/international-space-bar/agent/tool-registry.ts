@@ -1,10 +1,10 @@
-import type { StructuredToolInterface } from "@langchain/core/tools";
+import type { StructuredTool } from "@langchain/core/tools";
 
 import { getWeather, TOOL_INSTRUCTION as WEATHER_INSTRUCTION } from "../tool/weather.js";
 import { TOOL_INSTRUCTION as WEB_FETCH_INSTRUCTION, webFetch } from "../tool/web-fetch.js";
 
 export interface ToolEntry {
-    readonly tool: StructuredToolInterface;
+    readonly tool: StructuredTool;
     readonly instruction: string;
 }
 

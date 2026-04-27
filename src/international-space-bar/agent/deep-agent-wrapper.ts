@@ -59,7 +59,7 @@ export class DeepAgentWrapper implements IAgent {
 
         ctx.logger.info({ result }, "Raw agent response");
         ctx.logger.info({ agentId: this.id }, "Agent invocation complete");
-        
+
         const messages = result.messages ?? [];
         ctx.logger.debug({ messages }, "Raw agent messages");
 
