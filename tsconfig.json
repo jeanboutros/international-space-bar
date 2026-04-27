@@ -11,6 +11,7 @@
     "forceConsistentCasingInFileNames": true,
     "alwaysStrict": true,
     "resolveJsonModule": true,
+    "jsx": "react-jsx",
     "types": ["node"],
     "paths": {
         "@llm/*": ["./src/international-space-bar/llm/*"],
