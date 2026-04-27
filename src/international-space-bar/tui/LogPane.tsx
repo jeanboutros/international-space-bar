@@ -25,8 +25,12 @@ export default function LogPane() {
             flexDirection="column"
             borderStyle="single"
             borderColor="gray"
+            borderLeft={false}
+            borderRight={false}
+            borderBottom={false}
             paddingX={1}
-            height={MAX_VISIBLE + 2}
+            flexGrow={1}
+            overflow="hidden"
         >
             <Text bold dimColor>
                 Logs

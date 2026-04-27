@@ -1,11 +1,12 @@
 import React, { useCallback, useState } from "react";
 import { Box } from "ink";
 import type { AppContext } from "../interfaces/app-context.interface.js";
-import type { IAgent, InterruptInfo } from "../interfaces/agent.interface.js";
+import type { IAgent, InterruptInfo, TokenUsage } from "../interfaces/agent.interface.js";
 import InputBar from "./InputBar.js";
 import InterruptPrompt from "./InterruptPrompt.js";
 import LogPane from "./LogPane.js";
 import MessageList, { type ChatMessage } from "./MessageList.js";
+import StatusPane from "./StatusPane.js";
 
 interface TuiAppProps {
     readonly agent: IAgent;
@@ -19,9 +20,23 @@ export default function TuiApp({ agent, ctx, threadId }: TuiAppProps) {
     ]);
     const [isProcessing, setIsProcessing] = useState(false);
     const [currentInterrupt, setCurrentInterrupt] = useState<InterruptInfo | null>(null);
+    const [tokenUsage, setTokenUsage] = useState<TokenUsage | null>(null);
 
     const appendMessage = useCallback((msg: ChatMessage) => {
         setMessages((prev) => [...prev, msg]);
+    }, []);
+
+    const accumulateTokens = useCallback((usage: TokenUsage | undefined) => {
+        if (!usage) return;
+        setTokenUsage((prev) =>
+            prev
+                ? {
+                      inputTokens: prev.inputTokens + usage.inputTokens,
+                      outputTokens: prev.outputTokens + usage.outputTokens,
+                      totalTokens: prev.totalTokens + usage.totalTokens,
+                  }
+                : usage,
+        );
     }, []);
 
     const handleSubmit = useCallback(
@@ -31,6 +46,7 @@ export default function TuiApp({ agent, ctx, threadId }: TuiAppProps) {
 
             try {
                 const result = await agent.invoke(query, ctx, threadId);
+                accumulateTokens(result.tokenUsage);
 
                 if (result.lastContent) {
                     appendMessage({ role: "agent", content: result.lastContent });
@@ -48,7 +64,7 @@ export default function TuiApp({ agent, ctx, threadId }: TuiAppProps) {
                 }
             }
         },
-        [agent, ctx, threadId, appendMessage, currentInterrupt],
+        [agent, ctx, threadId, appendMessage, accumulateTokens, currentInterrupt],
     );
 
     const handleInterruptDecision = useCallback(
@@ -64,6 +80,7 @@ export default function TuiApp({ agent, ctx, threadId }: TuiAppProps) {
 
             try {
                 const result = await agent.resume(decision, ctx, threadId);
+                accumulateTokens(result.tokenUsage);
 
                 if (result.lastContent) {
                     appendMessage({ role: "agent", content: result.lastContent });
@@ -79,21 +96,44 @@ export default function TuiApp({ agent, ctx, threadId }: TuiAppProps) {
                 setIsProcessing(false);
             }
         },
-        [agent, ctx, threadId, appendMessage, currentInterrupt],
+        [agent, ctx, threadId, appendMessage, accumulateTokens, currentInterrupt],
     );
 
     return (
-        <Box flexDirection="column" height="100%">
-            <MessageList messages={messages} />
-            <LogPane />
-            {currentInterrupt ? (
-                <InterruptPrompt
-                    interrupt={currentInterrupt}
-                    onDecision={(d) => void handleInterruptDecision(d)}
+        <Box flexDirection="row" height="100%">
+            {/* Left column — main responses + input */}
+            <Box flexDirection="column" flexGrow={1} flexBasis="70%">
+                <MessageList messages={messages} />
+                {currentInterrupt ? (
+                    <InterruptPrompt
+                        interrupt={currentInterrupt}
+                        onDecision={(d) => void handleInterruptDecision(d)}
+                    />
+                ) : (
+                    <InputBar isProcessing={isProcessing} onSubmit={(q) => void handleSubmit(q)} />
+                )}
+            </Box>
+
+            {/* Right column — status + logs */}
+            <Box
+                flexDirection="column"
+                width={32}
+                borderStyle="single"
+                borderColor="gray"
+                borderLeft
+                borderTop={false}
+                borderBottom={false}
+                borderRight={false}
+            >
+                <StatusPane
+                    agentName={agent.displayName}
+                    isProcessing={isProcessing}
+                    messageCount={messages.length}
+                    tokenUsage={tokenUsage}
+                    threadId={threadId}
                 />
-            ) : (
-                <InputBar isProcessing={isProcessing} onSubmit={(q) => void handleSubmit(q)} />
-            )}
+                <LogPane />
+            </Box>
         </Box>
     );
 }
