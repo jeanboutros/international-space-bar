@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Text, useBoxMetrics, useInput, type DOMElement } from "ink";
 import type { RefObject } from "react";
 import { getLogRingBuffer } from "./log-stream.js";
+import { colors, layout } from "./theme.js";
 
 // 1 row for the "Logs" header, 1 for top border = 2 rows of chrome
 const CHROME_ROWS = 2;
@@ -63,11 +64,11 @@ export default function LogPane() {
             ref={containerRef}
             flexDirection="column"
             borderStyle="single"
-            borderColor="gray"
+            borderColor={colors.border}
             borderLeft={false}
             borderRight={false}
             borderBottom={false}
-            paddingX={1}
+            paddingX={layout.panePaddingX}
             flexGrow={1}
             overflow="hidden"
         >

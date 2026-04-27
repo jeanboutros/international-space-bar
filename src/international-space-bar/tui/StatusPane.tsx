@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Text } from "ink";
 import type { TokenUsage } from "../interfaces/agent.interface.js";
+import { colors, layout } from "./theme.js";
 
 interface StatusPaneProps {
     readonly agentName: string;
@@ -18,17 +19,17 @@ export default function StatusPane({
     threadId,
 }: StatusPaneProps) {
     return (
-        <Box flexDirection="column" paddingX={1}>
-            <Text bold color="white">
+        <Box flexDirection="column" paddingX={layout.panePaddingX}>
+            <Text bold color={colors.heading}>
                 Status
             </Text>
             <Box marginTop={1}>
                 <Text dimColor>Agent: </Text>
-                <Text color="cyan">{agentName}</Text>
+                <Text color={colors.accent}>{agentName}</Text>
             </Box>
             <Box>
                 <Text dimColor>State: </Text>
-                <Text color={isProcessing ? "yellow" : "green"}>
+                <Text color={isProcessing ? colors.warning : colors.success}>
                     {isProcessing ? "⏳ Processing" : "● Idle"}
                 </Text>
             </Box>
@@ -42,7 +43,7 @@ export default function StatusPane({
             </Box>
 
             <Box marginTop={1}>
-                <Text bold color="white">
+                <Text bold color={colors.heading}>
                     Token Usage
                 </Text>
             </Box>

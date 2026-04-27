@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Text, useInput } from "ink";
 import type { InterruptInfo } from "../interfaces/agent.interface.js";
+import { borders, colors, layout } from "./theme.js";
 
 interface InterruptPromptProps {
     readonly interrupt: InterruptInfo;
@@ -19,17 +20,17 @@ export default function InterruptPrompt({ interrupt, onDecision }: InterruptProm
     return (
         <Box
             flexDirection="column"
-            borderStyle="double"
-            borderColor="red"
-            paddingX={1}
+            borderStyle={borders.prominent}
+            borderColor={colors.borderDanger}
+            paddingX={layout.panePaddingX}
             paddingY={0}
         >
-            <Text bold color="red">
+            <Text bold color={colors.danger}>
                 ⚠ Tool Approval Required
             </Text>
             <Box marginTop={1}>
                 <Text bold>Tool: </Text>
-                <Text color="yellow">{interrupt.toolName}</Text>
+                <Text color={colors.warning}>{interrupt.toolName}</Text>
             </Box>
             <Box>
                 <Text bold>Args: </Text>
@@ -41,11 +42,11 @@ export default function InterruptPrompt({ interrupt, onDecision }: InterruptProm
                 </Box>
             ) : null}
             <Box marginTop={1}>
-                <Text color="green" bold>
+                <Text color={colors.success} bold>
                     [a]
                 </Text>
                 <Text> approve </Text>
-                <Text color="red" bold>
+                <Text color={colors.danger} bold>
                     [r]
                 </Text>
                 <Text> reject</Text>

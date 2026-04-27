@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useState } from "react";
 import { Box, Text, useInput } from "ink";
 import TextInput from "ink-text-input";
+import { colors, layout } from "./theme.js";
 
 interface InputBarProps {
     readonly isProcessing: boolean;
@@ -67,12 +68,12 @@ export default function InputBar({ isProcessing, onSubmit }: InputBarProps) {
     });
 
     return (
-        <Box borderStyle="single" borderColor={isProcessing ? "yellow" : "cyan"} paddingX={1}>
+        <Box borderStyle="single" borderColor={isProcessing ? colors.borderBusy : colors.borderActive} paddingX={layout.panePaddingX}>
             {isProcessing ? (
-                <Text color="yellow">⏳ Agent is thinking…</Text>
+                <Text color={colors.warning}>⏳ Agent is thinking…</Text>
             ) : (
                 <>
-                    <Text color="cyan" bold>
+                    <Text color={colors.accent} bold>
                         {"❯ "}
                     </Text>
                     <TextInput

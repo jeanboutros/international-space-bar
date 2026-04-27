@@ -7,6 +7,7 @@ import InterruptPrompt from "./InterruptPrompt.js";
 import LogPane from "./LogPane.js";
 import MessageList, { type ChatMessage } from "./MessageList.js";
 import StatusPane from "./StatusPane.js";
+import { colors, layout } from "./theme.js";
 
 interface TuiAppProps {
     readonly agent: IAgent;
@@ -16,7 +17,7 @@ interface TuiAppProps {
 
 export default function TuiApp({ agent, ctx, threadId }: TuiAppProps) {
     const { columns, rows } = useWindowSize();
-    const sidebarWidth = Math.max(28, Math.floor(columns * 0.3));
+    const sidebarWidth = Math.max(layout.sidebarMinWidth, Math.floor(columns * layout.sidebarPercent));
     const mainWidth = columns - sidebarWidth;
 
     const [messages, setMessages] = useState<ChatMessage[]>([
@@ -123,7 +124,7 @@ export default function TuiApp({ agent, ctx, threadId }: TuiAppProps) {
                 flexDirection="column"
                 width={sidebarWidth}
                 borderStyle="single"
-                borderColor="gray"
+                borderColor={colors.border}
                 borderLeft
                 borderTop={false}
                 borderBottom={false}
