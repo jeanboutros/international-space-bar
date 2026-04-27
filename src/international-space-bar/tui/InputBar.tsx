@@ -35,8 +35,10 @@ export default function InputBar({ isProcessing, onSubmit }: InputBarProps) {
             return;
         }
 
-        // Arrow up when input is empty → navigate history backwards
-        if (key.upArrow && value.length === 0 && historyRef.current.length > 0) {
+        // Ctrl+Up → navigate history backwards (only when input is empty or already browsing)
+        if (key.ctrl && key.upArrow) {
+            if (historyRef.current.length === 0) return;
+            if (value.length > 0 && historyIndex < 0) return;
             const nextIdx =
                 historyIndex === -1
                     ? historyRef.current.length - 1
@@ -46,16 +48,8 @@ export default function InputBar({ isProcessing, onSubmit }: InputBarProps) {
             return;
         }
 
-        // Arrow up when already browsing history
-        if (key.upArrow && historyIndex >= 0) {
-            const nextIdx = Math.max(0, historyIndex - 1);
-            setHistoryIndex(nextIdx);
-            setValue(historyRef.current[nextIdx]!);
-            return;
-        }
-
-        // Arrow down while browsing history
-        if (key.downArrow && historyIndex >= 0) {
+        // Ctrl+Down → navigate history forwards
+        if (key.ctrl && key.downArrow && historyIndex >= 0) {
             const nextIdx = historyIndex + 1;
             if (nextIdx >= historyRef.current.length) {
                 setHistoryIndex(-1);
@@ -80,7 +74,7 @@ export default function InputBar({ isProcessing, onSubmit }: InputBarProps) {
                         value={value}
                         onChange={setValue}
                         onSubmit={handleSubmit}
-                        placeholder="Enter your message. Shift+C to clear"
+                        placeholder="Enter your message. Shift+C clear · Ctrl+↑↓ history"
                         focus={!isProcessing}
                     />
                 </>
