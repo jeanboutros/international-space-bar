@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { Box } from "ink";
+import { Box, useWindowSize } from "ink";
 import type { AppContext } from "../interfaces/app-context.interface.js";
 import type { IAgent, InterruptInfo, TokenUsage } from "../interfaces/agent.interface.js";
 import InputBar from "./InputBar.js";
@@ -15,6 +15,10 @@ interface TuiAppProps {
 }
 
 export default function TuiApp({ agent, ctx, threadId }: TuiAppProps) {
+    const { columns, rows } = useWindowSize();
+    const sidebarWidth = Math.max(28, Math.floor(columns * 0.3));
+    const mainWidth = columns - sidebarWidth;
+
     const [messages, setMessages] = useState<ChatMessage[]>([
         { role: "system", content: `Connected to ${agent.displayName}. Type a message to begin.` },
     ]);
@@ -100,9 +104,9 @@ export default function TuiApp({ agent, ctx, threadId }: TuiAppProps) {
     );
 
     return (
-        <Box flexDirection="row" height="100%">
+        <Box flexDirection="row" width={columns} height={rows}>
             {/* Left column — main responses + input */}
-            <Box flexDirection="column" flexGrow={1} flexBasis="70%">
+            <Box flexDirection="column" width={mainWidth}>
                 <MessageList messages={messages} />
                 {currentInterrupt ? (
                     <InterruptPrompt
@@ -114,10 +118,10 @@ export default function TuiApp({ agent, ctx, threadId }: TuiAppProps) {
                 )}
             </Box>
 
-            {/* Right column — status + logs */}
+            {/* Right column — status (natural height) + logs (fill rest) */}
             <Box
                 flexDirection="column"
-                width={32}
+                width={sidebarWidth}
                 borderStyle="single"
                 borderColor="gray"
                 borderLeft
