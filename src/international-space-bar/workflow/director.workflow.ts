@@ -10,14 +10,20 @@
  *     ▼
  *  classifyIntent
  *     │
- *     ├─ "query"     ──▶ orchestrator ──▶ councilGate ─┬─ yes ──▶ council ──▶ present
- *     │                                                 └─ no  ──────────────▶ present
- *     ├─ "reasoning" ──▶ reasoning    ──▶ councilGate ─┬─ yes ──▶ council ──▶ present
- *     │                                                 └─ no  ──────────────▶ present
- *     └─ "council"   ──▶ council ─────────────────────────────────────────────▶ present
- *                                                                                 │
- *                                                                                 ▼
- *                                                                             __end__
+ *     ├─ "query"     ──▶ orchestrator ──▶ councilGate ─┬─ yes ──▶ council ──┐
+ *     │                                                 └─ no  ──────────────┤
+ *     ├─ "reasoning" ──▶ reasoning    ──▶ councilGate ─┬─ yes ──▶ council ──┤
+ *     │                                                 └─ no  ──────────────┤
+ *     └─ "council"   ──▶ council ──────────────────────────────────────────┘
+ *                                                                         │
+ *                                                                         ▼
+ *                                                                      evaluate
+ *                                                                    ┌────────┤
+ *                                              satisfied / max reached │        │ unsatisfied
+ *                                                                    ▼        │
+ *                                                                 present    ├──▶ back to
+ *                                                                    │       │    execution
+ *                                                                 __end__   ┘    node
  * ```
  */
 
@@ -31,6 +37,10 @@ import {
 import { getAgent } from "../agent/agent-loader.js";
 import { createCouncilGateClassifier } from "../agent/council-gate-classifier.js";
 import { createIntentClassifier } from "../agent/intent-classifier.js";
+import {
+    createSatisfactionEvaluator,
+    SATISFACTION_THRESHOLD,
+} from "../agent/satisfaction-evaluator.js";
 import type { IConfig } from "../interfaces/config.interface.js";
 import { Logging } from "../logging.js";
 import { buildCouncilWorkflow } from "./council.workflow.js";
@@ -63,7 +73,14 @@ type DirectorNode = GraphNode<{
     InputSchema: typeof DirectorState;
     OutputSchema: typeof DirectorState;
     ContextSchema: typeof DirectorContextSchema;
-    Nodes: "classifyIntent" | "orchestrator" | "reasoning" | "councilGate" | "council" | "present";
+    Nodes:
+        | "classifyIntent"
+        | "orchestrator"
+        | "reasoning"
+        | "councilGate"
+        | "council"
+        | "evaluate"
+        | "present";
 }>;
 
 // ---------------------------------------------------------------------------
@@ -73,6 +90,7 @@ type DirectorNode = GraphNode<{
 function createNodes(config: IConfig) {
     const classify = createIntentClassifier(config);
     const classifyCouncilGate = createCouncilGateClassifier(config);
+    const evaluateSatisfaction = createSatisfactionEvaluator(config);
     const councilGraph = buildCouncilWorkflow();
 
     /**
@@ -90,8 +108,16 @@ function createNodes(config: IConfig) {
      */
     const orchestrator: DirectorNode = async (state, runnableConfig) => {
         const { ctx, thread_id } = getContext(runnableConfig);
-        logger.info({ query: state.query }, "Invoking orchestrator agent");
-        const result = await getAgent("orchestrator").invoke(state.query, ctx, thread_id);
+        logger.info(
+            { query: state.query, iteration: state.iteration },
+            "Invoking orchestrator agent",
+        );
+
+        const enhancedQuery = state.feedback
+            ? `${state.query}\n\n---\n[Refinement feedback from iteration ${state.iteration}: ${state.feedback}]`
+            : state.query;
+
+        const result = await getAgent("orchestrator").invoke(enhancedQuery, ctx, thread_id);
         logger.debug({ length: result.lastContent.length }, "Orchestrator agent completed");
         return { outcome: result.lastContent, messages: result.messages };
     };
@@ -101,8 +127,13 @@ function createNodes(config: IConfig) {
      */
     const reasoning: DirectorNode = async (state, runnableConfig) => {
         const { ctx, thread_id } = getContext(runnableConfig);
-        logger.info({ query: state.query }, "Invoking reasoner agent");
-        const result = await getAgent("reasoner").invoke(state.query, ctx, thread_id);
+        logger.info({ query: state.query, iteration: state.iteration }, "Invoking reasoner agent");
+
+        const enhancedQuery = state.feedback
+            ? `${state.query}\n\n---\n[Refinement feedback from iteration ${state.iteration}: ${state.feedback}]`
+            : state.query;
+
+        const result = await getAgent("reasoner").invoke(enhancedQuery, ctx, thread_id);
         logger.debug({ length: result.lastContent.length }, "Reasoner agent completed");
         return { outcome: result.lastContent, messages: result.messages };
     };
@@ -150,6 +181,51 @@ function createNodes(config: IConfig) {
     };
 
     /**
+     * Evaluate node — assesses whether the outcome is satisfactory.
+     *
+     * If the satisfaction score is below the threshold and the maximum
+     * number of iterations has not been reached, the workflow loops back
+     * to the execution path with feedback injected into the query.
+     *
+     * If the score meets the threshold or max iterations is reached,
+     * the workflow proceeds to present the result.
+     */
+    const evaluate: DirectorNode = async (state) => {
+        // Skip evaluation if there's no outcome yet (shouldn't happen, but guard).
+        if (!state.outcome && !state.councilVerdict) {
+            logger.warn("Evaluate called with no outcome or council verdict — accepting as-is");
+            return { satisfactionScore: 1, feedback: "" };
+        }
+
+        // Accept the result if we've reached max iterations.
+        if (state.iteration >= state.maxIterations) {
+            logger.info({ iteration: state.iteration }, "Max iterations reached, accepting result");
+            return { satisfactionScore: 1, feedback: "" };
+        }
+
+        const outcomeToEvaluate = state.councilVerdict || state.outcome;
+
+        logger.info({ iteration: state.iteration }, "Evaluating satisfaction");
+        const { score, feedback } = await evaluateSatisfaction(
+            state.query,
+            outcomeToEvaluate,
+            state.iteration,
+            state.feedback,
+        );
+
+        logger.info(
+            { score, feedback: feedback.slice(0, 100), iteration: state.iteration },
+            "Satisfaction evaluation complete",
+        );
+
+        return {
+            satisfactionScore: score,
+            feedback: score < SATISFACTION_THRESHOLD ? feedback : "",
+            iteration: state.iteration + 1,
+        };
+    };
+
+    /**
      * Present node — assembles the final response for the user.
      */
     // eslint-disable-next-line @typescript-eslint/require-await -- pure logic, no I/O
@@ -166,7 +242,7 @@ function createNodes(config: IConfig) {
         return { finalResponse: state.outcome };
     };
 
-    return { classifyIntent, orchestrator, reasoning, councilGate, council, present };
+    return { classifyIntent, orchestrator, reasoning, councilGate, council, evaluate, present };
 }
 
 // ---------------------------------------------------------------------------
@@ -187,14 +263,48 @@ const routeIntent: ConditionalEdgeRouter<
 };
 
 /**
- * Routes from councilGate — either into the council or straight to present.
+ * Routes from councilGate — either into the council or straight to evaluate.
  */
 const routeCouncilGate: ConditionalEdgeRouter<
     typeof DirectorState,
     DirectorContext,
-    "council" | "present"
+    "council" | "evaluate"
 > = (state) => {
-    return state.councilTriggered ? "council" : "present";
+    return state.councilTriggered ? "council" : "evaluate";
+};
+
+/**
+ * Routes from evaluate — back to the execution path if unsatisfied,
+ * or to present if satisfied or max iterations reached.
+ */
+const routeAfterEvaluate: ConditionalEdgeRouter<
+    typeof DirectorState,
+    DirectorContext,
+    "orchestrator" | "reasoning" | "council" | "present"
+> = (state) => {
+    if (state.satisfactionScore >= SATISFACTION_THRESHOLD) {
+        logger.info(
+            { score: state.satisfactionScore },
+            "Outcome satisfactory, proceeding to present",
+        );
+        return "present";
+    }
+    if (state.iteration >= state.maxIterations) {
+        logger.info(
+            { iteration: state.iteration },
+            "Max iterations reached, presenting best result",
+        );
+        return "present";
+    }
+
+    // Route back to the original execution path with feedback
+    logger.info(
+        { score: state.satisfactionScore, iteration: state.iteration, intent: state.intent },
+        "Outcome unsatisfactory, re-executing with feedback",
+    );
+    if (state.intent === "council") return "council";
+    if (state.intent === "reasoning") return "reasoning";
+    return "orchestrator";
 };
 
 // ---------------------------------------------------------------------------
@@ -202,7 +312,7 @@ const routeCouncilGate: ConditionalEdgeRouter<
 // ---------------------------------------------------------------------------
 
 export function buildDirectorWorkflow(config: IConfig) {
-    const { classifyIntent, orchestrator, reasoning, councilGate, council, present } =
+    const { classifyIntent, orchestrator, reasoning, councilGate, council, evaluate, present } =
         createNodes(config);
 
     return (
@@ -212,6 +322,7 @@ export function buildDirectorWorkflow(config: IConfig) {
             .addNode("reasoning", reasoning, { retryPolicy: LLM_RETRY_POLICY })
             .addNode("councilGate", councilGate, { retryPolicy: LLM_RETRY_POLICY })
             .addNode("council", council, { retryPolicy: LLM_RETRY_POLICY })
+            .addNode("evaluate", evaluate, { retryPolicy: LLM_RETRY_POLICY })
             .addNode("present", present)
             // Entry
             .addEdge(START, "classifyIntent")
@@ -224,10 +335,17 @@ export function buildDirectorWorkflow(config: IConfig) {
             // Query / reasoning → council gate
             .addEdge("orchestrator", "councilGate")
             .addEdge("reasoning", "councilGate")
-            // Council gate → council or present
-            .addConditionalEdges("councilGate", routeCouncilGate, ["council", "present"])
-            // Direct council and gate-triggered council → present
-            .addEdge("council", "present")
+            // Council gate → council or evaluate
+            .addConditionalEdges("councilGate", routeCouncilGate, ["council", "evaluate"])
+            // Council → evaluate (instead of directly to present)
+            .addEdge("council", "evaluate")
+            // Evaluate → satisfy? present; unsatisfy? loop back
+            .addConditionalEdges("evaluate", routeAfterEvaluate, [
+                "orchestrator",
+                "reasoning",
+                "council",
+                "present",
+            ])
             // Present → end
             .addEdge("present", END)
             .compile()

@@ -9,6 +9,8 @@ interface StatusPaneProps {
     readonly messageCount: number;
     readonly tokenUsage: TokenUsage | null;
     readonly threadId: string;
+    readonly currentIteration?: number;
+    readonly satisfactionScore?: number | null;
 }
 
 export default function StatusPane({
@@ -17,6 +19,8 @@ export default function StatusPane({
     messageCount,
     tokenUsage,
     threadId,
+    currentIteration,
+    satisfactionScore,
 }: StatusPaneProps) {
     return (
         <Box flexDirection="column" paddingX={layout.panePaddingX}>
@@ -41,6 +45,20 @@ export default function StatusPane({
                 <Text dimColor>Thread: </Text>
                 <Text>{threadId.slice(0, 8)}</Text>
             </Box>
+            {currentIteration !== undefined && currentIteration > 0 ? (
+                <Box>
+                    <Text dimColor>Iteration: </Text>
+                    <Text color={colors.accent}>{currentIteration}</Text>
+                </Box>
+            ) : null}
+            {satisfactionScore !== null && satisfactionScore !== undefined ? (
+                <Box>
+                    <Text dimColor>Quality: </Text>
+                    <Text color={satisfactionScore >= 0.7 ? colors.success : colors.warning}>
+                        {(satisfactionScore * 100).toFixed(0)}%
+                    </Text>
+                </Box>
+            ) : null}
 
             <Box marginTop={1}>
                 <Text bold color={colors.heading}>

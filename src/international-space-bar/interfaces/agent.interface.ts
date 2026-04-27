@@ -32,14 +32,39 @@ export interface IAgent {
     ): Promise<AgentResult>;
 }
 
+// ---------------------------------------------------------------------------
+// Workflow events (streamed from the director graph)
+// ---------------------------------------------------------------------------
+
+export type WorkflowEvent =
+    | { readonly type: "node_start"; readonly node: string; readonly iteration?: number }
+    | { readonly type: "node_complete"; readonly node: string; readonly output?: string }
+    | { readonly type: "satisfaction_check"; readonly score: number; readonly iteration: number }
+    | { readonly type: "loop_retry"; readonly iteration: number; readonly feedback: string }
+    | { readonly type: "complete"; readonly result: WorkflowResult };
+
+// ---------------------------------------------------------------------------
+// Workflow runner interface
+// ---------------------------------------------------------------------------
+
 /**
- * A compiled workflow that can be invoked with a user query.
+ * A compiled workflow that can be invoked or streamed with a user query.
  *
  * The TUI depends on this contract — the composition root provides the
  * concrete implementation (backed by a LangGraph `CompiledStateGraph`).
  */
 export interface IWorkflowRunner {
+    /** Invoke the workflow and wait for the final result. */
     invoke(query: string): Promise<WorkflowResult>;
+
+    /**
+     * Stream the workflow, yielding events as nodes complete.
+     *
+     * Each yielded value is a `WorkflowEvent` describing what happened.
+     * The stream ends with a `{ type: "complete" }` event containing the
+     * full result.
+     */
+    stream(query: string): AsyncIterable<WorkflowEvent>;
 }
 
 /**

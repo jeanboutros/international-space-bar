@@ -1,22 +1,15 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback } from "react";
 import { Box, useWindowSize } from "ink";
 import type { AppContext } from "../interfaces/app-context.interface.js";
-import type {
-    IAgent,
-    InterruptInfo,
-    IWorkflowRunner,
-    TokenUsage,
-} from "../interfaces/agent.interface.js";
+import type { IAgent, IWorkflowRunner, WorkflowEvent } from "../interfaces/agent.interface.js";
 import InputBar from "./InputBar.js";
 import InterruptPrompt from "./InterruptPrompt.js";
 import LogPane from "./LogPane.js";
-import MessageList, { type ChatMessage } from "./MessageList.js";
+import MessageList from "./MessageList.js";
 import StatusPane from "./StatusPane.js";
 import { colors, layout } from "./theme.js";
-import {
-    extractTokenUsage,
-    mapWorkflowMessages,
-} from "./workflow-result-mapper.js";
+import { useAppStore } from "./store.js";
+import { extractTokenUsage, mapWorkflowMessages } from "./workflow-result-mapper.js";
 
 interface TuiAppProps {
     readonly agent: IAgent;
@@ -25,77 +18,139 @@ interface TuiAppProps {
     readonly workflow: IWorkflowRunner;
 }
 
+/**
+ * Process a streaming workflow, updating the store with events as they arrive.
+ *
+ * Falls back to `workflow.invoke()` if streaming is unavailable.
+ */
+async function processWithStreaming(
+    query: string,
+    workflow: IWorkflowRunner,
+    ctx: AppContext,
+): Promise<void> {
+    const store = useAppStore;
+    const { addMessage, accumulateTokens, setProcessing, setSatisfactionScore, setLastEvent } =
+        store.getState();
+
+    try {
+        // Try streaming first
+        for await (const event of workflow.stream(query)) {
+            setLastEvent(event);
+
+            switch (event.type) {
+                case "node_start":
+                    ctx.logger.debug({ node: event.node }, "Workflow node started");
+                    break;
+
+                case "satisfaction_check":
+                    setSatisfactionScore(event.score);
+                    store.getState().incrementIteration();
+                    ctx.logger.info(
+                        { score: event.score, iteration: event.iteration },
+                        "Satisfaction check",
+                    );
+                    break;
+
+                case "loop_retry":
+                    addMessage({
+                        role: "system",
+                        content: `🔄 Iteration ${event.iteration}: Refining with feedback...`,
+                    });
+                    break;
+
+                case "node_complete":
+                    if (event.output) {
+                        addMessage({ role: "system", content: `✓ ${event.node} completed` });
+                    }
+                    break;
+
+                case "complete": {
+                    const chatMessages = mapWorkflowMessages(event.result.messages);
+                    accumulateTokens(extractTokenUsage(event.result.messages));
+
+                    if (chatMessages.length > 0) {
+                        addMessage(chatMessages);
+                    }
+
+                    if (chatMessages.length === 0 && event.result.finalResponse) {
+                        addMessage({ role: "agent", content: event.result.finalResponse });
+                    } else if (event.result.finalResponse) {
+                        // Ensure the final response is always shown even if
+                        // individual messages were already extracted
+                        addMessage({ role: "agent", content: event.result.finalResponse });
+                    }
+                    break;
+                }
+            }
+        }
+    } catch (err) {
+        // Streaming failed — fall back to invoke
+        ctx.logger.warn({ err }, "Streaming failed, falling back to invoke");
+
+        const result = await workflow.invoke(query);
+        const chatMessages = mapWorkflowMessages(result.messages);
+        accumulateTokens(extractTokenUsage(result.messages));
+
+        if (chatMessages.length > 0) {
+            addMessage(chatMessages);
+        }
+
+        if (chatMessages.length === 0 && result.finalResponse) {
+            addMessage({ role: "agent", content: result.finalResponse });
+        }
+    }
+}
+
 export default function TuiApp({ agent, ctx, threadId, workflow }: TuiAppProps) {
     const { columns, rows } = useWindowSize();
     const sidebarWidth = Math.max(layout.sidebarMinWidth, Math.floor(columns * layout.sidebarPercent));
     const mainWidth = columns - sidebarWidth;
 
-    const [messages, setMessages] = useState<ChatMessage[]>([
-        { role: "system", content: `Connected to ${agent.displayName}. Type a message to begin.` },
-    ]);
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [currentInterrupt, setCurrentInterrupt] = useState<InterruptInfo | null>(null);
-    const [tokenUsage, setTokenUsage] = useState<TokenUsage | null>(null);
+    // ── Selectors (subscribe to individual slices) ──────────────────
+    const messages = useAppStore((s) => s.messages);
+    const isProcessing = useAppStore((s) => s.isProcessing);
+    const currentInterrupt = useAppStore((s) => s.currentInterrupt);
+    const tokenUsage = useAppStore((s) => s.tokenUsage);
+    const currentIteration = useAppStore((s) => s.currentIteration);
+    const satisfactionScore = useAppStore((s) => s.satisfactionScore);
+    const messageCount = messages.length;
 
-    const appendMessage = useCallback((msg: ChatMessage | ChatMessage[]) => {
-        const items = Array.isArray(msg) ? msg : [msg];
-        setMessages((prev) => [...prev, ...items]);
-    }, []);
-
-    const accumulateTokens = useCallback((usage: TokenUsage | undefined) => {
-        if (!usage) return;
-        setTokenUsage((prev) =>
-            prev
-                ? {
-                      inputTokens: prev.inputTokens + usage.inputTokens,
-                      outputTokens: prev.outputTokens + usage.outputTokens,
-                      totalTokens: prev.totalTokens + usage.totalTokens,
-                  }
-                : usage,
-        );
-    }, []);
+    // ── Actions (stable references — no stale closures) ───────────────
+    const { addMessage, accumulateTokens, setProcessing, setCurrentInterrupt } =
+        useAppStore();
 
     const handleSubmit = useCallback(
         async (query: string) => {
             ctx.logger.info({ query }, "User submitted query");
-            appendMessage({ role: "user", content: query });
-            setIsProcessing(true);
+            addMessage({ role: "user", content: query });
+
+            // Reset iteration state for a new query
+            useAppStore.getState().resetIteration();
+            useAppStore.getState().setSatisfactionScore(null);
+            setProcessing(true);
 
             try {
-                const result = await workflow.invoke(query);
-                ctx.logger.info({ result }, "Workflow result");
-
-                // Extract reasoning + content messages from the LangGraph message chain.
-                const chatMessages = mapWorkflowMessages(result.messages);
-                accumulateTokens(extractTokenUsage(result.messages));
-
-                if (chatMessages.length > 0) {
-                    appendMessage(chatMessages);
-                }
-
-                // Fall back to finalResponse if no displayable messages were extracted.
-                if (chatMessages.length === 0 && result.finalResponse) {
-                    appendMessage({ role: "agent", content: result.finalResponse });
-                }
+                await processWithStreaming(query, workflow, ctx);
             } catch (err) {
                 const errMsg = err instanceof Error ? err.message : String(err);
-                appendMessage({ role: "system", content: `Error: ${errMsg}` });
+                addMessage({ role: "system", content: `Error: ${errMsg}` });
             } finally {
-                if (!currentInterrupt) {
-                    setIsProcessing(false);
+                // Always read the latest state (not a stale closure)
+                if (!useAppStore.getState().currentInterrupt) {
+                    setProcessing(false);
                 }
             }
         },
-        [workflow, ctx, appendMessage, accumulateTokens, currentInterrupt],
+        [workflow, ctx, addMessage, setProcessing],
     );
 
     const handleInterruptDecision = useCallback(
         async (decision: Record<string, unknown>) => {
-            const interruptInfo = currentInterrupt;
+            const interruptInfo = useAppStore.getState().currentInterrupt;
             setCurrentInterrupt(null);
-            setIsProcessing(true);
+            setProcessing(true);
 
-            appendMessage({
+            addMessage({
                 role: "system",
                 content: `Decision: ${decision.type as string} for ${interruptInfo?.toolName ?? "unknown"}`,
             });
@@ -106,9 +161,9 @@ export default function TuiApp({ agent, ctx, threadId, workflow }: TuiAppProps) 
 
                 const chatMessages = mapWorkflowMessages(result.messages);
                 if (chatMessages.length > 0) {
-                    appendMessage(chatMessages);
+                    addMessage(chatMessages);
                 } else if (result.lastContent) {
-                    appendMessage({ role: "agent", content: result.lastContent });
+                    addMessage({ role: "agent", content: result.lastContent });
                 }
 
                 if (result.interrupts && result.interrupts.length > 0) {
@@ -117,12 +172,14 @@ export default function TuiApp({ agent, ctx, threadId, workflow }: TuiAppProps) 
                 }
             } catch (err) {
                 const errMsg = err instanceof Error ? err.message : String(err);
-                appendMessage({ role: "system", content: `Resume error: ${errMsg}` });
+                addMessage({ role: "system", content: `Resume error: ${errMsg}` });
             } finally {
-                setIsProcessing(false);
+                if (!useAppStore.getState().currentInterrupt) {
+                    setProcessing(false);
+                }
             }
         },
-        [agent, ctx, threadId, appendMessage, accumulateTokens, currentInterrupt],
+        [agent, ctx, threadId, addMessage, accumulateTokens, setCurrentInterrupt, setProcessing],
     );
 
     return (
@@ -154,9 +211,11 @@ export default function TuiApp({ agent, ctx, threadId, workflow }: TuiAppProps) 
                 <StatusPane
                     agentName={agent.displayName}
                     isProcessing={isProcessing}
-                    messageCount={messages.length}
+                    messageCount={messageCount}
                     tokenUsage={tokenUsage}
                     threadId={threadId}
+                    currentIteration={currentIteration}
+                    satisfactionScore={satisfactionScore}
                 />
                 <LogPane />
             </Box>

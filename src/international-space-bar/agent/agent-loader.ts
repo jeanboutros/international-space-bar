@@ -20,6 +20,50 @@ const agentStore = new Map<string, IAgent>();
 // edit_file: true
 const defaultToolsToSkipLoading = ["read_file", "write_file", "edit_file", "ls", "grep", "glob"];
 
+// ---------------------------------------------------------------------------
+// Model alias resolution
+// ---------------------------------------------------------------------------
+
+/**
+ * Shorthand model names used in agent YAMLs.
+ *
+ * YAML configs use human-readable aliases (e.g. "opus", "sonnet") to
+ * decouple from specific provider/model identifiers. This mapping resolves
+ * them to actual provider-prefixed model strings.
+ *
+ * When adding a cloud provider (Anthropic, OpenAI, etc.), update this map
+ * to route aliases to the appropriate high-tier model.
+ */
+const MODEL_ALIASES: Record<string, string> = {
+    // High-quality — used for chairman, conductor, reviewer roles
+    opus: "ollama:glm-5.1",
+    // Mid-tier — used for advisor roles and general tasks
+    sonnet: "ollama:gemma4:e2b",
+    // Fast/light — for lightweight tasks
+    haiku: "ollama:gemma4:e2b",
+};
+
+/**
+ * Resolve a model string that may be an alias (e.g. "opus") or a
+ * provider-prefixed identifier (e.g. "ollama:gemma4:e2b").
+ *
+ * If the string is found in {@link MODEL_ALIASES}, the alias is replaced.
+ * Otherwise it's returned as-is (assumed to be a valid provider:model string).
+ */
+function resolveModel(model: string, defaultModel: string): string {
+    // If it's a known alias, resolve it
+    const alias = MODEL_ALIASES[model];
+    if (alias) {
+        return alias;
+    }
+    // If it already has a provider prefix (contains ":"), treat as resolved
+    if (model.includes(":")) {
+        return model;
+    }
+    // Unknown bare name — fall back to the app default
+    return defaultModel;
+}
+
 /**
  * Two-pass YAML loader:
  * 1. Parse every `*.yaml` in `agentsConfigDir` and validate against {@link AgentConfigSchema}.
@@ -49,7 +93,10 @@ export function loadAllAgents(config: IConfig): Map<string, IAgent> {
         const toolEntries: ToolEntry[] = agentConfig.tools
             .filter((toolId) => !defaultToolsToSkipLoading.includes(toolId))
             .map((toolId) => getToolEntry(toolId));
-        const resolvedModel = agentConfig.model ?? config.defaultModel;
+        const resolvedModel = resolveModel(
+            agentConfig.model ?? config.defaultModel,
+            config.defaultModel,
+        );
 
         // Build SubAgent array for deepagents
         let subagents: SubAgent[] | undefined;
@@ -69,7 +116,10 @@ export function loadAllAgents(config: IConfig): Map<string, IAgent> {
                     name: subConfig.display_name,
                     description: subConfig.short_description,
                     systemPrompt: subConfig.default_prompt,
-                    model: subConfig.model ?? config.defaultModel,
+                    model: resolveModel(
+                        subConfig.model ?? config.defaultModel,
+                        config.defaultModel,
+                    ),
                     tools: subTools.length > 0 ? subTools : undefined,
                 });
             }

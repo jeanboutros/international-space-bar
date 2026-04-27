@@ -18,7 +18,7 @@ import {
     normaliseMessage,
     resolveMessageRole,
 } from "../services/message-utils.js";
-import type { ChatMessage } from "./MessageList.js";
+import type { ChatMessage } from "./store.js";
 
 /**
  * Map LangGraph messages into displayable `ChatMessage[]`.
