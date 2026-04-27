@@ -136,7 +136,9 @@ export class DeepAgentWrapper implements IAgent {
     ): Promise<AgentResult> {
         ctx.logger.info({ agentId: this.id, decision, threadId }, "Resuming agent from interrupt");
 
-        const result = (await this.inner.invoke(new Command({ resume: decision }), {
+        const hitlResponse = { decisions: [decision] };
+
+        const result = (await this.inner.invoke(new Command({ resume: hitlResponse }), {
             configurable: { thread_id: threadId },
         })) as Record<string, unknown>;
 

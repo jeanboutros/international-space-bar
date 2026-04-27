@@ -11,9 +11,9 @@ interface InterruptPromptProps {
 export default function InterruptPrompt({ interrupt, onDecision }: InterruptPromptProps) {
     useInput((input) => {
         if (input === "a") {
-            onDecision({ type: "approve", toolName: interrupt.toolName });
+            onDecision({ type: "approve" });
         } else if (input === "r") {
-            onDecision({ type: "reject", toolName: interrupt.toolName });
+            onDecision({ type: "reject" });
         }
     });
 
