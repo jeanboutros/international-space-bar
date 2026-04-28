@@ -23,3 +23,6 @@ Thumbs.db
 
 # TypeScript cache
 *.tsbuildinfo
+
+# Temporary files
+.tmp/
