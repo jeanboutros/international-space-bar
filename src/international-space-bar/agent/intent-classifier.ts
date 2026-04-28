@@ -11,7 +11,7 @@
 
 import { z } from "zod";
 import type { IConfig } from "../interfaces/config.interface.js";
-import { createOllamaLLM } from "../llm/ollama.js";
+import { createOllamaLLMFromConfig } from "../llm/ollama.js";
 
 // ---------------------------------------------------------------------------
 // Intent schema
@@ -79,11 +79,8 @@ Conditions:
  * @returns A function that classifies a user query into an {@link Intent}.
  */
 export function createIntentClassifier(config: IConfig, modelOverride?: string) {
-    const raw = modelOverride ?? config.defaultModel;
-    // config.defaultModel uses "provider:model" format (e.g. "ollama:gemma4:e2b").
-    // ChatOllama expects just the model portion.
-    const modelName = raw.startsWith("ollama:") ? raw.slice("ollama:".length) : raw;
-    const llm = createOllamaLLM({ model: modelName, temperature: 0 });
+    const model = modelOverride ?? config.defaultModel;
+    const llm = createOllamaLLMFromConfig(config, model);
     const structured = llm.withStructuredOutput(IntentSchema);
 
     return async (query: string): Promise<Intent> => {

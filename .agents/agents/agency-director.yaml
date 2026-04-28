@@ -1,7 +1,7 @@
 version: 1
 display_name: "Agency Director"
 short_description: "Orchestrator agent. Classifies user intent, dispatches to the correct subagent, and presents results. Never executes work itself."
-model: "ollama:gemma4:e2b"
+model: "ollama:gemma4:31b-cloud"
 skills:
   - ".agents/skills/"
 subagents:

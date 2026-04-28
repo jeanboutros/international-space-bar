@@ -15,7 +15,7 @@
 
 import { z } from "zod";
 import type { IConfig } from "../interfaces/config.interface.js";
-import { createOllamaLLM } from "../llm/ollama.js";
+import { createOllamaLLMFromConfig } from "../llm/ollama.js";
 import { Logging } from "../logging.js";
 
 const logger = Logging.getLogger("agent.satisfaction-evaluator");
@@ -105,9 +105,8 @@ export const SATISFACTION_THRESHOLD = 0.7;
  * @returns A function that evaluates (query, outcome) → SatisfactionResult.
  */
 export function createSatisfactionEvaluator(config: IConfig, modelOverride?: string) {
-    const raw = modelOverride ?? config.defaultModel;
-    const modelName = raw.startsWith("ollama:") ? raw.slice("ollama:".length) : raw;
-    const llm = createOllamaLLM({ model: modelName, temperature: 0 });
+    const model = modelOverride ?? config.defaultModel;
+    const llm = createOllamaLLMFromConfig(config, model);
     const structured = llm.withStructuredOutput(SatisfactionSchema);
 
     return async (

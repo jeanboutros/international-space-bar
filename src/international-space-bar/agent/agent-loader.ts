@@ -1,10 +1,12 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join, parse } from "node:path";
 
+import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import type { SubAgent } from "deepagents";
 import { parse as parseYaml } from "yaml";
 import type { IAgent } from "../interfaces/agent.interface.js";
 import type { IConfig } from "../interfaces/config.interface.js";
+import { createOllamaLLMFromConfig } from "../llm/ollama.js";
 import { type AgentConfig, AgentConfigSchema } from "./agent-config.schema.js";
 import { createSharedBackend, createSharedCheckpointer } from "./agent-infrastructure.js";
 import { DeepAgentWrapper } from "./deep-agent-wrapper.js";
@@ -25,34 +27,19 @@ const defaultToolsToSkipLoading = ["read_file", "write_file", "edit_file", "ls",
 // ---------------------------------------------------------------------------
 
 /**
- * Shorthand model names used in agent YAMLs.
- *
- * YAML configs use human-readable aliases (e.g. "opus", "sonnet") to
- * decouple from specific provider/model identifiers. This mapping resolves
- * them to actual provider-prefixed model strings.
- *
- * When adding a cloud provider (Anthropic, OpenAI, etc.), update this map
- * to route aliases to the appropriate high-tier model.
- */
-const MODEL_ALIASES: Record<string, string> = {
-    // High-quality — used for chairman, conductor, reviewer roles
-    opus: "ollama:glm-5.1",
-    // Mid-tier — used for advisor roles and general tasks
-    sonnet: "ollama:gemma4:e2b",
-    // Fast/light — for lightweight tasks
-    haiku: "ollama:gemma4:e2b",
-};
-
-/**
  * Resolve a model string that may be an alias (e.g. "opus") or a
- * provider-prefixed identifier (e.g. "ollama:gemma4:e2b").
+ * provider-prefixed identifier (e.g. "ollama:gemma4:27b").
  *
- * If the string is found in {@link MODEL_ALIASES}, the alias is replaced.
+ * If the string is found in the config's `modelAliases`, the alias is replaced.
  * Otherwise it's returned as-is (assumed to be a valid provider:model string).
  */
-function resolveModel(model: string, defaultModel: string): string {
+function resolveModel(
+    model: string,
+    defaultModel: string,
+    aliases: Record<string, string>,
+): string {
     // If it's a known alias, resolve it
-    const alias = MODEL_ALIASES[model];
+    const alias = aliases[model];
     if (alias) {
         return alias;
     }
@@ -64,6 +51,33 @@ function resolveModel(model: string, defaultModel: string): string {
     return defaultModel;
 }
 
+// ---------------------------------------------------------------------------
+// Environment setup for Ollama Cloud
+// ---------------------------------------------------------------------------
+
+/**
+ * Set the `OLLAMA_BASE_URL` environment variable from config so that
+ * deepagents' internal `initChatModel` resolver (and any other code
+ * that resolves model strings) connects to the correct Ollama endpoint.
+ *
+ * Without this, the universal resolver defaults to `http://127.0.0.1:11434`.
+ *
+ * Note: We also pass pre-configured `ChatOllama` instances (with `baseUrl`
+ * and `Authorization: Bearer` headers) to both main agents and subagents
+ * via `createOllamaLLMFromConfig`. This env var is a safety net for any
+ * code paths that still use string-based model resolution.
+ */
+function ensureOllamaEnvVars(config: IConfig): void {
+    const baseUrl = config.ollamaBaseUrl.href.replace(/\/$/, "");
+    if (!process.env.OLLAMA_BASE_URL) {
+        process.env.OLLAMA_BASE_URL = baseUrl;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Agent loading
+// ---------------------------------------------------------------------------
+
 /**
  * Two-pass YAML loader:
  * 1. Parse every `*.yaml` in `agentsConfigDir` and validate against {@link AgentConfigSchema}.
@@ -72,6 +86,9 @@ function resolveModel(model: string, defaultModel: string): string {
  * Returns a `Map<agentId, IAgent>` and stores them in a module-level map for lookup.
  */
 export function loadAllAgents(config: IConfig): Map<string, IAgent> {
+    // Ensure Ollama Cloud env vars are set before any model resolution.
+    ensureOllamaEnvVars(config);
+
     const dir = join(process.cwd(), config.agentsConfigDir);
     const files = readdirSync(dir).filter((f) => f.endsWith(".yaml"));
 
@@ -93,12 +110,15 @@ export function loadAllAgents(config: IConfig): Map<string, IAgent> {
         const toolEntries: ToolEntry[] = agentConfig.tools
             .filter((toolId) => !defaultToolsToSkipLoading.includes(toolId))
             .map((toolId) => getToolEntry(toolId));
-        const resolvedModel = resolveModel(
+        const resolvedModelString = resolveModel(
             agentConfig.model ?? config.defaultModel,
             config.defaultModel,
+            config.modelAliases,
         );
 
-        // Build SubAgent array for deepagents
+        // Build SubAgent array for deepagents — pass ChatOllama instances
+        // (not raw strings) so subagents also connect to Ollama Cloud with
+        // the correct baseUrl and API key.
         let subagents: SubAgent[] | undefined;
         if (agentConfig.subagents.length > 0) {
             subagents = [];
@@ -112,18 +132,28 @@ export function loadAllAgents(config: IConfig): Map<string, IAgent> {
                 const subTools = subConfig.tools
                     .filter((toolId) => !defaultToolsToSkipLoading.includes(toolId))
                     .map((toolId) => getToolEntry(toolId).tool);
+                const subModelString = resolveModel(
+                    subConfig.model ?? config.defaultModel,
+                    config.defaultModel,
+                    config.modelAliases,
+                );
+                const subModel = createOllamaLLMFromConfig(config, subModelString);
                 subagents.push({
                     name: subConfig.display_name,
                     description: subConfig.short_description,
                     systemPrompt: subConfig.default_prompt,
-                    model: resolveModel(
-                        subConfig.model ?? config.defaultModel,
-                        config.defaultModel,
-                    ),
+                    model: subModel,
                     tools: subTools.length > 0 ? subTools : undefined,
                 });
             }
         }
+
+        // For the main agent, pass a pre-configured ChatOllama instance
+        // so Ollama Cloud baseUrl and API key are used.
+        const resolvedModel: string | BaseChatModel = createOllamaLLMFromConfig(
+            config,
+            resolvedModelString,
+        );
 
         const agent = new DeepAgentWrapper({
             id,

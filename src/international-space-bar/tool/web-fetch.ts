@@ -43,7 +43,15 @@ async function webFetchFunction({
         country: "united kingdom", // TODO: make this configurable
     });
 
-    return await tavily._call({ query });
+    const result = await tavily._call({ query });
+
+    // Tavily may return objects or arrays instead of plain strings.
+    // The @langchain/ollama adapter requires string tool message content,
+    // so we stringify anything that isn't already a string.
+    if (typeof result === "string") {
+        return result;
+    }
+    return JSON.stringify(result, null, 2);
 }
 
 const webFetch = tool(webFetchFunction, webFetchToolSchema);

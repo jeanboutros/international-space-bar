@@ -1,7 +1,7 @@
 version: 1
 display_name: "Reasoner"
 short_description: "Chain-of-thought reasoning agent. Decomposes complex problems into explicit steps, verifies each step, and synthesises a final answer."
-model: "ollama:gemma4:e2b"
+model: "ollama:gemma4:31b-cloud"
 tools: []
 skills:
   - ".agents/skills/reasoning/"

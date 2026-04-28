@@ -1,3 +1,4 @@
+import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import type { MemorySaver } from "@langchain/langgraph";
 import { Command, INTERRUPT, type Interrupt } from "@langchain/langgraph";
 import type { FilesystemBackend, SubAgent } from "deepagents";
@@ -11,7 +12,12 @@ import type { ToolEntry } from "./tool-registry.js";
 export interface DeepAgentWrapperOpts {
     readonly id: string;
     readonly config: AgentConfig;
-    readonly resolvedModel: string;
+    /**
+     * Either a pre-configured `BaseChatModel` instance (e.g. `ChatOllama`
+     * with custom baseUrl/headers for Ollama Cloud) or a model string
+     * that deepagents resolves via its universal model resolver.
+     */
+    readonly resolvedModel: string | BaseChatModel;
     readonly toolEntries: ToolEntry[];
     readonly backend: FilesystemBackend;
     readonly checkpointer: MemorySaver;

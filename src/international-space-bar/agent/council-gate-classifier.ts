@@ -8,7 +8,7 @@
 
 import { z } from "zod";
 import type { IConfig } from "../interfaces/config.interface.js";
-import { createOllamaLLM } from "../llm/ollama.js";
+import { createOllamaLLMFromConfig } from "../llm/ollama.js";
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -60,9 +60,7 @@ You MUST respond with a JSON object matching { "shouldTrigger": true/false }. No
  * @returns A function that classifies whether an outcome should trigger the council.
  */
 export function createCouncilGateClassifier(config: IConfig) {
-    const raw = config.defaultModel;
-    const modelName = raw.startsWith("ollama:") ? raw.slice("ollama:".length) : raw;
-    const llm = createOllamaLLM({ model: modelName, temperature: 0 });
+    const llm = createOllamaLLMFromConfig(config, config.defaultModel);
     const structured = llm.withStructuredOutput(CouncilGateSchema);
 
     return async (query: string, outcome: string): Promise<CouncilGateResult> => {
