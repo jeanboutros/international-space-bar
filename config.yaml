@@ -1,0 +1,32 @@
+# International Space Bar — Application Configuration
+# Values starting with SECRET[xxx] are resolved via the secrets store at runtime.
+# The default store reads xxx from environment variables.
+
+version: 1
+
+app:
+  nodeEnv: development
+  appVersion: "0.1.0"
+
+logger:
+  type: pino
+  logFilePath: ./logs/app.log
+
+ollama:
+  # Ollama Cloud endpoint
+  baseUrl: https://ollama.com
+  apiKey: SECRET[OLLAMA_API_KEY]
+
+tavily:
+  apiKey: SECRET[TAVILY_API_KEY]
+
+models:
+  default: glm-5.1:cloud
+  aliases:
+    opus: glm-5.1:cloud
+    sonnet: deepseek-v4-pro:cloud
+    haiku: ollama:gemma4:31b-cloud
+
+paths:
+  skillsRoot: .agents/skills/
+  agentsConfigDir: .agents/agents/

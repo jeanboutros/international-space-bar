@@ -3,18 +3,12 @@
  *
  * Consumers depend on this interface, not on the Zod-backed `Config` class or
  * any specific validation library. The concrete implementation in `Config`
- * populates these fields from validated environment variables, but that detail
+ * populates these fields from validated YAML configuration, but that detail
  * is invisible to callers.
  *
  * All fields are `readonly` — configuration is immutable after initialisation.
- *
- * @example
- * ```typescript
- * function createLLM(config: IConfig) {
- *     return new ChatOllama({ baseUrl: config.ollamaBaseUrl.href });
- * }
- * ```
  */
+
 export interface IConfig {
     /** Runtime environment. */
     readonly nodeEnv: "development" | "production" | "test";
@@ -34,15 +28,18 @@ export interface IConfig {
      */
     readonly logFilePath?: string;
 
-    /** Base URL of the Ollama server. */
+    /** Base URL of the Ollama server (cloud or local). */
     readonly ollamaBaseUrl: URL;
+
+    /** API key for Ollama Cloud authentication. */
+    readonly ollamaApiKey?: string;
 
     /** Tavily search API key. */
     readonly tavilyApiKey: string;
 
     /**
      * Default LLM model identifier used when an agent YAML does not specify its own model.
-     * Format: `"provider:model"` (e.g. `"ollama:gemma4:e2b"`).
+     * Format: `"provider:model"` (e.g. `"ollama:gemma4:27b"`).
      */
     readonly defaultModel: string;
 
@@ -60,4 +57,10 @@ export interface IConfig {
      * The agent loader scans this directory for `*.yaml` files at startup.
      */
     readonly agentsConfigDir: string;
+
+    /**
+     * Model alias mappings (e.g. `"opus": "ollama:qwen3-coder:480b"`).
+     * Used by the agent loader to resolve shorthand model names in YAML configs.
+     */
+    readonly modelAliases: Record<string, string>;
 }

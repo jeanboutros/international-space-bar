@@ -1,19 +1,32 @@
 /**
- * This file is responsible for defining the configuration schema and parsing environment variables for the application.
- * It uses the Zod library to validate and provide default values for the configuration.
+ * Application configuration — reads from YAML with secrets resolution.
  *
- * TODO:
- * The configurations should be inside a yaml file and not inside environment variables.
- * Environment variables should only be used for base level configurations that have to precede the loading of the yaml file,
- * such as the path to the yaml file.
- * Secrets should be managed by a secrets manager and not be stored in environment variables or yaml files.
+ * The primary config source is `config.yaml` at the project root.
+ * Values using the `SECRET[xxx]` syntax are resolved at load time
+ * via a pluggable {@link ISecretsStore} (default: environment variables).
+ *
+ * Only one environment variable is required to bootstrap the system:
+ * - `CONFIG_PATH` — path to the YAML config file (default: `config.yaml`)
+ *
+ * All other values (including secrets) come from the YAML file, with
+ * secrets resolved through the store.
  */
 
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { z } from "zod";
 import packageJson from "../../package.json" with { type: "json" };
+import {
+    EnvironmentVariablesSecretsStore,
+    type ISecretsStore,
+    resolveSecrets,
+} from "./services/secrets-store.js";
 
-// The application version is injected from package.json at build time.
 const version = packageJson.version;
+
+// ---------------------------------------------------------------------------
+// Schema — mirrors config.yaml structure after secrets are resolved
+// ---------------------------------------------------------------------------
 
 const ConfigSchema = z.readonly(
     z.object({
@@ -23,45 +36,53 @@ const ConfigSchema = z.readonly(
         ollamaBaseUrl: z
             .url()
             .transform((s) => new URL(s))
-            .default(() => new URL("http://localhost:11434")),
+            .default(() => new URL("https://ollama.com")),
+        ollamaApiKey: z.string().optional(),
         tavilyApiKey: z.string().min(1),
-        defaultModel: z.string().min(1).default("ollama:gemma4:e2b"),
+        defaultModel: z.string().min(1).default("ollama:gemma4:27b"),
         appVersion: z.string().default(version),
         skillsRoot: z.string().default(".agents/skills/"),
         agentsConfigDir: z.string().default(".agents/agents/"),
+        modelAliases: z.record(z.string(), z.string()).default({}),
     }),
 );
 
+// ---------------------------------------------------------------------------
+// YAML loading helpers
+// ---------------------------------------------------------------------------
+
+interface RawYamlConfig {
+    app?: { nodeEnv?: string; appVersion?: string };
+    logger?: { type?: string; logFilePath?: string };
+    ollama?: { baseUrl?: string; apiKey?: string };
+    tavily?: { apiKey?: string };
+    models?: { default?: string; aliases?: Record<string, string> };
+    paths?: { skillsRoot?: string; agentsConfigDir?: string };
+}
+
 /**
- * Application configuration singleton.
- *
- * Uses the async factory pattern — the constructor is private and trivial;
- * all initialisation (including future async I/O such as secrets-manager calls)
- * lives in the private {@link Config.initialize} method.
- *
- * The `Promise<Config>` is cached rather than the resolved instance, which
- * prevents duplicate initialisation when `getInstance` is called concurrently
- * before the first call has resolved.
- *
- * Required environment variables:
- * - `TAVILY_API_KEY` — Tavily search API key
- *
- * Optional environment variables (all have defaults):
- * - `NODE_ENV` — `"development"` | `"production"` | `"test"` (default: `"development"`)
- * - `OLLAMA_BASE_URL` — Ollama server base URL (default: `"http://localhost:11434"`)
- * - `APP_VERSION` — application version string (default: `"1.0.0"`)
- *
- * @example
- * ```typescript
- * import { Config } from './config.js';
- *
- * const config = (await Config.getInstance()).getConfig();
- *
- * console.log(config.nodeEnv);       // "development"
- * console.log(config.ollamaBaseUrl); // URL { href: 'http://localhost:11434/' }
- * console.log(config.tavilyApiKey);  // "tvly-..."
- * ```
+ * Flatten the nested YAML structure into the flat schema shape.
  */
+function flattenYaml(raw: RawYamlConfig): Record<string, unknown> {
+    return {
+        nodeEnv: raw.app?.nodeEnv,
+        appVersion: raw.app?.appVersion,
+        loggerType: raw.logger?.type,
+        logFilePath: raw.logger?.logFilePath,
+        ollamaBaseUrl: raw.ollama?.baseUrl,
+        ollamaApiKey: raw.ollama?.apiKey,
+        tavilyApiKey: raw.tavily?.apiKey,
+        defaultModel: raw.models?.default,
+        modelAliases: raw.models?.aliases,
+        skillsRoot: raw.paths?.skillsRoot,
+        agentsConfigDir: raw.paths?.agentsConfigDir,
+    };
+}
+
+// ---------------------------------------------------------------------------
+// Config singleton
+// ---------------------------------------------------------------------------
+
 export class Config {
     private static instance: Promise<Config> | undefined;
     private config: z.infer<typeof ConfigSchema>;
@@ -72,56 +93,52 @@ export class Config {
 
     /**
      * Performs all async initialisation and returns a fully constructed instance.
-     * Replace the `process.env` lookups here with async I/O (e.g. secrets manager)
-     * as needed — callers are unaffected because they always await {@link Config.getInstance}.
+     *
+     * Reads the YAML config file, resolves `SECRET[xxx]` references using
+     * the provided (or default) secrets store, then validates against the
+     * Zod schema.
      */
-    private static initialize(): Config {
-        const parsed = ConfigSchema.parse({
-            nodeEnv: process.env.NODE_ENV,
-            logFilePath: process.env.LOG_FILE_PATH,
-            loggerType: process.env.LOGGER_TYPE,
-            ollamaBaseUrl: process.env.OLLAMA_BASE_URL,
-            tavilyApiKey: process.env.TAVILY_API_KEY,
-            defaultModel: process.env.DEFAULT_MODEL,
-            appVersion: process.env.APP_VERSION,
-            skillsRoot: process.env.SKILLS_ROOT,
-            agentsConfigDir: process.env.AGENTS_CONFIG_DIR,
-        });
+    private static async initialize(secretsStore?: ISecretsStore): Promise<Config> {
+        const store = secretsStore ?? new EnvironmentVariablesSecretsStore();
 
-        return new Config(parsed);
+        // Determine YAML path from env (or default)
+        const configPath = process.env.CONFIG_PATH ?? join(process.cwd(), "config.yaml");
+
+        // Load and parse YAML
+        const { parse: parseYaml } = await import("yaml");
+        const rawYaml = readFileSync(configPath, "utf-8");
+        const parsed = parseYaml(rawYaml) as unknown;
+
+        // Flatten nested YAML into the flat schema shape
+        const flat = flattenYaml(parsed as RawYamlConfig);
+
+        // Resolve SECRET[xxx] references
+        resolveSecrets(flat, store);
+
+        // Validate with Zod
+        const validated = ConfigSchema.parse(flat);
+
+        return new Config(validated);
     }
 
     /**
      * Returns a `Promise` that resolves to the singleton `Config` instance,
      * creating it on the first call.
      *
-     * Caching the `Promise` (not the resolved value) ensures that concurrent
-     * calls before initialisation completes all share the same in-flight promise
-     * and never trigger a second initialisation.
-     *
+     * @param secretsStore - Optional custom secrets store (defaults to env vars).
      * @returns A `Promise` resolving to the singleton `Config` instance.
-     * @throws {import('zod').ZodError} If required environment variables are missing or fail validation.
-     *
-     * @example
-     * ```typescript
-     * // Throws ZodError at startup if TAVILY_API_KEY is not set.
-     * const config = (await Config.getInstance()).getConfig();
-     * ```
+     * @throws {import('zod').ZodError} If required config values are missing or invalid.
+     * @throws {Error} If the YAML file cannot be read or secrets cannot be resolved.
      */
-    public static getInstance(): Promise<Config> {
+    public static getInstance(secretsStore?: ISecretsStore): Promise<Config> {
         if (!Config.instance) {
-            // TODO: Once `initialize` performs real async I/O (e.g. reading from a secrets manager,
-            // network, or filesystem), remove `Promise.resolve()` and make `initialize` async,
-            // returning `Promise<Config>` directly. The `getInstance` signature stays unchanged.
-            Config.instance = Promise.resolve(Config.initialize());
+            Config.instance = Config.initialize(secretsStore);
         }
         return Config.instance;
     }
 
     /**
      * Returns the validated, readonly configuration object.
-     *
-     * @returns A `Readonly` config object matching {@link ConfigType}.
      */
     public getConfig() {
         return this.config;
