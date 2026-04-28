@@ -185,7 +185,7 @@ export default function TuiApp({ agent, ctx, threadId, workflow }: TuiAppProps) 
     return (
         <Box flexDirection="row" width={columns} height={rows}>
             {/* Left column — main responses + input */}
-            <Box flexDirection="column" width={mainWidth}>
+            <Box flexDirection="column" width={mainWidth} height={rows}>
                 <MessageList messages={messages} />
                 {currentInterrupt ? (
                     <InterruptPrompt
@@ -201,6 +201,7 @@ export default function TuiApp({ agent, ctx, threadId, workflow }: TuiAppProps) 
             <Box
                 flexDirection="column"
                 width={sidebarWidth}
+                height={rows}
                 borderStyle="single"
                 borderColor={colors.border}
                 borderLeft

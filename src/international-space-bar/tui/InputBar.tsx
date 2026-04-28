@@ -62,12 +62,17 @@ export default function InputBar({ isProcessing, onSubmit }: InputBarProps) {
     });
 
     return (
-        <Box borderStyle="single" borderColor={isProcessing ? colors.borderBusy : colors.borderActive} paddingX={layout.panePaddingX}>
+        <Box
+            borderStyle="single"
+            borderColor={isProcessing ? colors.borderBusy : colors.borderActive}
+            paddingX={layout.panePaddingX}
+            minHeight={3}
+        >
             {isProcessing ? (
                 <Text color={colors.warning}>⏳ Agent is thinking…</Text>
             ) : (
                 <>
-                    <Text color={colors.accent} bold>
+                    <Text color={colors.inputPrompt} bold>
                         {"❯ "}
                     </Text>
                     <TextInput

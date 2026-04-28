@@ -1,9 +1,9 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box, Text, useBoxMetrics, useInput, type DOMElement } from "ink";
 import type { RefObject } from "react";
 import { useWindowSize } from "ink";
 import type { ChatMessage } from "./store.js";
-import { colors, layout, roleColors, roleLabels } from "./theme.js";
+import { colors, layout, roleColors, roleLabels, scrollbarChar } from "./theme.js";
 import { useMouseScroll } from "./use-mouse-scroll.js";
 
 interface MessageListProps {
@@ -24,18 +24,19 @@ function estimateLines(content: string, availableWidth: number): number {
 
 export default function MessageList({ messages }: MessageListProps) {
     const containerRef = useRef<DOMElement>(null) as RefObject<DOMElement>;
-    const { height: boxHeight } = useBoxMetrics(containerRef);
+    const { height: boxHeight, hasMeasured } = useBoxMetrics(containerRef);
     const { columns } = useWindowSize();
 
-    // Usable width inside the box (subtract padding on both sides)
-    const usableWidth = Math.max(1, columns - 2 * layout.messagePaddingX - 10);
+    // Usable width inside the box (subtract padding on both sides + scrollbar column)
+    const usableWidth = Math.max(1, columns - 2 * layout.messagePaddingX - layout.scrollbarWidth - 10);
 
     // Sum estimated lines per message to get a line-based viewport
     const totalLines = messages.reduce(
         (sum, msg) => sum + estimateLines(msg.content, usableWidth),
         0,
     );
-    const visibleLines = Math.max(1, boxHeight);
+    // 1 row for the "Messages" header
+    const visibleLines = hasMeasured ? Math.max(1, boxHeight - 1) : 0;
 
     const [scrollOffset, setScrollOffset] = useState(0); // 0 = pinned to bottom
     const [autoScroll, setAutoScroll] = useState(true);
@@ -80,8 +81,6 @@ export default function MessageList({ messages }: MessageListProps) {
     // Build visible slice by accumulating lines from the end backwards
     let lineBudget = visibleLines;
     let endIdx = messages.length;
-    // Walk backwards from end (minus scroll offset in lines)
-    // For simplicity, we still show whole messages but estimate how many fit
     let startIdx = messages.length;
     let accumulated = 0;
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -96,12 +95,38 @@ export default function MessageList({ messages }: MessageListProps) {
 
     const visible = messages.slice(startIdx, endIdx);
 
+    // Build the scrollbar only when we have a measured height.
+    // Invert offset: 0 = bottom of content, maxOffset = top.
+    const invertedOffset = maxOffset - scrollOffset;
+    const scrollbar = useMemo(
+        () =>
+            hasMeasured && visibleLines > 0
+                ? scrollbarChar(totalLines, visibleLines, invertedOffset, visibleLines)
+                : null,
+        [hasMeasured, totalLines, visibleLines, invertedOffset],
+    );
+
     const scrollIndicator =
         scrollOffset > 0
             ? ` ↑${scrollOffset}`
             : totalLines > visibleLines
               ? " ●"
               : "";
+
+    // Don't render content until layout is measured — avoids 0-height flash.
+    if (!hasMeasured) {
+        return (
+            <Box
+                ref={containerRef}
+                flexDirection="column"
+                flexGrow={1}
+                overflow="hidden"
+                paddingX={layout.messagePaddingX}
+            >
+                <Text dimColor>Messages</Text>
+            </Box>
+        );
+    }
 
     return (
         <Box
@@ -116,28 +141,49 @@ export default function MessageList({ messages }: MessageListProps) {
                     Messages{scrollIndicator}
                     <Text dimColor> (PgUp/PgDn or mouse wheel)</Text>
                 </Text>
-            ) : null}
-            {visible.map((msg, i) => (
-                <Box key={startIdx + i} flexDirection="column" marginBottom={layout.messageGap}>
-                    {msg.role === "reasoning" ? (
-                        <Box>
-                            <Text color={roleColors.reasoning} dimColor italic>
-                                {roleLabels.reasoning}:{" "}
-                            </Text>
-                            <Text wrap="wrap" dimColor italic>
-                                {msg.content}
-                            </Text>
+            ) : (
+                <Text dimColor>Messages</Text>
+            )}
+            <Box flexDirection="row" flexGrow={1} overflow="hidden">
+                {/* Message content column */}
+                <Box flexDirection="column" flexGrow={1} overflow="hidden">
+                    {visible.map((msg, i) => (
+                        <Box key={startIdx + i} flexDirection="column" marginBottom={layout.messageGap}>
+                            {msg.role === "reasoning" ? (
+                                <Box>
+                                    <Text color={roleColors.reasoning} dimColor italic>
+                                        {roleLabels.reasoning}:{" "}
+                                    </Text>
+                                    <Text wrap="wrap" dimColor italic>
+                                        {msg.content}
+                                    </Text>
+                                </Box>
+                            ) : (
+                                <Box>
+                                    <Text color={roleColors[msg.role]} bold>
+                                        {roleLabels[msg.role]}:{" "}
+                                    </Text>
+                                    <Text wrap="wrap">{msg.content}</Text>
+                                </Box>
+                            )}
                         </Box>
-                    ) : (
-                        <Box>
-                            <Text color={roleColors[msg.role]} bold>
-                                {roleLabels[msg.role]}:{" "}
-                            </Text>
-                            <Text wrap="wrap">{msg.content}</Text>
-                        </Box>
-                    )}
+                    ))}
                 </Box>
-            ))}
+
+                {/* Scrollbar column — only rendered when content overflows */}
+                {scrollbar ? (
+                    <Box flexDirection="column" width={layout.scrollbarWidth}>
+                        {scrollbar.split("\n").map((char, i) => (
+                            <Text
+                                key={i}
+                                color={char === "█" ? colors.scrollThumb : colors.scrollTrack}
+                            >
+                                {char}
+                            </Text>
+                        ))}
+                    </Box>
+                ) : null}
+            </Box>
         </Box>
     );
 }
