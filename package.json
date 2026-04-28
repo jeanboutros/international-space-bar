@@ -17,7 +17,8 @@
 		"lint": "biome lint src/ && eslint",
 		"lint:fix": "biome lint --write src/ && eslint --fix",
 		"format": "biome format --write src/",
-		"check": "biome check --write src/ && eslint --fix"
+		"check": "biome check --write src/ && eslint --fix",
+		"generate:types": "openapi-typescript docs/openapi/openresponses.json -o src/international-space-bar-server/openresponses/openresponses.generated.d.ts && node scripts/fix-openapi-discriminators.mjs src/international-space-bar-server/openresponses/openresponses.generated.d.ts"
 	},
 	"dependencies": {
 		"@langchain/anthropic": "^1.3.27",
@@ -45,6 +46,7 @@
 		"@types/node": "^22",
 		"@types/supertest": "^7.2.0",
 		"eslint": "^10.2.1",
+		"openapi-typescript": "^7.13.0",
 		"supertest": "^7.2.2",
 		"tsup": "^8.5.1",
 		"tsx": "^4",
