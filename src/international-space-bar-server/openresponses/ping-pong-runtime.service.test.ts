@@ -2,6 +2,7 @@ import "reflect-metadata";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { PingPongRuntimeService } from "./ping-pong-runtime.service.js";
+import type { Message, OutputTextContent } from "./responses.types.js";
 
 void describe("PingPongRuntimeService", () => {
     const service = new PingPongRuntimeService();
@@ -20,18 +21,21 @@ void describe("PingPongRuntimeService", () => {
         assert.equal(typeof result.created_at, "number");
 
         assert.equal(result.output.length, 1);
-        const msg = result.output[0];
+        const msg = result.output[0] as Message;
         assert.ok(msg.id.startsWith("msg_"));
         assert.equal(msg.type, "message");
         assert.equal(msg.role, "assistant");
-        assert.equal(msg.content[0].type, "output_text");
-        assert.equal(msg.content[0].text, "pong");
-        assert.deepStrictEqual(msg.content[0].annotations, []);
+        const content = msg.content[0] as OutputTextContent;
+        assert.equal(content.type, "output_text");
+        assert.equal(content.text, "pong");
+        assert.deepStrictEqual(content.annotations, []);
 
         assert.deepStrictEqual(result.usage, {
             input_tokens: 0,
             output_tokens: 1,
             total_tokens: 1,
+            input_tokens_details: { cached_tokens: 0 },
+            output_tokens_details: { reasoning_tokens: 0 },
         });
     });
 });

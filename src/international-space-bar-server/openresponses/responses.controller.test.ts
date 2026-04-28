@@ -6,7 +6,7 @@ import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import request from "supertest";
 import { AppModule } from "../app.module.js";
-import type { ResponseResource } from "./responses.types.js";
+import type { Message, OutputTextContent, ResponseResource } from "./responses.types.js";
 
 const VALID_BODY = { model: "ping-pong", input: "ping" };
 const AUTH_HEADER = "Bearer test-key";
@@ -40,7 +40,9 @@ void describe("POST /v1/responses", () => {
         assert.equal(body.object, "response");
         assert.equal(body.status, "completed");
         assert.equal(body.model, "ping-pong");
-        assert.equal(body.output[0].content[0].text, "pong");
+        const msg = body.output[0] as Message;
+        const content = msg.content[0] as OutputTextContent;
+        assert.equal(content.text, "pong");
     });
 
     void it("response shape has correct fields and prefixes", async () => {
@@ -56,19 +58,19 @@ void describe("POST /v1/responses", () => {
         assert.equal(typeof body.created_at, "number");
         assert.ok(Array.isArray(body.output));
 
-        const msg = body.output[0];
+        const msg = body.output[0] as Message;
         assert.ok(msg.id.startsWith("msg_"), `message id should start with msg_, got ${msg.id}`);
         assert.equal(msg.type, "message");
         assert.equal(msg.role, "assistant");
         assert.equal(msg.status, "completed");
-        assert.equal(msg.content[0].type, "output_text");
-        assert.deepStrictEqual(msg.content[0].annotations, []);
+        const content = msg.content[0] as OutputTextContent;
+        assert.equal(content.type, "output_text");
+        assert.deepStrictEqual(content.annotations, []);
 
-        assert.deepStrictEqual(body.usage, {
-            input_tokens: 0,
-            output_tokens: 1,
-            total_tokens: 1,
-        });
+        assert.ok(body.usage);
+        assert.equal(body.usage.input_tokens, 0);
+        assert.equal(body.usage.output_tokens, 1);
+        assert.equal(body.usage.total_tokens, 1);
     });
 
     void it("returns 401 without authorization header", async () => {
