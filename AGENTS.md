@@ -78,6 +78,28 @@ layers must never import from outer layers.
   ancestor layer (usually `services/`). Never create a dependency from an
   inner layer to an outer layer to share code.
 
+### Logging vs Observability — separation of concerns
+
+System logging (`app.log`) and agent observability logging (`agents.log`) are
+fundamentally separate concerns with separate infrastructure. They must never
+share pino instances or stream configurations.
+
+| Concern | Destination | Purpose | Examples |
+|---------|-------------|---------|----------|
+| System logging | `app.log` + TUI ring buffer | Infrastructure diagnostics | Startup, config load, HTTP errors, retries |
+| Agent observability | `agents.log` only | Behavioural audit trail | Intent classified, token usage, routing decisions |
+| Future: API observability | `api.log` | API request tracing | Request/response pairs, latency |
+
+**Agent messages are not system logs. System diagnostics are not agent tuning data.**
+
+Each observability domain gets its own pino instance and log file. They do not
+share streams. The composition root wires each logger via `AppContext`:
+- `ctx.logger` → system events → `app.log` + TUI ring buffer + stdout
+- `ctx.agentLogger` → agent observability → `agents.log` + stdout (dev only)
+
+See [`docs/agent-observability-logging.md`](docs/agent-observability-logging.md)
+for the full design document.
+
 ## Commands
 
 | Task | Command |
