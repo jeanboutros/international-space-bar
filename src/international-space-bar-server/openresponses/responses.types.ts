@@ -1,34 +1,27 @@
 import type { z } from "zod";
+import type { components } from "./openresponses.generated.js";
 import type { CreateResponseSchema } from "./responses.schemas.js";
 
+type Schemas = components["schemas"];
+
+// ─── Input (validated by Zod schema — intentionally a subset) ───
 export type CreateResponseBody = z.infer<typeof CreateResponseSchema>;
 
-export interface ResponseResource {
-    id: string;
-    object: "response";
-    created_at: number;
-    model: string;
-    status: "completed" | "in_progress" | "failed";
-    output: OutputMessage[];
-    usage: Usage;
-}
+// ─── Full-spec input body (all fields from the OpenAPI spec) ───
+export type SpecCreateResponseBody = Schemas["CreateResponseBody"];
 
-export interface OutputMessage {
-    id: string;
-    type: "message";
-    status: "completed";
-    role: "assistant";
-    content: OutputContent[];
-}
-
-export interface OutputContent {
-    type: "output_text";
-    text: string;
-    annotations: unknown[];
-}
-
-export interface Usage {
-    input_tokens: number;
-    output_tokens: number;
-    total_tokens: number;
-}
+// ─── Output types (auto-generated from OpenAPI spec) ───
+export type ResponseResource = Schemas["ResponseResource"];
+export type Usage = Schemas["Usage"];
+export type InputTokensDetails = Schemas["InputTokensDetails"];
+export type OutputTokensDetails = Schemas["OutputTokensDetails"];
+export type ItemField = Schemas["ItemField"];
+export type Message = Schemas["Message"];
+export type FunctionCall = Schemas["FunctionCall"];
+export type FunctionCallOutput = Schemas["FunctionCallOutput"];
+export type ReasoningBody = Schemas["ReasoningBody"];
+export type CompactionBody = Schemas["CompactionBody"];
+export type OutputTextContent = Schemas["OutputTextContent"];
+export type IncompleteDetails = Schemas["IncompleteDetails"];
+export type Reasoning = Schemas["Reasoning"];
+export type Tool = Schemas["Tool"];

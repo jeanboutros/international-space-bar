@@ -20,8 +20,8 @@ import tseslint from "typescript-eslint";
  */
 export default defineConfig(
     {
-        // ignore compiled output
-        ignores: ["dist/**"],
+        // ignore compiled output and generated files
+        ignores: ["dist/**", "src/**/openresponses/openresponses.generated.d.ts"],
     },
     {
         files: ["src/**/*.ts"],
