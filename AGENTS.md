@@ -2,6 +2,8 @@
 
 Agent orchestration platform for a software development agency. Runs a multi-agent system with roles such as agency director, HR, engineers, testers, QA, project managers, and documentation writers.
 
+> **AI agents performing technical tasks:** Read [`docs/technical-stack.md`](docs/technical-stack.md) for the full technical reference — runtime, LLM infrastructure, agent framework, layered architecture rules, and mandatory conventions. Read [`docs/workflow.md`](docs/workflow.md) for Mermaid diagrams of the AI workflow and planned evolution features.
+
 ## Stack
 
 - **Runtime**: Node.js 22 (Active LTS)
