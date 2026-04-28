@@ -9,6 +9,7 @@ Agent orchestration platform for a software development agency. Runs a multi-age
 - **Runtime**: Node.js 22 (Active LTS)
 - **Language**: TypeScript 5 (strict mode, ESM)
 - **Agent framework**: `@langchain/langgraph` with `StateSchema` + `MessagesValue`
+- **Backend framework**: NestJS (outer adapter only)
 - **Validation**: Zod 4
 - **Package manager**: pnpm
 
@@ -22,8 +23,14 @@ src/international-space-bar/
   workflow/      # LangGraph workflows (director, council)
   llm/           # LLM provider adapters
   tool/          # Tool implementations
-  tui/           # Terminal UI — React/Ink components (outermost)
   *.ts           # Composition root: app, config, logging, main
+src/international-space-bar-server/
+  common/        # Guards, pipes — shared NestJS infrastructure
+  health/        # Health-check controller
+  openresponses/ # OpenResponses protocol — controller, service, schemas
+  *.ts           # NestJS entry point, root module, smoke test
+archive/
+  legacy-ink-tui/  # Preserved Ink/React TUI (see archive/legacy-ink-tui/README.md)
 dist/            # Compiled output (tsup)
 ```
 
@@ -35,10 +42,10 @@ layers must never import from outer layers.
 
 ```
 ┌───────────────────────────────────────────────┐
+│  international-space-bar-server/              │  NestJS outer adapter (HTTP, guards, pipes)
+├───────────────────────────────────────────────┤
 │              Composition Root                  │  main.ts, app.ts, config.ts, logging.ts
 │  (can import from every layer to wire them)   │
-├───────────────────────────────────────────────┤
-│                    tui/                        │  Presentation — React/Ink components
 ├───────────────────────────────────────────────┤
 │              workflow/                         │  Orchestration — LangGraph state-graphs
 ├───────────────────────────────────────────────┤
@@ -50,6 +57,10 @@ layers must never import from outer layers.
 └───────────────────────────────────────────────┘
 ```
 
+`international-space-bar-server/` is the outermost layer — a NestJS HTTP
+adapter. It depends on the agent core only through port interfaces
+(`agent-runtime.port.ts`), never by importing agent internals directly.
+
 ### Allowed imports per layer
 
 | Layer | May import from |
@@ -60,16 +71,17 @@ layers must never import from outer layers.
 | `llm/` | `interfaces/`, `services/` |
 | `tool/` | `interfaces/`, `services/` |
 | `workflow/` | `interfaces/`, `services/`, `agent/` |
-| `tui/` | `interfaces/`, `services/`, `tui/` (internal only) |
+| `server/` (`international-space-bar-server/`) | `interfaces/` (via port contracts); NestJS framework only |
 | Composition root | Everything (wires layers together) |
 
 ### Rules
 
-- **TUI never imports from `agent/`, `workflow/`, `llm/`, or `tool/`.**
-  The composition root injects dependencies (compiled workflows, agents)
-  into TUI components via props or callbacks.
+- **Server never imports agent internals directly.** The server layer
+  communicates with the agent runtime through port interfaces
+  (`agent-runtime.port.ts`). The composition root wires concrete
+  implementations at startup.
 - **Infrastructure utilities** (log ring buffer, shared stream helpers) live at
-  the composition root level or in `services/`, never in `tui/`.
+  the composition root level or in `services/`.
 - **`services/`** contains cross-cutting logic needed by multiple layers
   (e.g. message parsing, token extraction). It depends only on `interfaces/`.
 - **`interfaces/`** is the innermost layer — pure type definitions and
@@ -104,9 +116,10 @@ for the full design document.
 
 | Task | Command |
 |------|---------|
-| Run (dev) | `pnpm dev` |
-| Build | `pnpm build` |
-| Run (built) | `pnpm start` |
+| Run (dev) | `pnpm dev:server` |
+| Build | `pnpm build:server` |
+| Run (built) | `pnpm start:server` |
+| Test | `pnpm test` |
 | Lint | `pnpm lint` |
 | Lint + auto-fix | `pnpm lint:fix` |
 | Format | `pnpm format` |
