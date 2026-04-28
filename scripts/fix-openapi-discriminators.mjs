@@ -32,7 +32,7 @@ let content = readFileSync(filePath, "utf8");
 // with it. The regex is case-insensitive for "always" / "Always".
 
 content = content.replace(
-	/[Aa]lways `([^`]+)`\. \(enum property replaced by openapi-typescript\)(\n\s+\* @enum \{string\}\n\s+\*\/\n\s+type: )"[^"]+";/g,
+	/[Aa]lways\b[^`]*`([^`]+)`\. \(enum property replaced by openapi-typescript\)(\n\s+\* @enum \{string\}\n\s+\*\/\n\s+type: )"[^"]+";/g,
 	(match, originalValue, middle) =>
 		`Always \`${originalValue}\`. (enum property replaced by openapi-typescript)${middle}"${originalValue}";`,
 );

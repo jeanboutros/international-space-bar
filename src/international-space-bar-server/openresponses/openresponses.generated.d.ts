@@ -629,10 +629,10 @@ export interface components {
          */
         Message: {
             /**
-             * @description The type of the message. Always set to `message`. (enum property replaced by openapi-typescript)
+             * @description The type of the message. Always `message`. (enum property replaced by openapi-typescript)
              * @enum {string}
              */
-            type: "Message";
+            type: "message";
             /** @description The unique ID of the message. */
             id: string;
             status: components["schemas"]["MessageStatus"] & unknown;
