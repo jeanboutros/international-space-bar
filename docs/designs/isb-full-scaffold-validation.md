@@ -1,6 +1,6 @@
 # Design: Complete Zod Validation for Scaffold Streaming Events
 
-**Status**: Draft  
+**Status**: Implemented  
 **Ticket**: isb-0056 (to be assigned)  
 **File in scope**: `src/international-space-bar-server/openresponses/ping-pong-runtime.service.ts`
 
