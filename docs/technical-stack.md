@@ -160,6 +160,21 @@ The codebase follows a strict layered architecture. **Dependencies point inward 
 - **`interfaces/`** is the innermost layer — pure type definitions and contracts with zero runtime dependencies on other project layers.
 - When a function is needed by two layers, move it to the lowest common ancestor layer (usually `services/`). Never create a dependency from an inner layer to an outer layer.
 
+### Cross-layer re-exports — port contracts
+
+The `interfaces/` layer may be re-exported into the server layer through
+explicitly declared **port contracts** in
+`src/international-space-bar-server/common/interfaces/`.
+
+Each permitted cross-layer import must have its own `*.port.ts` file. Direct
+imports from `international-space-bar-server/` into `international-space-bar/`
+are forbidden — only `*.port.ts` shims are allowed at this boundary.
+
+The first such shim is `logger.port.ts`, which re-exports `ILogger` so that
+`PinoLoggerService` can implement the inner interface without the server layer
+importing from the core domain directly. See [`docs/logging.md`](logging.md)
+for the full rationale.
+
 ---
 
 ## Project Structure

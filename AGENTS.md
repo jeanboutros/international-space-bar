@@ -113,6 +113,50 @@ share streams. The composition root wires each logger via `AppContext`:
 See [`docs/agent-observability-logging.md`](docs/agent-observability-logging.md)
 for the full design document.
 
+## Server logging — NestJS layer
+
+The `international-space-bar-server` NestJS layer has its own dedicated logging
+infrastructure, separate from the core agent logger.
+
+### Wiring convention
+
+```typescript
+// main.ts — mandatory pattern; both lines must appear in the same commit.
+const app = await NestFactory.create(AppModule, { bufferLogs: true });
+app.useLogger(app.get(PinoLoggerService)); // replaces NestJS default console logger
+```
+
+- **`bufferLogs: true`** is required so NestJS holds early internal messages
+  until `useLogger` is called. Without it, those messages bypass `PinoLoggerService`.
+- **`logger: [...]` array** must never be passed to `NestFactory.create` alongside
+  `app.useLogger` — the two are mutually exclusive. Removing one is atomic with
+  adding the other.
+
+### `PinoLoggerService`
+
+- Lives in `src/international-space-bar-server/logging/pino-logger.service.ts`.
+- Implements both `LoggerService` (NestJS) and `ILogger` (inner `interfaces/` layer).
+- Provided globally by `LoggingModule` (`@Global()`).
+- Inject it anywhere via constructor injection; use `.child(name)` for
+  module-scoped log bindings.
+
+### Cross-layer re-export (first intentional boundary crossing)
+
+`ILogger` is re-exported from the inner `interfaces/` layer into the server
+layer through a single declared boundary file:
+
+```
+src/international-space-bar-server/common/interfaces/logger.port.ts
+```
+
+This is the **only** permitted import from the core domain into the server
+layer for the purposes of type sharing. All future cross-layer type re-exports
+must go through a new `*.port.ts` file in `common/interfaces/`, never as a
+direct import.
+
+See [`docs/logging.md`](docs/logging.md) for the full design document covering
+the bridge pattern, startup sequence, config reference, and future HTTP logging.
+
 ## Commands
 
 | Task | Command |
