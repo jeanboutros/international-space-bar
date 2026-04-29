@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { SecretNotFoundException } from "../common/exceptions/index.js";
 import type { ISecretsStore } from "../common/interfaces/index.js";
 
 /**
@@ -23,9 +24,6 @@ export class SecretsStoreService implements ISecretsStore {
         if (defaultValue !== undefined) {
             return defaultValue;
         }
-        throw new Error(
-            `Secret "${key}" not found in environment variables and no default provided. ` +
-            `Set the ${key} environment variable or provide a default.`,
-        );
+        throw new SecretNotFoundException(key);
     }
 }
