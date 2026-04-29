@@ -5,7 +5,23 @@ import { type BaseMessage, HumanMessage, ToolMessage } from "@langchain/core/mes
 import { ChatOllama } from "@langchain/ollama"; // TODO: REMOVE BEFORE PRODUCTION
 import { Injectable } from "@nestjs/common";
 import { z } from "zod";
+
 import type { AgentInvokeRequest, AgentRuntimePort } from "./agent-runtime.port.js";
+import { responseCompletedStreamingEventSchema } from "./generated/zod/responseCompletedStreamingEventSchema.js";
+import { responseContentPartAddedStreamingEventSchema } from "./generated/zod/responseContentPartAddedStreamingEventSchema.js";
+import { responseContentPartDoneStreamingEventSchema } from "./generated/zod/responseContentPartDoneStreamingEventSchema.js";
+import { responseCreatedStreamingEventSchema } from "./generated/zod/responseCreatedStreamingEventSchema.js";
+import { responseFunctionCallArgumentsDeltaStreamingEventSchema } from "./generated/zod/responseFunctionCallArgumentsDeltaStreamingEventSchema.js";
+import { responseFunctionCallArgumentsDoneStreamingEventSchema } from "./generated/zod/responseFunctionCallArgumentsDoneStreamingEventSchema.js";
+import { responseOutputItemAddedStreamingEventSchema } from "./generated/zod/responseOutputItemAddedStreamingEventSchema.js";
+import { responseOutputItemDoneStreamingEventSchema } from "./generated/zod/responseOutputItemDoneStreamingEventSchema.js";
+import { responseOutputTextDeltaStreamingEventSchema } from "./generated/zod/responseOutputTextDeltaStreamingEventSchema.js";
+import { responseOutputTextDoneStreamingEventSchema } from "./generated/zod/responseOutputTextDoneStreamingEventSchema.js";
+import { responseReasoningSummaryDeltaStreamingEventSchema } from "./generated/zod/responseReasoningSummaryDeltaStreamingEventSchema.js";
+import { responseReasoningSummaryDoneStreamingEventSchema } from "./generated/zod/responseReasoningSummaryDoneStreamingEventSchema.js";
+import { responseReasoningSummaryPartAddedStreamingEventSchema } from "./generated/zod/responseReasoningSummaryPartAddedStreamingEventSchema.js";
+import { responseReasoningSummaryPartDoneStreamingEventSchema } from "./generated/zod/responseReasoningSummaryPartDoneStreamingEventSchema.js";
+import { responseResourceSchema } from "./generated/zod/responseResourceSchema.js";
 import type { ResponseResource, ResponseStreamEvent } from "./responses.types.js";
 
 // ── SCAFFOLD TYPES — delete with file (TODO isb-0020) ───────────────────────
@@ -41,61 +57,64 @@ const FunctionCallItemShape = z.object({
 
 @Injectable()
 export class PingPongRuntimeService implements AgentRuntimePort {
+    // constructor(@Inject(LOGGER) private readonly logger: ILogger) {}
     invoke(request: AgentInvokeRequest): Promise<ResponseResource> {
         const now = Math.floor(Date.now() / 1000);
-        return Promise.resolve({
-            id: `resp_${randomUUID()}`,
-            object: "response",
-            created_at: now,
-            completed_at: now,
-            status: "completed",
-            model: request.model,
-            previous_response_id: null,
-            instructions: null,
-            output: [
-                {
-                    id: `msg_${randomUUID()}`,
-                    type: "message",
-                    status: "completed",
-                    role: "assistant",
-                    content: [
-                        {
-                            type: "output_text",
-                            text: "pong",
-                            annotations: [],
-                        },
-                    ],
+        return Promise.resolve(
+            responseResourceSchema.parse({
+                id: `resp_${randomUUID()}`,
+                object: "response",
+                created_at: now,
+                completed_at: now,
+                status: "completed",
+                model: request.model,
+                previous_response_id: null,
+                instructions: null,
+                output: [
+                    {
+                        id: `msg_${randomUUID()}`,
+                        type: "message",
+                        status: "completed",
+                        role: "assistant",
+                        content: [
+                            {
+                                type: "output_text",
+                                text: "pong",
+                                annotations: [],
+                            },
+                        ],
+                    },
+                ],
+                error: null,
+                tools: [],
+                tool_choice: "auto",
+                truncation: "disabled",
+                parallel_tool_calls: true,
+                text: { format: { type: "text" } },
+                top_p: 1,
+                presence_penalty: 0,
+                frequency_penalty: 0,
+                top_logprobs: 0,
+                temperature: 1,
+                reasoning: null,
+                usage: {
+                    input_tokens: 0,
+                    output_tokens: 1,
+                    total_tokens: 1,
+                    input_tokens_details: { cached_tokens: 0 },
+                    output_tokens_details: { reasoning_tokens: 0 },
                 },
-            ],
-            error: null,
-            tools: [],
-            tool_choice: "auto",
-            truncation: "disabled",
-            parallel_tool_calls: true,
-            text: { format: { type: "text" } },
-            top_p: 1,
-            presence_penalty: 0,
-            frequency_penalty: 0,
-            top_logprobs: 0,
-            temperature: 1,
-            reasoning: null,
-            usage: {
-                input_tokens: 0,
-                output_tokens: 1,
-                total_tokens: 1,
-                input_tokens_details: { cached_tokens: 0 },
-                output_tokens_details: { reasoning_tokens: 0 },
-            },
-            max_output_tokens: null,
-            max_tool_calls: null,
-            store: true,
-            background: false,
-            service_tier: "default",
-            metadata: {},
-            safety_identifier: null,
-            prompt_cache_key: null,
-            incomplete_details: null,
-        });
+                max_output_tokens: null,
+                max_tool_calls: null,
+                store: true,
+                background: false,
+                service_tier: "default",
+                metadata: {},
+                safety_identifier: null,
+                prompt_cache_key: null,
+                incomplete_details: null,
+            }),
+        );
     }
 
     // stream() — scaffold implementation using ChatOllama.
@@ -139,7 +158,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
             const reasoningId = `rs__${randomUUID()}`;
 
             // output_item.added
-            yield {
+            yield responseOutputItemAddedStreamingEventSchema.parse({
                 type: "response.output_item.added",
                 sequence_number: seq++,
                 output_index: outputIndex,
@@ -149,17 +168,17 @@ export class PingPongRuntimeService implements AgentRuntimePort {
                     summary: [],
                     content: [],
                 }),
-            };
+            });
 
             // reasoning_summary_part.added
-            yield {
+            yield responseReasoningSummaryPartAddedStreamingEventSchema.parse({
                 type: "response.reasoning_summary_part.added",
                 sequence_number: seq++,
                 item_id: reasoningId,
                 output_index: outputIndex,
                 summary_index: 0,
                 part: { type: "summary_text" as const, text: "" },
-            } as unknown as ResponseStreamEvent;
+            });
 
             // stream deltas
             let accumulated = "";
@@ -178,29 +197,29 @@ export class PingPongRuntimeService implements AgentRuntimePort {
                 const text = typeof chunk.content === "string" ? chunk.content : "";
                 if (text) {
                     accumulated += text;
-                    yield {
+                    yield responseReasoningSummaryDeltaStreamingEventSchema.parse({
                         type: "response.reasoning_summary_text.delta",
                         sequence_number: seq++,
                         item_id: reasoningId,
                         output_index: outputIndex,
                         summary_index: 0,
                         delta: text,
-                    };
+                    });
                 }
             }
 
             // reasoning_summary.done
-            yield {
+            yield responseReasoningSummaryDoneStreamingEventSchema.parse({
                 type: "response.reasoning_summary_text.done",
                 sequence_number: seq++,
                 item_id: reasoningId,
                 output_index: outputIndex,
                 summary_index: 0,
                 text: accumulated,
-            };
+            });
 
             // reasoning_summary_part.done
-            yield {
+            yield responseReasoningSummaryPartDoneStreamingEventSchema.parse({
                 type: "response.reasoning_summary_part.done",
                 sequence_number: seq++,
                 item_id: reasoningId,
@@ -210,10 +229,10 @@ export class PingPongRuntimeService implements AgentRuntimePort {
                     type: "summary_text" as const,
                     text: accumulated,
                 },
-            } as unknown as ResponseStreamEvent;
+            });
 
             // output_item.done
-            yield {
+            yield responseOutputItemDoneStreamingEventSchema.parse({
                 type: "response.output_item.done",
                 sequence_number: seq++,
                 output_index: outputIndex,
@@ -222,7 +241,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
                     type: "reasoning",
                     summary: [{ type: "summary_text", text: accumulated }],
                 }),
-            };
+            });
         }
 
         async function* streamMessageBlock(
@@ -233,7 +252,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
             const msgId = `msg_${randomUUID()}`;
 
             // output_item.added
-            yield {
+            yield responseOutputItemAddedStreamingEventSchema.parse({
                 type: "response.output_item.added",
                 sequence_number: seq++,
                 output_index: outputIndex,
@@ -244,10 +263,10 @@ export class PingPongRuntimeService implements AgentRuntimePort {
                     role: "assistant",
                     content: [],
                 }),
-            };
+            });
 
             // content_part.added
-            yield {
+            yield responseContentPartAddedStreamingEventSchema.parse({
                 type: "response.content_part.added",
                 sequence_number: seq++,
                 item_id: msgId,
@@ -258,7 +277,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
                     text: "",
                     annotations: [],
                 },
-            } as unknown as ResponseStreamEvent;
+            });
 
             // stream deltas
             let accumulated = "";
@@ -277,29 +296,29 @@ export class PingPongRuntimeService implements AgentRuntimePort {
                 const text = typeof chunk.content === "string" ? chunk.content : "";
                 if (text) {
                     accumulated += text;
-                    yield {
+                    yield responseOutputTextDeltaStreamingEventSchema.parse({
                         type: "response.output_text.delta",
                         sequence_number: seq++,
                         item_id: msgId,
                         output_index: outputIndex,
                         content_index: 0,
                         delta: text,
-                    };
+                    });
                 }
             }
 
             // output_text.done
-            yield {
+            yield responseOutputTextDoneStreamingEventSchema.parse({
                 type: "response.output_text.done",
                 sequence_number: seq++,
                 item_id: msgId,
                 output_index: outputIndex,
                 content_index: 0,
                 text: accumulated,
-            };
+            });
 
             // content_part.done
-            yield {
+            yield responseContentPartDoneStreamingEventSchema.parse({
                 type: "response.content_part.done",
                 sequence_number: seq++,
                 item_id: msgId,
@@ -310,10 +329,10 @@ export class PingPongRuntimeService implements AgentRuntimePort {
                     text: accumulated,
                     annotations: [],
                 },
-            } as unknown as ResponseStreamEvent;
+            });
 
             // output_item.done
-            yield {
+            yield responseOutputItemDoneStreamingEventSchema.parse({
                 type: "response.output_item.done",
                 sequence_number: seq++,
                 output_index: outputIndex,
@@ -324,11 +343,11 @@ export class PingPongRuntimeService implements AgentRuntimePort {
                     role: "assistant",
                     content: [{ type: "output_text", text: accumulated, annotations: [] }],
                 }),
-            };
+            });
         }
 
         // ── response.created ────────────────────────────────────────────────────
-        const inProgressResponse: ResponseResource = {
+        const inProgressResponse: ResponseResource = responseResourceSchema.parse({
             id: respId,
             object: "response",
             created_at: now,
@@ -366,13 +385,13 @@ export class PingPongRuntimeService implements AgentRuntimePort {
             safety_identifier: null,
             prompt_cache_key: null,
             incomplete_details: null,
-        };
+        });
 
-        yield {
+        yield responseCreatedStreamingEventSchema.parse({
             type: "response.created",
             sequence_number: seq++,
             response: inProgressResponse,
-        };
+        });
 
         // ── OUTPUT 0: reasoning ─────────────────────────────────────────────────
         yield* streamReasoningBlock(
@@ -399,7 +418,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         const fnCallId = `fc_${randomUUID()}`;
         const callId = `call_${randomUUID()}`;
 
-        yield {
+        yield responseOutputItemAddedStreamingEventSchema.parse({
             type: "response.output_item.added",
             sequence_number: seq++,
             output_index: 3,
@@ -411,7 +430,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
                 arguments: "",
                 status: "in_progress",
             }),
-        };
+        });
 
         let argsAccumulated = "";
         // TODO: REMOVE BEFORE PRODUCTION
@@ -425,41 +444,41 @@ export class PingPongRuntimeService implements AgentRuntimePort {
                 (chunk.tool_calls as Array<{ args?: string }> | undefined) ??
                 (
                     chunk.additional_kwargs as
-                    | { tool_calls?: Array<{ function?: { arguments?: string } }> }
-                    | undefined
+                        | { tool_calls?: Array<{ function?: { arguments?: string } }> }
+                        | undefined
                 )?.tool_calls;
 
             if (toolCalls && toolCalls.length > 0) {
                 const tc = toolCalls[0];
                 const fragment =
                     typeof (tc as { function?: { arguments?: string } }).function?.arguments ===
-                        "string"
+                    "string"
                         ? ((tc as { function?: { arguments?: string } }).function?.arguments ?? "")
                         : "";
                 if (fragment) {
                     argsAccumulated += fragment;
-                    yield {
+                    yield responseFunctionCallArgumentsDeltaStreamingEventSchema.parse({
                         type: "response.function_call_arguments.delta",
                         sequence_number: seq++,
                         item_id: fnCallId,
                         output_index: 3,
                         delta: fragment,
-                    };
+                    });
                 }
             }
         }
 
         const finalArgs = argsAccumulated || "{}";
 
-        yield {
+        yield responseFunctionCallArgumentsDoneStreamingEventSchema.parse({
             type: "response.function_call_arguments.done",
             sequence_number: seq++,
             item_id: fnCallId,
             output_index: 3,
             arguments: finalArgs,
-        };
+        });
 
-        yield {
+        yield responseOutputItemDoneStreamingEventSchema.parse({
             type: "response.output_item.done",
             sequence_number: seq++,
             output_index: 3,
@@ -471,7 +490,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
                 arguments: finalArgs,
                 status: "completed",
             }),
-        };
+        });
 
         // ── OUTPUT 4: reasoning ─────────────────────────────────────────────────
         yield* streamReasoningBlock(
@@ -496,7 +515,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         );
 
         // ── response.completed ──────────────────────────────────────────────────
-        yield {
+        yield responseCompletedStreamingEventSchema.parse({
             type: "response.completed",
             sequence_number: seq++,
             response: {
@@ -504,6 +523,6 @@ export class PingPongRuntimeService implements AgentRuntimePort {
                 status: "completed",
                 completed_at: Math.floor(Date.now() / 1000),
             },
-        };
+        });
     }
 }
