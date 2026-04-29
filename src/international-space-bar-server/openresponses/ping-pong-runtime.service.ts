@@ -1,11 +1,43 @@
 // SCAFFOLD: Temporary file. Real LLM calls via ChatOllama until LangGraph is wired.
 // TODO(isb-0020): Delete this file entirely when LangGraph adapter is wired.
 import { randomUUID } from "node:crypto";
-import { HumanMessage } from "@langchain/core/messages"; // TODO: REMOVE BEFORE PRODUCTION
+import { type BaseMessage, HumanMessage, ToolMessage } from "@langchain/core/messages"; // TODO: REMOVE BEFORE PRODUCTION
 import { ChatOllama } from "@langchain/ollama"; // TODO: REMOVE BEFORE PRODUCTION
 import { Injectable } from "@nestjs/common";
+import { z } from "zod";
 import type { AgentInvokeRequest, AgentRuntimePort } from "./agent-runtime.port.js";
 import type { ResponseResource, ResponseStreamEvent } from "./responses.types.js";
+
+// ── SCAFFOLD TYPES — delete with file (TODO isb-0020) ───────────────────────
+// These schemas validate the item payloads built inside stream() events.
+// Using .parse() here throws a ZodError with a named path if an item shape is
+// wrong — surfacing structural bugs immediately rather than silently forwarding
+// a malformed event payload downstream.
+const ReasoningItemShape = z.object({
+    id: z.string(),
+    type: z.literal("reasoning"),
+    summary: z.array(z.unknown()),
+    // content is omitted in output_item.done events (only present in .added as [])
+    content: z.array(z.unknown()).optional(),
+});
+
+const MessageItemShape = z.object({
+    id: z.string(),
+    type: z.literal("message"),
+    status: z.enum(["in_progress", "completed"]),
+    role: z.literal("assistant"),
+    content: z.array(z.unknown()),
+});
+
+const FunctionCallItemShape = z.object({
+    id: z.string(),
+    type: z.literal("function_call"),
+    call_id: z.string(),
+    name: z.string(),
+    arguments: z.string(),
+    status: z.enum(["in_progress", "completed"]),
+});
+// ────────────────────────────────────────────────────────────────────────────
 
 @Injectable()
 export class PingPongRuntimeService implements AgentRuntimePort {
@@ -101,22 +133,22 @@ export class PingPongRuntimeService implements AgentRuntimePort {
 
         async function* streamReasoningBlock(
             model: typeof llm,
-            prompt: string,
+            messages: BaseMessage[],
             outputIndex: number,
         ): AsyncIterable<ResponseStreamEvent> {
-            const reasoningId = `rs_${randomUUID()}`;
+            const reasoningId = `rs__${randomUUID()}`;
 
             // output_item.added
             yield {
                 type: "response.output_item.added",
                 sequence_number: seq++,
                 output_index: outputIndex,
-                item: {
+                item: ReasoningItemShape.parse({
                     id: reasoningId,
                     type: "reasoning",
                     summary: [],
                     content: [],
-                },
+                }),
             };
 
             // reasoning_summary_part.added
@@ -132,7 +164,17 @@ export class PingPongRuntimeService implements AgentRuntimePort {
             // stream deltas
             let accumulated = "";
             // TODO: REMOVE BEFORE PRODUCTION
-            for await (const chunk of await model.stream([new HumanMessage(prompt)])) {
+            for await (const chunk of await model.stream(messages)) {
+                // chunk.content is typed as MessageContent = string | MessageContentComplex[].
+                // It is a plain string for text-only streaming deltas (the common case with
+                // text-generation models). It is a MessageContentComplex[] when the model returns
+                // structured content — e.g. image parts ({type:"image_url"}), tool call
+                // descriptions ({type:"tool_use"}), or tool result parts ({type:"tool_result"}).
+                // Non-string content is silently dropped here ("") because this scaffold only
+                // forwards text deltas for reasoning/message blocks.
+                // TODO(isb-0020): When LangGraph is wired, route non-string content parts through
+                // the appropriate streaming event types (e.g. image → response.output_item.added
+                // with type:"image_url"; tool call → response.function_call_arguments.delta).
                 const text = typeof chunk.content === "string" ? chunk.content : "";
                 if (text) {
                     accumulated += text;
@@ -175,11 +217,11 @@ export class PingPongRuntimeService implements AgentRuntimePort {
                 type: "response.output_item.done",
                 sequence_number: seq++,
                 output_index: outputIndex,
-                item: {
+                item: ReasoningItemShape.parse({
                     id: reasoningId,
                     type: "reasoning",
                     summary: [{ type: "summary_text", text: accumulated }],
-                },
+                }),
             };
         }
 
@@ -195,13 +237,13 @@ export class PingPongRuntimeService implements AgentRuntimePort {
                 type: "response.output_item.added",
                 sequence_number: seq++,
                 output_index: outputIndex,
-                item: {
+                item: MessageItemShape.parse({
                     id: msgId,
                     type: "message",
                     status: "in_progress",
                     role: "assistant",
                     content: [],
-                },
+                }),
             };
 
             // content_part.added
@@ -222,6 +264,16 @@ export class PingPongRuntimeService implements AgentRuntimePort {
             let accumulated = "";
             // TODO: REMOVE BEFORE PRODUCTION
             for await (const chunk of await model.stream([new HumanMessage(prompt)])) {
+                // chunk.content is typed as MessageContent = string | MessageContentComplex[].
+                // It is a plain string for text-only streaming deltas (the common case with
+                // text-generation models). It is a MessageContentComplex[] when the model returns
+                // structured content — e.g. image parts ({type:"image_url"}), tool call
+                // descriptions ({type:"tool_use"}), or tool result parts ({type:"tool_result"}).
+                // Non-string content is silently dropped here ("") because this scaffold only
+                // forwards text deltas for reasoning/message blocks.
+                // TODO(isb-0020): When LangGraph is wired, route non-string content parts through
+                // the appropriate streaming event types (e.g. image → response.output_item.added
+                // with type:"image_url"; tool call → response.function_call_arguments.delta).
                 const text = typeof chunk.content === "string" ? chunk.content : "";
                 if (text) {
                     accumulated += text;
@@ -265,13 +317,13 @@ export class PingPongRuntimeService implements AgentRuntimePort {
                 type: "response.output_item.done",
                 sequence_number: seq++,
                 output_index: outputIndex,
-                item: {
+                item: MessageItemShape.parse({
                     id: msgId,
                     type: "message",
                     status: "completed",
                     role: "assistant",
                     content: [{ type: "output_text", text: accumulated, annotations: [] }],
-                },
+                }),
             };
         }
 
@@ -325,7 +377,11 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         // ── OUTPUT 0: reasoning ─────────────────────────────────────────────────
         yield* streamReasoningBlock(
             llm,
-            `Think step by step about what the user is asking: ${request.input}`,
+            [
+                new HumanMessage(
+                    `Think step by step about what the user is asking: ${request.input}`,
+                ),
+            ],
             0,
         );
 
@@ -335,7 +391,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         // ── OUTPUT 2: reasoning ─────────────────────────────────────────────────
         yield* streamReasoningBlock(
             llm,
-            `Think about what tool you need to fully answer: ${request.input}`,
+            [new HumanMessage(`Think about what tool you need to fully answer: ${request.input}`)],
             2,
         );
 
@@ -347,14 +403,14 @@ export class PingPongRuntimeService implements AgentRuntimePort {
             type: "response.output_item.added",
             sequence_number: seq++,
             output_index: 3,
-            item: {
+            item: FunctionCallItemShape.parse({
                 id: fnCallId,
                 type: "function_call",
                 call_id: callId,
                 name: "get_weather",
                 arguments: "",
                 status: "in_progress",
-            },
+            }),
         };
 
         let argsAccumulated = "";
@@ -407,20 +463,28 @@ export class PingPongRuntimeService implements AgentRuntimePort {
             type: "response.output_item.done",
             sequence_number: seq++,
             output_index: 3,
-            item: {
+            item: FunctionCallItemShape.parse({
                 id: fnCallId,
                 type: "function_call",
                 call_id: callId,
                 name: "get_weather",
                 arguments: finalArgs,
                 status: "completed",
-            },
+            }),
         };
 
         // ── OUTPUT 4: reasoning ─────────────────────────────────────────────────
         yield* streamReasoningBlock(
             llm,
-            "Reflect on what get_weather would return and how to use it.",
+            [
+                new HumanMessage(String(request.input)),
+                new ToolMessage({
+                    content: `{"temperature": 22, "unit": "celsius", "description": "Partly cloudy"}`,
+                    tool_call_id: callId,
+                    name: "get_weather",
+                }),
+                new HumanMessage("Reflect on the tool result and how to use it in your answer."),
+            ],
             4,
         );
 
