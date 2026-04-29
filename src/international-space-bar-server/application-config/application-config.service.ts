@@ -81,17 +81,20 @@ export class ApplicationConfigService {
      * Load and parse `config.<env>.yaml`, then resolve secret references.
      */
     private loadConfig(env: ProjectEnvironment): Record<string, unknown> {
-        // Construct config file path relative to project root (where process is run)
-        // TODO: This is fragile - cosider supporting strategies like searching upwards for the
-        // config file or allowing an explicit path via CLI/env var or both
-        const configPath = join(process.cwd(), `config.${env}.yaml`);
+        // Config path precedence: --config CLI arg > ISB_CONFIG_PATH env var > default
+        // NOTE: search-upward strategy is intentionally deferred; use explicit overrides for now
+        const configPath =
+            this.cliArgs.config ??
+            process.env.ISB_CONFIG_PATH ??
+            join(process.cwd(), `config.${env}.yaml`);
 
         let raw: string;
         try {
             raw = readFileSync(configPath, "utf-8");
         } catch (err) {
             throw new ConfigurationException(
-                `Cannot read config file at "${configPath}": ${(err as Error).message}`,
+                `Cannot read config file at "${configPath}": ${(err as Error).message}. ` +
+                    "Override the path with --config <path> or ISB_CONFIG_PATH env var.",
             );
         }
 
