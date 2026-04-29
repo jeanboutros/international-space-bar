@@ -186,4 +186,82 @@ void describe("ConfigSchema", () => {
         // --- Assert ---
         assert.equal(result.success, false);
     });
+
+    // -----------------------------------------------------------------------
+    // TC-3: logger.level enum validation (isb-0055)
+    // -----------------------------------------------------------------------
+
+    /**
+     * WHAT: A valid pino log level ("trace") passes schema validation.
+     * WHY: AC-1 — the level enum must accept all six pino levels so valid
+     *      configurations are not wrongly rejected at startup.
+     * STEPS:
+     *   Arrange — build a config with logger.level set to "trace" (lowest valid level)
+     *   Act — call ConfigSchema.safeParse
+     *   Assert — result.success is true and the level value is preserved
+     */
+    void it('accepts valid pino level "trace" for logger.level', () => {
+        // --- Arrange ---
+        const input = {
+            version: 1,
+            logger: { type: "pino", logFilePath: "./logs/app.log", level: "trace" },
+        };
+
+        // --- Act ---
+        const result = ConfigSchema.safeParse(input);
+
+        // --- Assert ---
+        assert.ok(result.success);
+        // Level value is preserved in parsed output
+        assert.equal(result.data.logger?.level, "trace");
+    });
+
+    /**
+     * WHAT: An invalid log level string ("verbose") is rejected by the schema.
+     * WHY: AC-1 — the level field uses z.enum([...]) not z.string(); any value
+     *      outside the six pino levels must be caught at startup, not at runtime.
+     * STEPS:
+     *   Arrange — build a config with logger.level set to "verbose" (not a pino level)
+     *   Act — call ConfigSchema.safeParse
+     *   Assert — result.success is false
+     */
+    void it('rejects invalid log level string "verbose" for logger.level', () => {
+        // --- Arrange ---
+        const input = {
+            version: 1,
+            logger: { type: "pino", logFilePath: "./logs/app.log", level: "verbose" },
+        };
+
+        // --- Act ---
+        const result = ConfigSchema.safeParse(input);
+
+        // --- Assert ---
+        // "verbose" is not in the enum ["fatal","error","warn","info","debug","trace"]
+        assert.equal(result.success, false);
+    });
+
+    /**
+     * WHAT: Omitting logger.level (undefined) passes schema validation.
+     * WHY: AC-1 — the level field is .optional(); absence must be valid so the
+     *      service-level fallback to "info" (AC-2) is reachable without a schema error.
+     * STEPS:
+     *   Arrange — build a config with a logger section but no level key
+     *   Act — call ConfigSchema.safeParse
+     *   Assert — result.success is true and level is undefined in parsed output
+     */
+    void it("passes when logger.level is omitted (optional field)", () => {
+        // --- Arrange ---
+        const input = {
+            version: 1,
+            logger: { type: "pino", logFilePath: "./logs/app.log" },
+        };
+
+        // --- Act ---
+        const result = ConfigSchema.safeParse(input);
+
+        // --- Assert ---
+        assert.ok(result.success);
+        // level is absent — undefined signals the fallback path in PinoLoggerService
+        assert.equal(result.data.logger?.level, undefined);
+    });
 });
