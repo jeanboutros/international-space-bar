@@ -12,6 +12,7 @@ void describe("GET /health", () => {
     let server: Server;
 
     before(async () => {
+        process.env.ISB_PROJECT_ENVIRONMENT = "test";
         process.env.ISB_OPENRESPONSES_API_KEY = "test-key";
         const moduleRef = await Test.createTestingModule({
             imports: [AppModule],
