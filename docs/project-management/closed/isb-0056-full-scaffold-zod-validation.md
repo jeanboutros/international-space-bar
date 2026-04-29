@@ -187,3 +187,13 @@ assert.throws(
 - Known constraint: generated schemas use `zod/v4` import internally; scaffold uses `zod`. No conflict — both resolve to the same Zod 4 instance in this project.
 - All scaffold code remains marked `// TODO: REMOVE BEFORE PRODUCTION`. No change to scaffold lifecycle.
 - isb-0054 (closed) introduced the 3 hand-rolled item schemas; this ticket extends that pattern to all generated event schemas.
+
+## Completion
+
+**Closed**: 2026-04-29  
+**Phase C**: APPROVED (Challenger, loop 2 — docs fix + gateway revert)  
+**Commits**:
+- `df5f3bf` — feat(openresponses): add Zod parse validation to all 20 scaffold objects
+- `8c4be4b` — test(openresponses): add schema smoke tests for scaffold validation
+
+All 16 acceptance criteria met. pnpm check exits 0. All tests pass.
