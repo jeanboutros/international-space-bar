@@ -1,4 +1,5 @@
-import { Body, Controller, HttpCode, Inject, Post, UseGuards, UsePipes } from "@nestjs/common";
+import { Body, Controller, HttpCode, Inject, Post, Res, UseGuards, UsePipes } from "@nestjs/common";
+import type { Response as ExpressResponse } from "express";
 import { BearerAuthGuard } from "../common/bearer-auth.guard.js";
 import { ZodValidationPipe } from "../common/zod-validation.pipe.js";
 import { CreateResponseSchema } from "./responses.schemas.js";
@@ -17,7 +18,24 @@ export class ResponsesController {
     @Post()
     @HttpCode(200)
     @UsePipes(new ZodValidationPipe(CreateResponseSchema))
-    create(@Body() body: CreateResponseBody) {
-        return this.responses.create(body);
+    async create(
+        @Body() body: CreateResponseBody,
+        @Res({ passthrough: false }) res: ExpressResponse,
+    ) {
+        if (body.stream) {
+            res.setHeader("Content-Type", "text/event-stream");
+            res.setHeader("Cache-Control", "no-cache");
+            res.setHeader("Connection", "keep-alive");
+
+            for await (const event of this.responses.createStream(body)) {
+                res.write(`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`);
+            }
+
+            res.write("data: [DONE]\n\n");
+            res.end();
+            return;
+        }
+
+        res.json(await this.responses.create(body));
     }
 }

@@ -1,7 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { Inject, Injectable } from "@nestjs/common";
 import { AGENT_RUNTIME_PORT, type AgentRuntimePort } from "./agent-runtime.port.js";
-import type { CreateResponseBody, ResponseResource } from "./responses.types.js";
+import type {
+    CreateResponseBody,
+    ResponseResource,
+    ResponseStreamEvent,
+} from "./responses.types.js";
 
 @Injectable()
 export class ResponsesService {
@@ -15,6 +19,17 @@ export class ResponsesService {
         const input = typeof body.input === "string" ? body.input : JSON.stringify(body.input);
 
         return this.runtime.invoke({
+            model: body.model,
+            input,
+            instructions: body.instructions,
+            requestId: `req_${randomUUID()}`,
+        });
+    }
+
+    createStream(body: CreateResponseBody): AsyncIterable<ResponseStreamEvent> {
+        const input = typeof body.input === "string" ? body.input : JSON.stringify(body.input);
+
+        return this.runtime.stream({
             model: body.model,
             input,
             instructions: body.instructions,

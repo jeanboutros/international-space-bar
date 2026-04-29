@@ -9,7 +9,7 @@ export class SecretNotFoundException extends ApplicationException {
         super(
             "SECRET_NOT_FOUND",
             `Secret "${key}" not found in environment variables and no default provided. ` +
-            `Set the ${key} environment variable or provide a default.`,
+                `Set the ${key} environment variable or provide a default.`,
         );
         this.name = "SecretNotFoundException";
     }

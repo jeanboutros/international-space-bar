@@ -425,15 +425,15 @@ export class PingPongRuntimeService implements AgentRuntimePort {
                 (chunk.tool_calls as Array<{ args?: string }> | undefined) ??
                 (
                     chunk.additional_kwargs as
-                        | { tool_calls?: Array<{ function?: { arguments?: string } }> }
-                        | undefined
+                    | { tool_calls?: Array<{ function?: { arguments?: string } }> }
+                    | undefined
                 )?.tool_calls;
 
             if (toolCalls && toolCalls.length > 0) {
                 const tc = toolCalls[0];
                 const fragment =
                     typeof (tc as { function?: { arguments?: string } }).function?.arguments ===
-                    "string"
+                        "string"
                         ? ((tc as { function?: { arguments?: string } }).function?.arguments ?? "")
                         : "";
                 if (fragment) {
