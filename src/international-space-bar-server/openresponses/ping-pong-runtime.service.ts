@@ -1,7 +1,11 @@
+// SCAFFOLD: Temporary file. Real LLM calls via ChatOllama until LangGraph is wired.
+// TODO(isb-0020): Delete this file entirely when LangGraph adapter is wired.
 import { randomUUID } from "node:crypto";
+import { HumanMessage } from "@langchain/core/messages"; // TODO: REMOVE BEFORE PRODUCTION
+import { ChatOllama } from "@langchain/ollama"; // TODO: REMOVE BEFORE PRODUCTION
 import { Injectable } from "@nestjs/common";
 import type { AgentInvokeRequest, AgentRuntimePort } from "./agent-runtime.port.js";
-import type { ResponseResource } from "./responses.types.js";
+import type { ResponseResource, ResponseStreamEvent } from "./responses.types.js";
 
 @Injectable()
 export class PingPongRuntimeService implements AgentRuntimePort {
@@ -60,5 +64,382 @@ export class PingPongRuntimeService implements AgentRuntimePort {
             prompt_cache_key: null,
             incomplete_details: null,
         });
+    }
+
+    // stream() — scaffold implementation using ChatOllama.
+    // Fires 6 LLM calls producing: reasoning → message → reasoning → function_call → reasoning → message
+    // TODO(isb-0020): Delete this entire method when LangGraph adapter is wired.
+    async *stream(request: AgentInvokeRequest): AsyncIterable<ResponseStreamEvent> {
+        const respId = `resp_${randomUUID()}`;
+        let seq = 0;
+        const now = Math.floor(Date.now() / 1000);
+
+        // TODO: REMOVE BEFORE PRODUCTION
+        const llm = new ChatOllama({ model: "gemma4:e2b", baseUrl: "http://localhost:11434" });
+
+        // ── Tool for index 3 ────────────────────────────────────────────────────
+        const weatherTool = {
+            type: "function" as const,
+            function: {
+                name: "get_weather",
+                description: "Get the current weather for a location",
+                parameters: {
+                    type: "object",
+                    properties: {
+                        location: { type: "string", description: "City name" },
+                        unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+                    },
+                    required: ["location"],
+                },
+            },
+        };
+
+        // TODO: REMOVE BEFORE PRODUCTION
+        const llmWithTools = llm.bindTools([weatherTool]);
+
+        // ── Inner helpers closing over `seq` ────────────────────────────────────
+
+        async function* streamReasoningBlock(
+            model: typeof llm,
+            prompt: string,
+            outputIndex: number,
+        ): AsyncIterable<ResponseStreamEvent> {
+            const reasoningId = `rs_${randomUUID()}`;
+
+            // output_item.added
+            yield {
+                type: "response.output_item.added",
+                sequence_number: seq++,
+                output_index: outputIndex,
+                item: {
+                    id: reasoningId,
+                    type: "reasoning",
+                    summary: [],
+                    content: [],
+                },
+            };
+
+            // reasoning_summary_part.added
+            yield {
+                type: "response.reasoning_summary_part.added",
+                sequence_number: seq++,
+                item_id: reasoningId,
+                output_index: outputIndex,
+                summary_index: 0,
+                part: { type: "summary_text" as const, text: "" },
+            } as unknown as ResponseStreamEvent;
+
+            // stream deltas
+            let accumulated = "";
+            // TODO: REMOVE BEFORE PRODUCTION
+            for await (const chunk of await model.stream([new HumanMessage(prompt)])) {
+                const text = typeof chunk.content === "string" ? chunk.content : "";
+                if (text) {
+                    accumulated += text;
+                    yield {
+                        type: "response.reasoning_summary_text.delta",
+                        sequence_number: seq++,
+                        item_id: reasoningId,
+                        output_index: outputIndex,
+                        summary_index: 0,
+                        delta: text,
+                    };
+                }
+            }
+
+            // reasoning_summary.done
+            yield {
+                type: "response.reasoning_summary_text.done",
+                sequence_number: seq++,
+                item_id: reasoningId,
+                output_index: outputIndex,
+                summary_index: 0,
+                text: accumulated,
+            };
+
+            // reasoning_summary_part.done
+            yield {
+                type: "response.reasoning_summary_part.done",
+                sequence_number: seq++,
+                item_id: reasoningId,
+                output_index: outputIndex,
+                summary_index: 0,
+                part: {
+                    type: "summary_text" as const,
+                    text: accumulated,
+                },
+            } as unknown as ResponseStreamEvent;
+
+            // output_item.done
+            yield {
+                type: "response.output_item.done",
+                sequence_number: seq++,
+                output_index: outputIndex,
+                item: {
+                    id: reasoningId,
+                    type: "reasoning",
+                    summary: [{ type: "summary_text", text: accumulated }],
+                },
+            };
+        }
+
+        async function* streamMessageBlock(
+            model: typeof llm,
+            prompt: string,
+            outputIndex: number,
+        ): AsyncIterable<ResponseStreamEvent> {
+            const msgId = `msg_${randomUUID()}`;
+
+            // output_item.added
+            yield {
+                type: "response.output_item.added",
+                sequence_number: seq++,
+                output_index: outputIndex,
+                item: {
+                    id: msgId,
+                    type: "message",
+                    status: "in_progress",
+                    role: "assistant",
+                    content: [],
+                },
+            };
+
+            // content_part.added
+            yield {
+                type: "response.content_part.added",
+                sequence_number: seq++,
+                item_id: msgId,
+                output_index: outputIndex,
+                content_index: 0,
+                part: {
+                    type: "output_text" as const,
+                    text: "",
+                    annotations: [],
+                },
+            } as unknown as ResponseStreamEvent;
+
+            // stream deltas
+            let accumulated = "";
+            // TODO: REMOVE BEFORE PRODUCTION
+            for await (const chunk of await model.stream([new HumanMessage(prompt)])) {
+                const text = typeof chunk.content === "string" ? chunk.content : "";
+                if (text) {
+                    accumulated += text;
+                    yield {
+                        type: "response.output_text.delta",
+                        sequence_number: seq++,
+                        item_id: msgId,
+                        output_index: outputIndex,
+                        content_index: 0,
+                        delta: text,
+                    };
+                }
+            }
+
+            // output_text.done
+            yield {
+                type: "response.output_text.done",
+                sequence_number: seq++,
+                item_id: msgId,
+                output_index: outputIndex,
+                content_index: 0,
+                text: accumulated,
+            };
+
+            // content_part.done
+            yield {
+                type: "response.content_part.done",
+                sequence_number: seq++,
+                item_id: msgId,
+                output_index: outputIndex,
+                content_index: 0,
+                part: {
+                    type: "output_text" as const,
+                    text: accumulated,
+                    annotations: [],
+                },
+            } as unknown as ResponseStreamEvent;
+
+            // output_item.done
+            yield {
+                type: "response.output_item.done",
+                sequence_number: seq++,
+                output_index: outputIndex,
+                item: {
+                    id: msgId,
+                    type: "message",
+                    status: "completed",
+                    role: "assistant",
+                    content: [{ type: "output_text", text: accumulated, annotations: [] }],
+                },
+            };
+        }
+
+        // ── response.created ────────────────────────────────────────────────────
+        const inProgressResponse: ResponseResource = {
+            id: respId,
+            object: "response",
+            created_at: now,
+            completed_at: null,
+            status: "in_progress",
+            model: request.model,
+            previous_response_id: null,
+            instructions: null,
+            output: [],
+            error: null,
+            tools: [],
+            tool_choice: "auto",
+            truncation: "disabled",
+            parallel_tool_calls: true,
+            text: { format: { type: "text" } },
+            top_p: 1,
+            presence_penalty: 0,
+            frequency_penalty: 0,
+            top_logprobs: 0,
+            temperature: 1,
+            reasoning: null,
+            usage: {
+                input_tokens: 0,
+                output_tokens: 0,
+                total_tokens: 0,
+                input_tokens_details: { cached_tokens: 0 },
+                output_tokens_details: { reasoning_tokens: 0 },
+            },
+            max_output_tokens: null,
+            max_tool_calls: null,
+            store: true,
+            background: false,
+            service_tier: "default",
+            metadata: {},
+            safety_identifier: null,
+            prompt_cache_key: null,
+            incomplete_details: null,
+        };
+
+        yield {
+            type: "response.created",
+            sequence_number: seq++,
+            response: inProgressResponse,
+        };
+
+        // ── OUTPUT 0: reasoning ─────────────────────────────────────────────────
+        yield* streamReasoningBlock(
+            llm,
+            `Think step by step about what the user is asking: ${request.input}`,
+            0,
+        );
+
+        // ── OUTPUT 1: message ───────────────────────────────────────────────────
+        yield* streamMessageBlock(llm, `Respond helpfully to: ${request.input}`, 1);
+
+        // ── OUTPUT 2: reasoning ─────────────────────────────────────────────────
+        yield* streamReasoningBlock(
+            llm,
+            `Think about what tool you need to fully answer: ${request.input}`,
+            2,
+        );
+
+        // ── OUTPUT 3: function_call ─────────────────────────────────────────────
+        const fnCallId = `fc_${randomUUID()}`;
+        const callId = `call_${randomUUID()}`;
+
+        yield {
+            type: "response.output_item.added",
+            sequence_number: seq++,
+            output_index: 3,
+            item: {
+                id: fnCallId,
+                type: "function_call",
+                call_id: callId,
+                name: "get_weather",
+                arguments: "",
+                status: "in_progress",
+            },
+        };
+
+        let argsAccumulated = "";
+        // TODO: REMOVE BEFORE PRODUCTION
+        for await (const chunk of await llmWithTools.stream([
+            new HumanMessage(
+                `You must call the get_weather function. The user asked: ${request.input}`,
+            ),
+        ])) {
+            // Collect tool call argument fragments from the chunk
+            const toolCalls =
+                (chunk.tool_calls as Array<{ args?: string }> | undefined) ??
+                (
+                    chunk.additional_kwargs as
+                        | { tool_calls?: Array<{ function?: { arguments?: string } }> }
+                        | undefined
+                )?.tool_calls;
+
+            if (toolCalls && toolCalls.length > 0) {
+                const tc = toolCalls[0];
+                const fragment =
+                    typeof (tc as { function?: { arguments?: string } }).function?.arguments ===
+                    "string"
+                        ? ((tc as { function?: { arguments?: string } }).function?.arguments ?? "")
+                        : "";
+                if (fragment) {
+                    argsAccumulated += fragment;
+                    yield {
+                        type: "response.function_call_arguments.delta",
+                        sequence_number: seq++,
+                        item_id: fnCallId,
+                        output_index: 3,
+                        delta: fragment,
+                    };
+                }
+            }
+        }
+
+        const finalArgs = argsAccumulated || "{}";
+
+        yield {
+            type: "response.function_call_arguments.done",
+            sequence_number: seq++,
+            item_id: fnCallId,
+            output_index: 3,
+            arguments: finalArgs,
+        };
+
+        yield {
+            type: "response.output_item.done",
+            sequence_number: seq++,
+            output_index: 3,
+            item: {
+                id: fnCallId,
+                type: "function_call",
+                call_id: callId,
+                name: "get_weather",
+                arguments: finalArgs,
+                status: "completed",
+            },
+        };
+
+        // ── OUTPUT 4: reasoning ─────────────────────────────────────────────────
+        yield* streamReasoningBlock(
+            llm,
+            "Reflect on what get_weather would return and how to use it.",
+            4,
+        );
+
+        // ── OUTPUT 5: message ───────────────────────────────────────────────────
+        yield* streamMessageBlock(
+            llm,
+            `Give a final helpful answer incorporating weather info for: ${request.input}`,
+            5,
+        );
+
+        // ── response.completed ──────────────────────────────────────────────────
+        yield {
+            type: "response.completed",
+            sequence_number: seq++,
+            response: {
+                ...inProgressResponse,
+                status: "completed",
+                completed_at: Math.floor(Date.now() / 1000),
+            },
+        };
     }
 }
