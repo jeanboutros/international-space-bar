@@ -65,6 +65,13 @@ The following are **mandatory rejection criteria**, not suggestions or nice-to-h
 - **Reject if**: Framework-specific types leak into domain interfaces
 - **Reject if**: Business logic depends on infrastructure details
 
+### Folder structure
+- **Reject if**: A file is placed in the wrong directory for its layer — verify against `AGENTS.md` "Project structure" and the "Allowed imports per layer" table
+- **Reject if**: A pure type or interface lives outside `interfaces/` (or `common/interfaces/` for the server)
+- **Reject if**: A NestJS-specific file (decorator, module, guard, pipe) lives inside a framework-free layer (`interfaces/`, `services/`, `agent/`, `llm/`, `tool/`, `workflow/`)
+- **Reject if**: An exception class lives outside `common/exceptions/` (server) or an equivalent shared location
+- **Reject if**: New files are added at the wrong nesting depth — e.g., a feature-specific file placed at the root level, or shared utilities buried inside a feature folder
+
 ### Code currency
 - **Reject if**: Deprecated APIs are used when current alternatives exist
 - **Reject if**: Patterns contradict current library documentation (verified via Context7)
@@ -85,6 +92,7 @@ The following are **mandatory rejection criteria**, not suggestions or nice-to-h
 ### Code smells
 - **Reject if**: Magic numbers or hardcoded values — extract to named constants or configuration
 - **Reject if**: Overly general exception handling (`catch (e) {}`, `catch (error: any)`) — catch specific error types, handle or rethrow with context
+- **Reject if**: Generic `Error` or `throw new Error(...)` anywhere in production code — always use a specialized exception extending `ApplicationException` with a machine-readable `code` field (e.g., `SecretNotFoundException`, `ConfigurationException`). If no suitable exception exists, create one in `common/exceptions/`
 - **Reject if**: Dead code, unreachable branches, or commented-out code left in place
 - **Reject if**: God objects or utility dumping grounds — modules that accumulate unrelated responsibilities
 - **Reject if**: Primitive obsession — using raw strings/numbers where a domain type or enum would be safer
@@ -120,6 +128,7 @@ The following are **mandatory rejection criteria**, not suggestions or nice-to-h
 | **Documentation** | Docs are accurate, code snippets match reality |
 | **Regressions** | No existing behaviour is broken |
 | **Architecture** | No new layered boundary violations (check imports) |
+| **Folder structure** | Files are in the correct directory for their layer per `AGENTS.md` |
 | **Scope creep** | No changes beyond what the ticket specifies |
 
 ## Constraints

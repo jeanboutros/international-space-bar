@@ -184,6 +184,7 @@ await bootstrap();
 
 ## Error Handling
 
+- **Never throw generic `Error`. Always use or create a specialized exception** that extends the project's base exception class (e.g., `ApplicationException`). Each exception must have a machine-readable `code` (e.g., `"SECRET_NOT_FOUND"`, `"CONFIGURATION_ERROR"`) for programmatic handling. If no suitable exception exists, create one in `common/exceptions/`.
 - Use NestJS exception filters for HTTP error responses.
 - Map domain errors to HTTP errors at the controller/filter boundary, not inside services.
 - Return structured error objects, not plain strings: `{ error: { type, message } }`.
