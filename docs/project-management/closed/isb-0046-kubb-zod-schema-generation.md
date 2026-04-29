@@ -4,10 +4,11 @@
 |---|---|
 | ID | isb-0046 |
 | Type | backend |
-| Status | open |
+| Status | closed |
 | Priority | high |
 | Epic | isb-epic-002 |
 | Dependencies | none |
+| Completed | 2026-04-29 |
 
 ## Background
 
@@ -148,3 +149,26 @@ Internal schemas (used only for type derivation) remain strict as generated — 
 ### CI note (non-AC)
 
 Once files are committed, the `generate:schemas` script should be re-run whenever `docs/openapi/openresponses.json` is updated. The resulting diff should be reviewed as part of the PR — the generated diff is the proof that a spec update was intentional and complete.
+
+---
+
+## Phase C Resolution
+
+**Date:** 2026-04-29
+**Status:** CLOSED — Phase C final review SATISFIED
+
+### Sub-tickets closed
+
+| Ticket | Title | Status |
+|--------|-------|--------|
+| isb-0048 | Install Kubb and generate schemas | closed |
+| isb-0049 | Wire generated schemas into responses layer | closed |
+| isb-0050 | Update tooling ignores and types | closed |
+| isb-0051 | Schema validation tests | closed |
+| isb-0052 | Schema generation docs | closed |
+
+All 5 implementation sub-tickets delivered. All acceptance criteria met. `pnpm check` exits 0, 69 tests pass.
+
+### Debt flagged
+
+`responses.schemas.ts` uses the deprecated Zod 4 `.passthrough()` method. Migration to `z.looseObject()` is blocked on Kubb providing typed shape exports. Tracked in **isb-0053** (low priority, non-blocking).
