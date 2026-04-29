@@ -1,6 +1,5 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { parseArgs } from "node:util";
 import { Inject, Injectable } from "@nestjs/common";
 import { parse as parseYaml } from "yaml";
 import { ConfigurationException } from "../common/exceptions/index.js";
@@ -10,6 +9,7 @@ import {
     SECRETS_STORE,
     VALID_ENVIRONMENTS,
 } from "../common/interfaces/index.js";
+import { CLI_ARGS, type CliArgs } from "./cli-args.js";
 import { resolveConfigSecrets } from "./resolve-config-secrets.js";
 
 /**
@@ -24,7 +24,10 @@ export class ApplicationConfigService {
     public readonly environment: ProjectEnvironment;
     private readonly config: Readonly<Record<string, unknown>>;
 
-    constructor(@Inject(SECRETS_STORE) private readonly secretsStore: ISecretsStore) {
+    constructor(
+        @Inject(CLI_ARGS) private readonly cliArgs: CliArgs,
+        @Inject(SECRETS_STORE) private readonly secretsStore: ISecretsStore,
+    ) {
         this.environment = this.resolveEnvironment();
         this.config = Object.freeze(this.loadConfig(this.environment));
     }
@@ -52,7 +55,7 @@ export class ApplicationConfigService {
      * CLI args take precedence over env var.
      */
     private resolveEnvironment(): ProjectEnvironment {
-        const cliEnv = this.parseCliEnvironment();
+        const cliEnv = this.cliArgs.environment;
         const envVar = process.env.ISB_PROJECT_ENVIRONMENT?.trim();
         const raw = cliEnv ?? envVar;
 
@@ -72,25 +75,6 @@ export class ApplicationConfigService {
         }
 
         return raw as ProjectEnvironment;
-    }
-
-    /**
-     * Parse `-e <env>` or `--environment <env>` from `process.argv`.
-     * Returns `undefined` if not provided.
-     */
-    private parseCliEnvironment(): string | undefined {
-        try {
-            const { values } = parseArgs({
-                options: {
-                    environment: { type: "string", short: "e" },
-                },
-                strict: false,
-            });
-            return values.environment as string | undefined;
-        } catch {
-            // If argv parsing fails (e.g. unexpected flags from tsx), ignore
-            return undefined;
-        }
     }
 
     /**
