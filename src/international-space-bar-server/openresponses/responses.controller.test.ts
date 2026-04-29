@@ -6,7 +6,7 @@ import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import request from "supertest";
 import { AppModule } from "../app.module.js";
-import type { Message, OutputTextContent, ResponseResource } from "./responses.types.js";
+import type { Message, OutputTextContent, ResponseResource, Usage } from "./responses.types.js";
 
 const VALID_BODY = { model: "ping-pong", input: "ping" };
 const AUTH_HEADER = "Bearer test-key";
@@ -69,9 +69,10 @@ void describe("POST /v1/responses", () => {
         assert.deepStrictEqual(content.annotations, []);
 
         assert.ok(body.usage);
-        assert.equal(body.usage.input_tokens, 0);
-        assert.equal(body.usage.output_tokens, 1);
-        assert.equal(body.usage.total_tokens, 1);
+        const usage = body.usage as Usage;
+        assert.equal(usage.input_tokens, 0);
+        assert.equal(usage.output_tokens, 1);
+        assert.equal(usage.total_tokens, 1);
     });
 
     void it("returns 401 without authorization header", async () => {
