@@ -23,6 +23,6 @@ import { PinoLoggerService } from "./pino-logger.service.js";
 @Module({
     imports: [ApplicationConfigModule],
     providers: [{ provide: LOGGER, useClass: PinoLoggerService }, PinoLoggerService],
-    exports: [LOGGER, PinoLoggerService],
+    exports: [LOGGER],
 })
 export class LoggingModule {}

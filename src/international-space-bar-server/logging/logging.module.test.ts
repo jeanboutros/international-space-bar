@@ -4,8 +4,8 @@
  * Ticket: isb-0055
  *
  * Purpose: Integration tests that verify PinoLoggerService is resolvable
- * when LoggingModule is imported, and that @Global() makes it injectable
- * into modules that do NOT import LoggingModule themselves.
+ * when LoggingModule is imported, and that @Global() makes the LOGGER token
+ * injectable into modules that do NOT import LoggingModule themselves.
  * Uses @nestjs/testing Test.createTestingModule — no HTTP server started.
  */
 import "reflect-metadata";
@@ -15,6 +15,8 @@ import { Inject, Injectable, Module } from "@nestjs/common";
 import type { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
 import { ApplicationConfigService } from "../application-config/application-config.service.js";
+import type { ILogger } from "../common/interfaces/logger.port.js";
+import { LOGGER } from "../common/interfaces/logger.port.js";
 import { LoggingModule } from "./logging.module.js";
 import { PinoLoggerService } from "./pino-logger.service.js";
 
@@ -38,11 +40,11 @@ const mockConfigService = {
 /**
  * A consumer service defined inline to test global injection.
  * It does NOT live in a module that imports LoggingModule — only @Global()
- * makes PinoLoggerService available here.
+ * makes the LOGGER token available here via ILogger interface.
  */
 @Injectable()
 class TestConsumerService {
-    constructor(@Inject(PinoLoggerService) public readonly logger: PinoLoggerService) {}
+    constructor(@Inject(LOGGER) public readonly logger: ILogger) {}
 }
 
 /**
@@ -145,9 +147,9 @@ void describe("LoggingModule", () => {
     // -----------------------------------------------------------------------
 
     /**
-     * LoggingModule — @Global() injection.
-     * Verifies that PinoLoggerService is injectable in modules that do NOT
-     * explicitly import LoggingModule.
+     * LoggingModule — @Global() injection via LOGGER token.
+     * Verifies that the LOGGER token (bound to ILogger) is injectable in modules
+     * that do NOT explicitly import LoggingModule.
      */
     void describe("@Global() injection", () => {
         let moduleRef: TestingModule;
@@ -170,28 +172,42 @@ void describe("LoggingModule", () => {
 
         /**
          * WHAT: A module that does NOT import LoggingModule can still inject
-         *       PinoLoggerService because LoggingModule is decorated @Global().
+         *       via the LOGGER token because LoggingModule is decorated @Global().
          * WHY: AC-5 — @Global() is the mechanism that removes the need for every
          *      consuming module to add LoggingModule to its imports array.
-         *      This test proves the @Global() decorator is actually present and
-         *      effective, not just documented.
+         *      Callers must inject via LOGGER token / ILogger interface, not the
+         *      concrete PinoLoggerService class (which is no longer exported).
+         *      This test proves the @Global() decorator is active and the token
+         *      resolves to a fully-functional ILogger implementation.
          * STEPS:
          *   Arrange — IsolatedConsumerModule imports nothing; it only declares
-         *             TestConsumerService which constructor-injects PinoLoggerService
+         *             TestConsumerService which constructor-injects via LOGGER token
          *   Act — compile the testing module and resolve TestConsumerService
-         *   Assert — TestConsumerService.logger is an instance of PinoLoggerService
+         *   Assert — TestConsumerService.logger exposes the ILogger method surface
          */
-        void it("injects PinoLoggerService into a module that does not import LoggingModule", () => {
+        void it("injects ILogger (via LOGGER token) into a module that does not import LoggingModule", () => {
             // --- Act ---
             const consumer = moduleRef.get(TestConsumerService);
 
             // --- Assert ---
             assert.ok(consumer, "TestConsumerService should be resolvable");
-            assert.ok(
-                consumer.logger instanceof PinoLoggerService,
-                "PinoLoggerService should be injected into the isolated consumer module " +
-                    "without LoggingModule appearing in its imports — proving @Global() is active",
-            );
+            // Verify the injected value satisfies the ILogger contract rather than
+            // asserting the concrete class — callers must not depend on PinoLoggerService.
+            for (const method of [
+                "info",
+                "warn",
+                "error",
+                "debug",
+                "trace",
+                "fatal",
+                "child",
+            ] as const) {
+                assert.equal(
+                    typeof consumer.logger[method],
+                    "function",
+                    `LOGGER token must resolve to an ILogger — expected logger.${method} to be a function`,
+                );
+            }
         });
     });
 });
