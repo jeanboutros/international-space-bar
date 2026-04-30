@@ -22,25 +22,4 @@ export type WebSocketResponseCreateEvent = (CreateResponseBody & {
      * @type string
     */
     type: WebSocketResponseCreateEventTypeEnumKey;
-    /**
-     * @description This HTTP streaming field MUST NOT be sent in WebSocket `response.create` messages.
-     * @minLength 1
-     * @maxLength 0
-     * @type string | undefined
-    */
-    stream?: string;
-    /**
-     * @description This HTTP streaming options field MUST NOT be sent in WebSocket `response.create` messages.
-     * @minLength 1
-     * @maxLength 0
-     * @type string | undefined
-    */
-    stream_options?: string;
-    /**
-     * @description This HTTP background-mode field MUST NOT be sent in WebSocket `response.create` messages.
-     * @minLength 1
-     * @maxLength 0
-     * @type string | undefined
-    */
-    background?: string;
 });
