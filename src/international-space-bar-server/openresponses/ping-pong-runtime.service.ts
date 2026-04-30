@@ -3,9 +3,10 @@
 import { randomUUID } from "node:crypto";
 import { type BaseMessage, HumanMessage, ToolMessage } from "@langchain/core/messages"; // TODO: REMOVE BEFORE PRODUCTION
 import { ChatOllama } from "@langchain/ollama"; // TODO: REMOVE BEFORE PRODUCTION
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { z } from "zod";
-
+import type { ILogger } from "../common/interfaces/index.js";
+import { LOGGER } from "../common/interfaces/logger.port.js";
 import type { AgentInvokeRequest, AgentRuntimePort } from "./agent-runtime.port.js";
 import { responseCompletedStreamingEventSchema } from "./generated/zod/responseCompletedStreamingEventSchema.js";
 import { responseContentPartAddedStreamingEventSchema } from "./generated/zod/responseContentPartAddedStreamingEventSchema.js";
@@ -57,8 +58,9 @@ const FunctionCallItemShape = z.object({
 
 @Injectable()
 export class PingPongRuntimeService implements AgentRuntimePort {
-    // constructor(@Inject(LOGGER) private readonly logger: ILogger) {}
+    constructor(@Inject(LOGGER) private readonly logger: ILogger) {}
     invoke(request: AgentInvokeRequest): Promise<ResponseResource> {
+        this.logger.info(`Received ping with input: ${request.input}`);
         const now = Math.floor(Date.now() / 1000);
         return Promise.resolve(
             responseResourceSchema.parse({
@@ -117,16 +119,28 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         );
     }
 
-    // stream() — scaffold implementation using ChatOllama.
-    // Fires 6 LLM calls producing: reasoning → message → reasoning → function_call → reasoning → message
+    // stream() — scaffold implementation.
+    // When OLLAMA_BASE_URL is set and Ollama is reachable, produces full LLM streaming.
+    // Otherwise, falls back to a minimal "pong" streaming sequence for compliance testing.
     // TODO(isb-0020): Delete this entire method when LangGraph adapter is wired.
     async *stream(request: AgentInvokeRequest): AsyncIterable<ResponseStreamEvent> {
+        this.logger.info(`Received streaming ping with input: ${request.input}`);
         const respId = `resp_${randomUUID()}`;
         let seq = 0;
         const now = Math.floor(Date.now() / 1000);
 
-        // TODO: REMOVE BEFORE PRODUCTION
-        const llm = new ChatOllama({ model: "gemma4:e2b", baseUrl: "http://localhost:11434" });
+        // Check if Ollama is available for the full streaming experience.
+        // If not, fall back to a minimal ping-pong streaming sequence.
+        const ollamaBaseUrl = process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
+        const useOllama = await this.isOllamaReachable(ollamaBaseUrl);
+
+        if (!useOllama) {
+            yield* this.streamSimplePong(request, respId, seq, now);
+            return;
+        }
+
+        // ── Full LLM streaming (Ollama reachable) ───────────────────────────────
+        const llm = new ChatOllama({ model: "gemma4:e2b", baseUrl: ollamaBaseUrl });
 
         // ── Tool for index 3 ────────────────────────────────────────────────────
         const weatherTool = {
@@ -524,5 +538,186 @@ export class PingPongRuntimeService implements AgentRuntimePort {
                 completed_at: Math.floor(Date.now() / 1000),
             },
         });
+    }
+
+    // ── Simple pong streaming (no Ollama required) ──────────────────────────
+    // Produces a minimal streaming sequence for compliance testing:
+    //   response.created → content_part.added → output_text.delta →
+    //   output_text.done → content_part.done → output_item.done → response.completed
+    //
+    // This mirrors the structure of a real streaming response but uses
+    // a hardcoded "pong" text instead of LLM output.
+    private *streamSimplePong(
+        request: AgentInvokeRequest,
+        respId: string,
+        seq: number,
+        now: number,
+    ): AsyncIterable<ResponseStreamEvent> {
+        const msgId = `msg_${randomUUID()}`;
+
+        const inProgressResponse = responseResourceSchema.parse({
+            id: respId,
+            object: "response",
+            created_at: now,
+            completed_at: null,
+            status: "in_progress",
+            model: request.model,
+            previous_response_id: null,
+            instructions: null,
+            output: [],
+            error: null,
+            tools: [],
+            tool_choice: "auto",
+            truncation: "disabled",
+            parallel_tool_calls: true,
+            text: { format: { type: "text" } },
+            top_p: 1,
+            presence_penalty: 0,
+            frequency_penalty: 0,
+            top_logprobs: 0,
+            temperature: 1,
+            reasoning: null,
+            usage: {
+                input_tokens: 0,
+                output_tokens: 0,
+                total_tokens: 0,
+                input_tokens_details: { cached_tokens: 0 },
+                output_tokens_details: { reasoning_tokens: 0 },
+            },
+            max_output_tokens: null,
+            max_tool_calls: null,
+            store: true,
+            background: false,
+            service_tier: "default",
+            metadata: {},
+            safety_identifier: null,
+            prompt_cache_key: null,
+            incomplete_details: null,
+        });
+
+        // response.created
+        yield responseCreatedStreamingEventSchema.parse({
+            type: "response.created",
+            sequence_number: seq++,
+            response: inProgressResponse,
+        });
+
+        // output_item.added
+        yield responseOutputItemAddedStreamingEventSchema.parse({
+            type: "response.output_item.added",
+            sequence_number: seq++,
+            output_index: 0,
+            item: MessageItemShape.parse({
+                id: msgId,
+                type: "message",
+                status: "in_progress",
+                role: "assistant",
+                content: [],
+            }),
+        });
+
+        // content_part.added
+        yield responseContentPartAddedStreamingEventSchema.parse({
+            type: "response.content_part.added",
+            sequence_number: seq++,
+            item_id: msgId,
+            output_index: 0,
+            content_index: 0,
+            part: {
+                type: "output_text" as const,
+                text: "",
+                annotations: [],
+            },
+        });
+
+        // output_text.delta
+        yield responseOutputTextDeltaStreamingEventSchema.parse({
+            type: "response.output_text.delta",
+            sequence_number: seq++,
+            item_id: msgId,
+            output_index: 0,
+            content_index: 0,
+            delta: "pong",
+        });
+
+        // output_text.done
+        yield responseOutputTextDoneStreamingEventSchema.parse({
+            type: "response.output_text.done",
+            sequence_number: seq++,
+            item_id: msgId,
+            output_index: 0,
+            content_index: 0,
+            text: "pong",
+        });
+
+        // content_part.done
+        yield responseContentPartDoneStreamingEventSchema.parse({
+            type: "response.content_part.done",
+            sequence_number: seq++,
+            item_id: msgId,
+            output_index: 0,
+            content_index: 0,
+            part: {
+                type: "output_text" as const,
+                text: "pong",
+                annotations: [],
+            },
+        });
+
+        // output_item.done
+        yield responseOutputItemDoneStreamingEventSchema.parse({
+            type: "response.output_item.done",
+            sequence_number: seq++,
+            output_index: 0,
+            item: MessageItemShape.parse({
+                id: msgId,
+                type: "message",
+                status: "completed",
+                role: "assistant",
+                content: [{ type: "output_text", text: "pong", annotations: [] }],
+            }),
+        });
+
+        // response.completed
+        yield responseCompletedStreamingEventSchema.parse({
+            type: "response.completed",
+            sequence_number: seq++,
+            response: {
+                ...inProgressResponse,
+                status: "completed",
+                completed_at: Math.floor(Date.now() / 1000),
+                output: [
+                    {
+                        id: msgId,
+                        type: "message",
+                        status: "completed",
+                        role: "assistant",
+                        content: [{ type: "output_text", text: "pong", annotations: [] }],
+                    },
+                ],
+                usage: {
+                    input_tokens: 1,
+                    output_tokens: 1,
+                    total_tokens: 2,
+                    input_tokens_details: { cached_tokens: 0 },
+                    output_tokens_details: { reasoning_tokens: 0 },
+                },
+            },
+        });
+    }
+
+    // ── Ollama reachability check ──────────────────────────────────────────
+    private async isOllamaReachable(baseUrl: string): Promise<boolean> {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000);
+            const response = await fetch(`${baseUrl}/api/tags`, {
+                signal: controller.signal,
+            });
+            clearTimeout(timeoutId);
+            return response.ok;
+        } catch {
+            return false;
+        }
     }
 }
