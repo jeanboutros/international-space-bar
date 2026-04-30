@@ -5,15 +5,6 @@ import { ApplicationConfigService } from "./application-config/application-confi
 import { PinoLoggerService } from "./logging/pino-logger.service.js";
 import { OpenResponsesWsAdapter } from "./openresponses/ws-adapter.js";
 
-// TODO: Constants should all live in one place, ideally typed and validated via zod.
-// They are the last resort and the fallback for when config values are truly needed
-// and they are not provided via environment variables or config files. For example, the default
-// port is something that should be easily overridable by env vars or config, but we want to have a sane default if not provided.
-const DEFAULT_PORT = 3000;
-// TODO: Same as DEFAULT_PORT, we should ideally have a single source of truth for the default host,
-// and it should be overrideable via env vars or config.
-const DEFAULT_HOST = "127.0.0.1";
-
 async function bootstrap() {
     const app = await NestFactory.create(AppModule, { bufferLogs: true });
     // Must be called after module bootstrap and before app.listen().
@@ -26,24 +17,20 @@ async function bootstrap() {
     app.useWebSocketAdapter(new OpenResponsesWsAdapter(app));
 
     const config = app.get(ApplicationConfigService);
-    // TODO(isb-0059): migrate to typed get() once server.enableCors is in ConfigSchema
     if (config.get("server.enableCors")) {
-        const origins = config.get("server.corsOrigins", []);
+        const origins = config.get("server.corsOrigins");
         app.enableCors({ origin: origins });
     }
 
     logger.log(`Starting international-space-bar-server in ${String(config.environment)} mode ...`);
 
-    // TODO: handle the defaults at schema validation level to make the logic
-    // simpler here.
-    const port = config.get("server.port", DEFAULT_PORT);
-    const host = config.get("server.host", DEFAULT_HOST);
+    const port = config.get("server.port");
+    const host = config.get("server.host");
 
     logger.debug("Logging application debug information:");
-    // TODO(isb-0059): migrate to typed get() once server.enableCors is in ConfigSchema
     logger.debug(`Is CORS enabled? ${String(config.get("server.enableCors"))}`);
-    logger.debug(`Is server.port set? ${String(config.get("server.port", DEFAULT_PORT))}`);
-    logger.debug(`Is server.host set? ${String(config.get("server.host", DEFAULT_HOST))}`);
+    logger.debug(`Is server.port set? ${String(config.get("server.port"))}`);
+    logger.debug(`Is server.host set? ${String(config.get("server.host"))}`);
     logger.debug(`Is environment variable HOST set? ${process.env.HOST ?? "undefined"}`);
     logger.debug(`Is environment variable PORT set? ${process.env.PORT ?? "undefined"}`);
 

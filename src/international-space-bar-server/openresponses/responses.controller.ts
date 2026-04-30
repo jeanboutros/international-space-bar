@@ -2,11 +2,12 @@ import { Body, Controller, HttpCode, Inject, Post, Res, UseGuards, UsePipes } fr
 import type { Response as ExpressResponse } from "express";
 import { BearerAuthGuard } from "../common/bearer-auth.guard.js";
 import { ZodValidationPipe } from "../common/zod-validation.pipe.js";
+import { RESPONSES_ROUTE } from "../constants.js";
 import { CreateResponseSchema } from "./responses.schemas.js";
 import { ResponsesService } from "./responses.service.js";
 import type { CreateResponseBody } from "./responses.types.js";
 
-@Controller("v1/responses")
+@Controller(RESPONSES_ROUTE)
 @UseGuards(BearerAuthGuard)
 export class ResponsesController {
     private readonly responses: ResponsesService;

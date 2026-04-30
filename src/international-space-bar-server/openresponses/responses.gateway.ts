@@ -30,6 +30,7 @@ import {
 import type WebSocket from "ws";
 import type { ILogger } from "../common/interfaces/index.js";
 import { LOGGER } from "../common/interfaces/logger.port.js";
+import { API_KEY_ENV_VAR, BEARER_PREFIX, RESPONSES_WS_PATH } from "../constants.js";
 import { AGENT_RUNTIME_PORT, type AgentRuntimePort } from "./agent-runtime.port.js";
 import { webSocketErrorEventSchema } from "./generated/zod/webSocketErrorEventSchema.js";
 import { webSocketResponseCreateEventSchema } from "./generated/zod/webSocketResponseCreateEventSchema.js";
@@ -47,6 +48,8 @@ interface ConnectionState {
     processing: boolean;
     /** Queue of pending messages to process sequentially */
     queue: Array<{ data: unknown; raw: string }>;
+    /** Abort controller for the current response stream */
+    abortController?: AbortController; //TODO: consider making this mandatory
 }
 
 // ── Auth helpers ──────────────────────────────────────────────────────────
@@ -62,13 +65,13 @@ function isTokenValid(token: string, expected: string): boolean {
 }
 
 function validateAuth(request: IncomingMessage): boolean {
-    const apiKey = process.env.ISB_OPENRESPONSES_API_KEY;
+    const apiKey = process.env[API_KEY_ENV_VAR];
     if (!apiKey) return false;
 
     const authorization = request.headers.authorization;
-    if (!authorization?.startsWith("Bearer ")) return false;
+    if (!authorization?.startsWith(BEARER_PREFIX)) return false;
 
-    const token = authorization.slice(7);
+    const token = authorization.slice(BEARER_PREFIX.length);
     return isTokenValid(token, apiKey);
 }
 
@@ -99,7 +102,7 @@ function sendError(
 type WsClient = InstanceType<typeof WebSocket>;
 
 @Injectable()
-@WebSocketGateway({ path: "/v1/responses" })
+@WebSocketGateway({ path: RESPONSES_WS_PATH })
 export class ResponsesGateway
     implements OnGatewayConnection<WsClient>, OnGatewayDisconnect<WsClient>
 {
@@ -128,10 +131,12 @@ export class ResponsesGateway
             return;
         }
 
+        const abortController = new AbortController();
         this.connections.set(client, {
             previousResponses: new Map(),
             processing: false,
             queue: [],
+            abortController,
         });
         this.logger.info("WebSocket client connected");
     }
@@ -141,6 +146,7 @@ export class ResponsesGateway
         if (state) {
             state.previousResponses.clear();
             state.queue.length = 0;
+            state.abortController?.abort();
         }
         this.connections.delete(client);
         this.logger.info("WebSocket client disconnected");
@@ -249,6 +255,7 @@ export class ResponsesGateway
                 input,
                 instructions: message.instructions ?? undefined,
                 requestId,
+                abortSignal: state.abortController?.signal,
             })) {
                 // REQ-WS-03: same event format as SSE — send as JSON frame
                 this.sendEvent(client, event);
