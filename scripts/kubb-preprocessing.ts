@@ -32,23 +32,23 @@
  * // spec.stream is now deleted
  */
 export function removeDisallowedFields(node: unknown): void {
-	if (Array.isArray(node)) {
-		node.forEach(removeDisallowedFields);
-	} else if (node !== null && typeof node === "object") {
-		const obj = node as Record<string, unknown>;
-		for (const key of Object.keys(obj)) {
-			const val = obj[key];
-			if (
-				val !== null &&
-				typeof val === "object" &&
-				(val as Record<string, unknown>).minLength === 1 &&
-				(val as Record<string, unknown>).maxLength === 0 &&
-				(val as Record<string, unknown>)["x-openresponses-disallowed"] === true
-			) {
-				delete obj[key];
-			} else {
-				removeDisallowedFields(val);
-			}
-		}
-	}
+    if (Array.isArray(node)) {
+        node.forEach(removeDisallowedFields);
+    } else if (node !== null && typeof node === "object") {
+        const obj = node as Record<string, unknown>;
+        for (const key of Object.keys(obj)) {
+            const val = obj[key];
+            if (
+                val !== null &&
+                typeof val === "object" &&
+                (val as Record<string, unknown>).minLength === 1 &&
+                (val as Record<string, unknown>).maxLength === 0 &&
+                (val as Record<string, unknown>)["x-openresponses-disallowed"] === true
+            ) {
+                delete obj[key];
+            } else {
+                removeDisallowedFields(val);
+            }
+        }
+    }
 }
