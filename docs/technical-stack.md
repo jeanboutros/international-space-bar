@@ -58,6 +58,37 @@ This document is the authoritative reference for the technical stack, architectu
 
 > **`pnpm check` must exit with code 0 after every code change.** It runs Biome (format + lint, auto-fix) followed by ESLint (type-aware, auto-fix). If either reports unfixable errors, resolve them manually before proceeding.
 
+### Schema generation — sentinel convention
+
+Some OpenAPI spec fields are deliberately marked as disallowed in a given
+context (e.g. `stream` in WebSocket response.create messages). These fields
+use the `x-openresponses-disallowed` sentinel — a property schema is stripped
+from the spec when **all three** of the following are present simultaneously:
+
+```json
+"fieldName": {
+    "type": "string",
+    "minLength": 1,
+    "maxLength": 0,
+    "x-openresponses-disallowed": true
+}
+```
+
+The `minLength:1, maxLength:0` pair is intentionally impossible — it is a
+project-specific convention, not a bug. **Do not "fix" these constraints.**
+Removing any one of the three conditions disqualifies the property from
+sentinel detection.
+
+Zod 4 builds regexes eagerly at schema construction time and crashes on the
+`{1,0}` quantifier if a sentinel property reaches Kubb unprocessed. The
+`removeDisallowedFields` function (in `scripts/kubb-preprocessing.ts`) strips
+these properties before Kubb sees the spec. As a result, Kubb's `input.path`
+points to a temp file (`<tmpdir>/openresponses-cleaned.json`) rather than to
+the source spec directly.
+
+See [`docs/schema-generation.md`](schema-generation.md) for the full
+preprocessing flow and guidance on adding new disallowed fields.
+
 ---
 
 ## Agent Framework

@@ -38,19 +38,102 @@ from it — never edit generated files to work around a spec gap.
 
 ---
 
+## Preprocessing
+
+The source spec is not passed to Kubb directly. Before Kubb runs, a
+preprocessing step strips all properties that carry the
+`x-openresponses-disallowed` sentinel. This is necessary because Zod 4 builds
+regexes eagerly at schema construction time and crashes on the impossible
+`{1,0}` quantifier that the sentinel uses.
+
+### Flow
+
+```
+docs/openapi/openresponses.json
+        │
+        │  readFileSync (in kubb.config.ts)
+        ▼
+ parsed spec object
+        │
+        │  removeDisallowedFields() — strips sentinel properties
+        ▼
+  cleaned spec object
+        │
+        │  writeFileSync to OS tmpdir
+        ▼
+  <tmpdir>/openresponses-cleaned.json
+        │
+        │  Kubb reads from here (input.path)
+        ▼
+ src/.../openresponses/generated/   (Zod 4 schemas)
+```
+
+The source spec is **never modified** — preprocessing is read-only from
+`docs/openapi/openresponses.json`'s perspective.
+
+### Function location
+
+`removeDisallowedFields` is a named export in
+[`scripts/kubb-preprocessing.ts`](../scripts/kubb-preprocessing.ts). It is
+called from `kubb.config.ts` immediately after parsing the source spec and
+before the Kubb config object is exported.
+
+### Sentinel detection rule
+
+A property is removed when its schema value satisfies **all three** of the
+following simultaneously:
+
+| Condition | Required value |
+|-----------|----------------|
+| `minLength` | `1` |
+| `maxLength` | `0` |
+| `x-openresponses-disallowed` | `true` |
+
+All three must be present — removing any one disqualifies the property from
+detection.
+
+### How to mark a new field as disallowed
+
+Add all three conditions to the property's schema in
+`docs/openapi/openresponses.json`:
+
+```json
+"fieldName": {
+    "type": "string",
+    "minLength": 1,
+    "maxLength": 0,
+    "x-openresponses-disallowed": true
+}
+```
+
+Then run `pnpm generate:schemas` — the field will be absent from the generated
+Zod schemas. The source spec retains the sentinel so the intent is visible to
+reviewers.
+
+---
+
 ## Configuration
 
 Full config: [`kubb.config.ts`](../kubb.config.ts)
 
 ```typescript
+import { writeFileSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { defineConfig } from "@kubb/core";
 import { pluginOas } from "@kubb/plugin-oas";
 import { pluginTs } from "@kubb/plugin-ts";
 import { pluginZod } from "@kubb/plugin-zod";
+import { removeDisallowedFields } from "./scripts/kubb-preprocessing.js";
+
+const rawSpec = JSON.parse(readFileSync("./docs/openapi/openresponses.json", "utf-8")) as unknown;
+removeDisallowedFields(rawSpec);
+const cleanedSpecPath = join(tmpdir(), "openresponses-cleaned.json");
+writeFileSync(cleanedSpecPath, JSON.stringify(rawSpec));
 
 export default defineConfig({
     input: {
-        path: "./docs/openapi/openresponses.json",
+        path: cleanedSpecPath,
     },
     output: {
         path: "./src/international-space-bar-server/openresponses/generated",
