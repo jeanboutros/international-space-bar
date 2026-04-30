@@ -26,22 +26,24 @@ async function bootstrap() {
     app.useWebSocketAdapter(new OpenResponsesWsAdapter(app));
 
     const config = app.get(ApplicationConfigService);
+    // TODO(isb-0059): migrate to typed get() once server.enableCors is in ConfigSchema
     if (config.get("server.enableCors")) {
-        const origins = config.get<string[]>("server.corsOrigins") ?? [];
+        const origins = config.get("server.corsOrigins", []);
         app.enableCors({ origin: origins });
     }
 
-    logger.log(
-        `Starting international-space-bar-server in ${String(config.get("environment"))} mode ...`,
-    );
+    logger.log(`Starting international-space-bar-server in ${String(config.environment)} mode ...`);
 
-    const port = Number(config.get("server.port") ?? process.env.PORT ?? DEFAULT_PORT);
-    const host = String(config.get("server.host") ?? process.env.HOST ?? DEFAULT_HOST);
+    // TODO: handle the defaults at schema validation level to make the logic
+    // simpler here.
+    const port = config.get("server.port", DEFAULT_PORT);
+    const host = config.get("server.host", DEFAULT_HOST);
 
     logger.debug("Logging application debug information:");
+    // TODO(isb-0059): migrate to typed get() once server.enableCors is in ConfigSchema
     logger.debug(`Is CORS enabled? ${String(config.get("server.enableCors"))}`);
-    logger.debug(`Is server.port set? ${String(config.get("server.port"))}`);
-    logger.debug(`Is server.host set? ${String(config.get("server.host"))}`);
+    logger.debug(`Is server.port set? ${String(config.get("server.port", DEFAULT_PORT))}`);
+    logger.debug(`Is server.host set? ${String(config.get("server.host", DEFAULT_HOST))}`);
     logger.debug(`Is environment variable HOST set? ${process.env.HOST ?? "undefined"}`);
     logger.debug(`Is environment variable PORT set? ${process.env.PORT ?? "undefined"}`);
 

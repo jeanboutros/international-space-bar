@@ -13,6 +13,51 @@ import { CLI_ARGS, type CliArgs } from "./cli-args.js";
 import { type AppConfig, ConfigSchema } from "./config.schema.js";
 import { resolveConfigSecrets } from "./resolve-config-secrets.js";
 
+// ---------------------------------------------------------------------------
+// Typed key-path helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Strips index signatures from an object type, preserving only named keys.
+ * Required because z.looseObject() adds [key: string]: unknown to the inferred
+ * type — without stripping it, DotKeys<T> collapses to plain string.
+ */
+type StripIndex<T> = {
+    [K in keyof T as string extends K ? never : K]: T[K];
+};
+
+/**
+ * Recursively generates dot-separated key paths for all named properties of T.
+ * NonNullable is applied at each recursion level so that optional parent objects
+ * (e.g. server?: { port: number }) are traversed without collapsing to never.
+ */
+type DotKeys<T> = {
+    [K in keyof StripIndex<T> & string]: NonNullable<StripIndex<T>[K]> extends Record<
+        string,
+        unknown
+    >
+        ? `${K}` | `${K}.${DotKeys<NonNullable<StripIndex<T>[K]>>}`
+        : `${K}`;
+}[keyof StripIndex<T> & string];
+
+/**
+ * Resolves the leaf value type for a given dot-notation path K within type T.
+ *
+ * NOTE: For paths where a parent is optional (e.g. server?: { port: number }),
+ * the resolved type may include undefined even if the leaf field itself is
+ * required. At runtime, Sig1 throws and Sig2 returns the supplied default.
+ */
+type DotValue<T, K extends string> = K extends `${infer Head}.${infer Tail}`
+    ? Head extends keyof StripIndex<T>
+        ? DotValue<NonNullable<StripIndex<T>[Head]>, Tail>
+        : never
+    : K extends keyof StripIndex<T>
+      ? StripIndex<T>[K]
+      : never;
+
+/** Sentinel that distinguishes "no default argument" from "default is undefined". */
+const MISSING = Symbol("MISSING");
+
 /**
  * Resolves the project environment from CLI args (`-e` / `--environment`)
  * or the `ISB_PROJECT_ENVIRONMENT` env var. Loads `config.<env>.yaml` and
@@ -41,19 +86,49 @@ export class ApplicationConfigService {
     }
 
     /**
-     * Type-safe accessor for a top-level config key.
+     * Type-safe accessor for a dot-notation config key path.
+     *
+     * Sig1 (required): throws ConfigurationException if the key is absent or malformed.
+     * Sig2 (with default): returns defaultValue if the key is absent; throws if malformed.
+     *
+     * Malformed keys (empty string, leading/trailing dot, consecutive dots) always throw,
+     * regardless of whether a defaultValue is supplied.
      */
-    get<T = unknown>(key: string): T | undefined {
-        if (key === "environment") {
-            return String(this.environment) as T;
+    get<K extends DotKeys<AppConfig>>(key: K): DotValue<AppConfig, K>;
+    get<K extends DotKeys<AppConfig>>(
+        key: K,
+        defaultValue: DotValue<AppConfig, K>,
+    ): DotValue<AppConfig, K>;
+    get<K extends DotKeys<AppConfig>>(
+        key: K,
+        defaultValue: DotValue<AppConfig, K> | typeof MISSING = MISSING,
+    ): DotValue<AppConfig, K> {
+        if (key === "" || key.startsWith(".") || key.endsWith(".") || key.includes("..")) {
+            throw new ConfigurationException(
+                `Malformed config key "${key}": must not be empty, start or end with a dot, or contain consecutive dots.`,
+            );
         }
+
         const parts = key.split(".");
         let current: unknown = this.config;
         for (const part of parts) {
-            if (current === null || typeof current !== "object") return undefined;
+            if (current === null || typeof current !== "object") {
+                if (defaultValue !== MISSING) return defaultValue;
+                throw new ConfigurationException(
+                    `Config key "${key}" is not present in the loaded configuration.`,
+                );
+            }
             current = (current as Record<string, unknown>)[part];
         }
-        return current as T | undefined;
+
+        if (current === undefined) {
+            if (defaultValue !== MISSING) return defaultValue;
+            throw new ConfigurationException(
+                `Config key "${key}" is not present in the loaded configuration.`,
+            );
+        }
+
+        return current as DotValue<AppConfig, K>;
     }
 
     // ------------------------------------------------------------------

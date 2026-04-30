@@ -491,4 +491,476 @@ void describe("ApplicationConfigService", () => {
             );
         });
     });
+
+    // ----------------------------------------------------------------
+    // get() — typed key-path accessor (isb-0063)
+    // ----------------------------------------------------------------
+
+    /**
+     * get() — two-overload type-safe dot-notation accessor (isb-0063).
+     * Sig1 (required): throws ConfigurationException when key is absent or malformed.
+     * Sig2 (with default): returns defaultValue when absent; throws when malformed.
+     * Compile-time: DotKeys<AppConfig> constrains the key parameter to valid paths only.
+     */
+    void describe("get()", () => {
+        let tmpGetDir: string;
+        /** Config with server.port, server.host, server.enableCors, server.corsOrigins. */
+        let fullGetConfigPath: string;
+        /** Config with only version — no server block present. */
+        let noServerGetConfigPath: string;
+
+        before(() => {
+            tmpGetDir = mkdtempSync(join(tmpdir(), "isb-get-test-"));
+
+            fullGetConfigPath = join(tmpGetDir, "full.yaml");
+            writeFileSync(
+                fullGetConfigPath,
+                [
+                    "version: 1",
+                    "server:",
+                    "  port: 3001",
+                    '  host: "127.0.0.1"',
+                    "  enableCors: true",
+                    "  corsOrigins:",
+                    '    - "http://example.com"',
+                ].join("\n") + "\n",
+            );
+
+            noServerGetConfigPath = join(tmpGetDir, "no-server.yaml");
+            writeFileSync(noServerGetConfigPath, "version: 1\n");
+        });
+
+        after(() => {
+            rmSync(tmpGetDir, { recursive: true });
+        });
+
+        /**
+         * WHAT: Sig1 returns the configured port as a number.
+         * WHY: T-01 — AC-1/AC-2: get("server.port") must return the typed port value.
+         * STEPS:
+         *   Arrange — service with config containing server.port: 3001
+         *   Act — call get("server.port") with no default (Sig1)
+         *   Assert — returns 3001 (number)
+         */
+        void it("T-01: get('server.port') returns the configured port number", () => {
+            // --- Arrange ---
+            process.env.ISB_PROJECT_ENVIRONMENT = "test";
+            const service = new ApplicationConfigService({ config: fullGetConfigPath }, noopStore);
+
+            // --- Act ---
+            const port = service.get("server.port");
+
+            // --- Assert ---
+            // Must return the number from config, not undefined
+            assert.equal(port, 3001);
+        });
+
+        /**
+         * WHAT: Sig1 returns the configured host as a string.
+         * WHY: T-02 — typed Sig1 must work for string leaf values.
+         * STEPS:
+         *   Arrange — service with config containing server.host: "127.0.0.1"
+         *   Act — call get("server.host")
+         *   Assert — returns "127.0.0.1"
+         */
+        void it("T-02: get('server.host') returns the configured host string", () => {
+            // --- Arrange ---
+            process.env.ISB_PROJECT_ENVIRONMENT = "test";
+            const service = new ApplicationConfigService({ config: fullGetConfigPath }, noopStore);
+
+            // --- Act ---
+            const host = service.get("server.host");
+
+            // --- Assert ---
+            // Must return the string value, not undefined
+            assert.equal(host, "127.0.0.1");
+        });
+
+        /**
+         * WHAT: Sig2 returns the config value (not the default) when the key is present.
+         * WHY: T-03 — AC-7: Sig2 must prefer the loaded value over the supplied default.
+         * STEPS:
+         *   Arrange — service with config containing server.port: 3001; default is 4000
+         *   Act — call get("server.port", 4000) (Sig2)
+         *   Assert — returns 3001, not 4000
+         */
+        void it("T-03: get('server.port', 4000) returns configured value when present", () => {
+            // --- Arrange ---
+            process.env.ISB_PROJECT_ENVIRONMENT = "test";
+            const service = new ApplicationConfigService({ config: fullGetConfigPath }, noopStore);
+
+            // --- Act ---
+            const port = service.get("server.port", 4000);
+
+            // --- Assert ---
+            // The loaded config value (3001) must take precedence over the default (4000)
+            assert.equal(port, 3001);
+        });
+
+        /**
+         * WHAT: Sig2 returns defaultValue when the server block is absent from config.
+         * WHY: T-04 — AC-7: Sig2 must return the default instead of throwing when absent.
+         * STEPS:
+         *   Arrange — service with config that has no server block (version: 1 only)
+         *   Act — call get("server.port", 4000)
+         *   Assert — returns 4000, no throw
+         */
+        void it("T-04: get('server.port', 4000) returns default when server block is absent", () => {
+            // --- Arrange ---
+            process.env.ISB_PROJECT_ENVIRONMENT = "test";
+            const service = new ApplicationConfigService(
+                { config: noServerGetConfigPath },
+                noopStore,
+            );
+
+            // --- Act ---
+            const port = service.get("server.port", 4000);
+
+            // --- Assert ---
+            // Traversal hits undefined at "server" → Sig2 returns the default, not throws
+            assert.equal(port, 4000);
+        });
+
+        /**
+         * WHAT: Empty key "" throws ConfigurationException immediately (malformation guard).
+         * WHY: T-05 — AC-8: Malformed keys must be rejected before any traversal.
+         *      Empty string is never a valid config path.
+         * STEPS:
+         *   Arrange — service with valid full config
+         *   Act — call get("") which triggers the malformation guard
+         *   Assert — throws ConfigurationException with a message identifying the bad key
+         *
+         * NOTE: @ts-expect-error suppresses the compile-time error; the malformation
+         * guard fires at runtime before any traversal occurs.
+         */
+        void it("T-05: get('') throws ConfigurationException for empty key", () => {
+            // --- Arrange ---
+            process.env.ISB_PROJECT_ENVIRONMENT = "test";
+            const service = new ApplicationConfigService({ config: fullGetConfigPath }, noopStore);
+
+            // --- Act & Assert ---
+            assert.throws(
+                () => {
+                    // @ts-expect-error — T-05: "" is not in DotKeys<AppConfig>; malformation guard tested at runtime
+                    service.get("");
+                },
+                (err: unknown) => {
+                    // Malformation guard must throw ConfigurationException, not traverse
+                    assert.ok(err instanceof ConfigurationException);
+                    assert.match(err.message, /Malformed config key/);
+                    return true;
+                },
+            );
+        });
+
+        /**
+         * WHAT: Leading-dot key ".server.port" throws ConfigurationException (malformation guard).
+         * WHY: T-06 — AC-8: Keys that start with a dot are syntactically invalid;
+         *      the guard must catch them before traversal.
+         * STEPS:
+         *   Arrange — service with valid full config
+         *   Act — call get(".server.port") which triggers startsWith(".") check
+         *   Assert — throws ConfigurationException with a message identifying the bad key
+         *
+         * NOTE: @ts-expect-error suppresses the compile-time error.
+         */
+        void it("T-06: get('.server.port') throws ConfigurationException for leading dot", () => {
+            // --- Arrange ---
+            process.env.ISB_PROJECT_ENVIRONMENT = "test";
+            const service = new ApplicationConfigService({ config: fullGetConfigPath }, noopStore);
+
+            // --- Act & Assert ---
+            assert.throws(
+                () => {
+                    // @ts-expect-error — T-06: ".server.port" is not in DotKeys<AppConfig>; malformation guard tested at runtime
+                    service.get(".server.port");
+                },
+                (err: unknown) => {
+                    // Leading dot must be rejected by the malformation guard
+                    assert.ok(err instanceof ConfigurationException);
+                    assert.match(err.message, /Malformed config key/);
+                    return true;
+                },
+            );
+        });
+
+        /**
+         * WHAT: Trailing-dot key "server.port." throws ConfigurationException (malformation guard).
+         * WHY: T-07 — AC-8: Keys that end with a dot are syntactically invalid;
+         *      the guard must catch them before traversal.
+         * STEPS:
+         *   Arrange — service with valid full config
+         *   Act — call get("server.port.") which triggers endsWith(".") check
+         *   Assert — throws ConfigurationException with a message identifying the bad key
+         *
+         * NOTE: @ts-expect-error suppresses the compile-time error.
+         */
+        void it("T-07: get('server.port.') throws ConfigurationException for trailing dot", () => {
+            // --- Arrange ---
+            process.env.ISB_PROJECT_ENVIRONMENT = "test";
+            const service = new ApplicationConfigService({ config: fullGetConfigPath }, noopStore);
+
+            // --- Act & Assert ---
+            assert.throws(
+                () => {
+                    // @ts-expect-error — T-07: "server.port." is not in DotKeys<AppConfig>; malformation guard tested at runtime
+                    service.get("server.port.");
+                },
+                (err: unknown) => {
+                    // Trailing dot must be rejected by the malformation guard
+                    assert.ok(err instanceof ConfigurationException);
+                    assert.match(err.message, /Malformed config key/);
+                    return true;
+                },
+            );
+        });
+
+        /**
+         * WHAT: Consecutive-dots key "server..port" throws ConfigurationException (malformation guard).
+         * WHY: T-08 — AC-8: Double dots are syntactically invalid;
+         *      the guard must catch them before traversal.
+         * STEPS:
+         *   Arrange — service with valid full config
+         *   Act — call get("server..port") which triggers includes("..") check
+         *   Assert — throws ConfigurationException with a message identifying the bad key
+         *
+         * NOTE: @ts-expect-error suppresses the compile-time error.
+         */
+        void it("T-08: get('server..port') throws ConfigurationException for consecutive dots", () => {
+            // --- Arrange ---
+            process.env.ISB_PROJECT_ENVIRONMENT = "test";
+            const service = new ApplicationConfigService({ config: fullGetConfigPath }, noopStore);
+
+            // --- Act & Assert ---
+            assert.throws(
+                () => {
+                    // @ts-expect-error — T-08: "server..port" is not in DotKeys<AppConfig>; malformation guard tested at runtime
+                    service.get("server..port");
+                },
+                (err: unknown) => {
+                    // Consecutive dots must be rejected by the malformation guard
+                    assert.ok(err instanceof ConfigurationException);
+                    assert.match(err.message, /Malformed config key/);
+                    return true;
+                },
+            );
+        });
+
+        /**
+         * WHAT: Sig2 with a malformed key throws ConfigurationException even when a defaultValue is supplied.
+         * WHY: T-09 — AC-8: The malformation guard fires before the absent-key fallback.
+         *      defaultValue must NOT suppress malformation errors — only absent-key errors.
+         * STEPS:
+         *   Arrange — service with valid full config; use empty key "" with a default of 4000
+         *   Act — call get("", 4000) (Sig2 with malformed key)
+         *   Assert — throws ConfigurationException; the default is never returned
+         *
+         * NOTE: @ts-expect-error suppresses the compile-time error.
+         */
+        void it("T-09: get('', 4000) throws ConfigurationException for malformed key even with default", () => {
+            // --- Arrange ---
+            process.env.ISB_PROJECT_ENVIRONMENT = "test";
+            const service = new ApplicationConfigService({ config: fullGetConfigPath }, noopStore);
+
+            // --- Act & Assert ---
+            assert.throws(
+                () => {
+                    // @ts-expect-error — T-09: "" is not in DotKeys<AppConfig>; malformation guard fires before absent-key fallback
+                    service.get("", 4000);
+                },
+                (err: unknown) => {
+                    // Malformation guard must override the Sig2 default-value fallback
+                    assert.ok(err instanceof ConfigurationException);
+                    assert.match(err.message, /Malformed config key/);
+                    return true;
+                },
+            );
+        });
+
+        /**
+         * WHAT: Sig1 returns a boolean for server.enableCors when the flag is set.
+         * WHY: T-05b — typed access must work for optional boolean leaf fields.
+         * STEPS:
+         *   Arrange — service with config containing server.enableCors: true
+         *   Act — call get("server.enableCors")
+         *   Assert — returns true (boolean)
+         */
+        void it("T-05b: get('server.enableCors') returns boolean when present", () => {
+            // --- Arrange ---
+            process.env.ISB_PROJECT_ENVIRONMENT = "test";
+            const service = new ApplicationConfigService({ config: fullGetConfigPath }, noopStore);
+
+            // --- Act ---
+            const enableCors = service.get("server.enableCors");
+
+            // --- Assert ---
+            // Must return the boolean true from config, not undefined
+            assert.equal(enableCors, true);
+        });
+
+        /**
+         * WHAT: Sig1 returns a string array for server.corsOrigins when present.
+         * WHY: T-06b — typed access must work for optional array leaf fields.
+         * STEPS:
+         *   Arrange — service with config containing server.corsOrigins: ["http://example.com"]
+         *   Act — call get("server.corsOrigins")
+         *   Assert — returns a string array with the configured origin
+         */
+        void it("T-06b: get('server.corsOrigins') returns string array when present", () => {
+            // --- Arrange ---
+            process.env.ISB_PROJECT_ENVIRONMENT = "test";
+            const service = new ApplicationConfigService({ config: fullGetConfigPath }, noopStore);
+
+            // --- Act ---
+            const corsOrigins = service.get("server.corsOrigins");
+
+            // --- Assert ---
+            assert.ok(Array.isArray(corsOrigins), "corsOrigins must be an array");
+            // The array must contain exactly the one origin from the config
+            assert.equal(corsOrigins?.length, 1);
+            assert.equal(corsOrigins?.[0], "http://example.com");
+        });
+
+        /**
+         * WHAT: TypeScript rejects get("server.nonExistentKey") with a type error.
+         * WHY: T-07b — AC-1: DotKeys<AppConfig> must exclude invalid key paths at compile time.
+         * STEPS:
+         *   Arrange — service with valid config
+         *   Act — call get("server.nonExistentKey") guarded with @ts-expect-error
+         *   Assert — compile-time gate: @ts-expect-error is consumed by the type error;
+         *            runtime: the absent key also throws ConfigurationException via Sig1
+         *
+         * NOTE: tsx strips types so the call executes at runtime — it throws because
+         * "server.nonExistentKey" is absent from the loaded config (Sig1 behaviour).
+         * The @ts-expect-error confirms the compile-time rejection. If DotKeys<AppConfig>
+         * is broadened to plain string, the directive becomes unused and tsc emits TS2578.
+         */
+        void it("T-07b: compile-time — 'server.nonExistentKey' is rejected by the type system", () => {
+            // --- Arrange ---
+            process.env.ISB_PROJECT_ENVIRONMENT = "test";
+            const service = new ApplicationConfigService({ config: fullGetConfigPath }, noopStore);
+
+            // --- Act & Assert ---
+            // Compile-time gate: @ts-expect-error consumed by type error
+            // Runtime behaviour: Sig1 throws because the key is absent in the loaded config
+            assert.throws(
+                () => {
+                    // @ts-expect-error — T-07b: "server.nonExistentKey" is not in DotKeys<AppConfig>
+                    service.get("server.nonExistentKey");
+                },
+                (err: unknown) => {
+                    assert.ok(err instanceof ConfigurationException);
+                    return true;
+                },
+            );
+        });
+
+        /**
+         * WHAT: Sig1 throws ConfigurationException when server block is absent from config.
+         * WHY: T-08b — AC-6: Sig1 (no default) must throw for any absent key path.
+         * STEPS:
+         *   Arrange — service with config that has no server block
+         *   Act — call get("server.port") with no default (Sig1)
+         *   Assert — throws ConfigurationException referencing the missing key
+         */
+        void it("T-08b: get('server.port') throws ConfigurationException when key is absent", () => {
+            // --- Arrange ---
+            process.env.ISB_PROJECT_ENVIRONMENT = "test";
+            const service = new ApplicationConfigService(
+                { config: noServerGetConfigPath },
+                noopStore,
+            );
+
+            // --- Act & Assert ---
+            assert.throws(
+                () => service.get("server.port"),
+                (err: unknown) => {
+                    // Must throw ConfigurationException, not a generic error
+                    assert.ok(err instanceof ConfigurationException);
+                    // Message must name the missing key so the caller can diagnose the gap
+                    assert.match(err.message, /server\.port/);
+                    return true;
+                },
+            );
+        });
+
+        /**
+         * WHAT: Sig2 returns the default when the entire server block is absent.
+         * WHY: T-09b — AC-7: Sig2 must handle absent parent objects gracefully.
+         * STEPS:
+         *   Arrange — service with config that has no server block (version: 1 only)
+         *   Act — call get("server.port", 3000) (Sig2 with default 3000)
+         *   Assert — returns 3000 (the default), no throw
+         */
+        void it("T-09b: get('server.port', 3000) returns default when entire server block is absent", () => {
+            // --- Arrange ---
+            process.env.ISB_PROJECT_ENVIRONMENT = "test";
+            const service = new ApplicationConfigService(
+                { config: noServerGetConfigPath },
+                noopStore,
+            );
+
+            // --- Act ---
+            const port = service.get("server.port", 3000);
+
+            // --- Assert ---
+            // With no server block, traversal hits undefined; Sig2 returns the default
+            assert.equal(port, 3000);
+        });
+
+        /**
+         * WHAT: TypeScript rejects get("environment") — the virtual key was removed from get().
+         * WHY: T-10 — AC-4: "environment" is not in DotKeys<AppConfig>; access it via .environment.
+         * STEPS:
+         *   Arrange — service with valid config
+         *   Act — call get("environment") wrapped in assert.throws (compile + runtime gate)
+         *         assert .environment is still accessible as a direct field
+         *   Assert — compile-time: @ts-expect-error consumed; runtime: throws + .environment = "test"
+         *
+         * NOTE: tsx strips types so the call executes at runtime — "environment" is not in
+         * ConfigSchema, so traversal returns undefined and Sig1 throws ConfigurationException.
+         * The @ts-expect-error confirms the compile-time rejection.
+         * The direct .environment assertion proves the correct access pattern still works.
+         */
+        void it("T-10: 'environment' is not accessible via get() — only via .environment", () => {
+            // --- Arrange ---
+            process.env.ISB_PROJECT_ENVIRONMENT = "test";
+            const service = new ApplicationConfigService({ config: fullGetConfigPath }, noopStore);
+
+            // --- Act & Assert (compile-time gate + runtime throw) ---
+            assert.throws(
+                () => {
+                    // @ts-expect-error — T-10: "environment" is not in DotKeys<AppConfig>
+                    service.get("environment");
+                },
+                (err: unknown) => {
+                    assert.ok(err instanceof ConfigurationException);
+                    return true;
+                },
+            );
+
+            // Direct property access is the correct pattern — runtime assertion
+            assert.equal(service.environment, "test");
+        });
+
+        /**
+         * WHAT: TypeScript rejects get("server.port", "3000") — wrong type for defaultValue.
+         * WHY: T-11 — AC-2: Sig2 must enforce that defaultValue matches DotValue<AppConfig, K>.
+         * STEPS:
+         *   Arrange — service with valid config
+         *   Act — call get("server.port", "3000") guarded with @ts-expect-error
+         *   Assert — compile-time gate: DotValue<AppConfig, "server.port"> is number, not string
+         *
+         * NOTE: No runtime assertion — compile-time gate only.
+         * The @ts-expect-error proves the overload enforces type alignment between
+         * the key path and its default value.
+         */
+        void it("T-11: compile-time — get('server.port', '3000') rejects string default for number key", () => {
+            process.env.ISB_PROJECT_ENVIRONMENT = "test";
+            const service = new ApplicationConfigService({ config: fullGetConfigPath }, noopStore);
+
+            // @ts-expect-error — T-11: "3000" (string) is not assignable to DotValue<AppConfig, "server.port"> (number)
+            service.get("server.port", "3000");
+        });
+    });
 });
