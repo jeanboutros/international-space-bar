@@ -9,6 +9,9 @@ app:
 server:
   port: 3000
   host: "127.0.0.1"
+  enableCors: true
+  corsOrigins:
+    - "http://localhost:3000"
 
 logger:
   type: pino

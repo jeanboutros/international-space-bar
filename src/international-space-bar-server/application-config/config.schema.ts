@@ -11,6 +11,8 @@ export const ConfigSchema = z.looseObject({
         .looseObject({
             port: z.number(),
             host: z.string(),
+            enableCors: z.boolean().optional(),
+            corsOrigins: z.array(z.string()).optional(),
         })
         .optional(),
     /**

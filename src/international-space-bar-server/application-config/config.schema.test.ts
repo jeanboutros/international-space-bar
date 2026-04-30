@@ -264,4 +264,129 @@ void describe("ConfigSchema", () => {
         // level is absent — undefined signals the fallback path in PinoLoggerService
         assert.equal(result.data.logger?.level, undefined);
     });
+
+    // -----------------------------------------------------------------------
+    // TC-4: server.corsOrigins and server.enableCors validation (isb-0059)
+    // -----------------------------------------------------------------------
+
+    /**
+     * WHAT: A config with server.corsOrigins as a string array passes validation.
+     * WHY: T-14 — corsOrigins is declared as z.array(z.string()); a valid origin
+     *      list must be accepted at startup so the allowlist is applied in main.ts.
+     * STEPS:
+     *   Arrange — build a config with server.corsOrigins set to ["http://localhost:4000"]
+     *   Act — call ConfigSchema.safeParse
+     *   Assert — result.success is true and corsOrigins is preserved in parsed output
+     */
+    void it("accepts server.corsOrigins as a string array", () => {
+        // --- Arrange ---
+        const input = {
+            version: 1,
+            server: { port: 3000, host: "localhost", corsOrigins: ["http://localhost:4000"] },
+        };
+
+        // --- Act ---
+        const result = ConfigSchema.safeParse(input);
+
+        // --- Assert ---
+        assert.ok(result.success);
+        // corsOrigins is passed through to main.ts as-is — value must be preserved
+        assert.deepEqual(result.data.server?.corsOrigins, ["http://localhost:4000"]);
+    });
+
+    /**
+     * WHAT: A config with server.corsOrigins as a plain string fails validation.
+     * WHY: T-15 — corsOrigins is z.array(z.string()), not z.string(); a bare string
+     *      would bypass the origin-list logic in main.ts and must be caught at startup.
+     * STEPS:
+     *   Arrange — build a config with server.corsOrigins set to a plain string
+     *   Act — call ConfigSchema.safeParse
+     *   Assert — result.success is false
+     */
+    void it("rejects server.corsOrigins as a plain string (not an array)", () => {
+        // --- Arrange ---
+        const input = {
+            version: 1,
+            server: { port: 3000, host: "localhost", corsOrigins: "http://localhost:4000" },
+        };
+
+        // --- Act ---
+        const result = ConfigSchema.safeParse(input);
+
+        // --- Assert ---
+        // A bare string is not a valid origin list — z.array(z.string()) must reject it
+        assert.equal(result.success, false);
+    });
+
+    /**
+     * WHAT: A config with server.enableCors: true passes validation.
+     * WHY: T-16 — enableCors is z.boolean().optional(); true must be accepted so
+     *      dev environments can opt into CORS via config.dev.yaml.
+     * STEPS:
+     *   Arrange — build a config with server.enableCors set to true
+     *   Act — call ConfigSchema.safeParse
+     *   Assert — result.success is true and enableCors value is preserved
+     */
+    void it("accepts server.enableCors: true", () => {
+        // --- Arrange ---
+        const input = {
+            version: 1,
+            server: { port: 3000, host: "localhost", enableCors: true },
+        };
+
+        // --- Act ---
+        const result = ConfigSchema.safeParse(input);
+
+        // --- Assert ---
+        assert.ok(result.success);
+        assert.equal(result.data.server?.enableCors, true);
+    });
+
+    /**
+     * WHAT: A config with server.enableCors: false passes validation.
+     * WHY: T-16 — false is a valid boolean value; prod configs that disable CORS
+     *      must not be rejected by the schema.
+     * STEPS:
+     *   Arrange — build a config with server.enableCors set to false
+     *   Act — call ConfigSchema.safeParse
+     *   Assert — result.success is true and enableCors is false in parsed output
+     */
+    void it("accepts server.enableCors: false", () => {
+        // --- Arrange ---
+        const input = {
+            version: 1,
+            server: { port: 3000, host: "localhost", enableCors: false },
+        };
+
+        // --- Act ---
+        const result = ConfigSchema.safeParse(input);
+
+        // --- Assert ---
+        assert.ok(result.success);
+        assert.equal(result.data.server?.enableCors, false);
+    });
+
+    /**
+     * WHAT: A config with server.enableCors set to a non-boolean fails validation.
+     * WHY: T-16 — enableCors is z.boolean(); a string "true" or number 1 must be
+     *      rejected so a YAML typo (e.g. enableCors: "yes") is caught at startup.
+     * STEPS:
+     *   Arrange — build a config with server.enableCors set to the string "true"
+     *   Act — call ConfigSchema.safeParse
+     *   Assert — result.success is false
+     */
+    void it("rejects server.enableCors as a non-boolean value", () => {
+        // --- Arrange ---
+        const input = {
+            version: 1,
+            server: { port: 3000, host: "localhost", enableCors: "true" },
+        };
+
+        // --- Act ---
+        const result = ConfigSchema.safeParse(input);
+
+        // --- Assert ---
+        // The string "true" is not a boolean — z.boolean() must reject it
+        assert.equal(result.success, false);
+    });
 });

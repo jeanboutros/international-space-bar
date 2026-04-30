@@ -26,7 +26,10 @@ async function bootstrap() {
     app.useWebSocketAdapter(new OpenResponsesWsAdapter(app));
 
     const config = app.get(ApplicationConfigService);
-    config.get("enableCors") && app.enableCors();
+    if (config.get("server.enableCors")) {
+        const origins = config.get<string[]>("server.corsOrigins") ?? [];
+        app.enableCors({ origin: origins });
+    }
 
     logger.log(
         `Starting international-space-bar-server in ${String(config.get("environment"))} mode ...`,
@@ -36,7 +39,7 @@ async function bootstrap() {
     const host = String(config.get("server.host") ?? process.env.HOST ?? DEFAULT_HOST);
 
     logger.debug("Logging application debug information:");
-    logger.debug(`Is CORS enabled? ${String(config.get("enableCors"))}`);
+    logger.debug(`Is CORS enabled? ${String(config.get("server.enableCors"))}`);
     logger.debug(`Is server.port set? ${String(config.get("server.port"))}`);
     logger.debug(`Is server.host set? ${String(config.get("server.host"))}`);
     logger.debug(`Is environment variable HOST set? ${process.env.HOST ?? "undefined"}`);
