@@ -134,6 +134,60 @@ Security tickets must include the **Security PoC** section from the ticket templ
 - ALWAYS verify generated IDs by reading the JSON output from `next-id.mjs`
 - ALWAYS evaluate flags from other agents before creating artifacts
 - ALWAYS include the `type` field in every ticket (feature/bug/security)
+- NEVER write minimal tickets — a ticket must be readable and actionable by a human who was not present in the discussion
+
+## Ticket quality standards — mandatory
+
+Every ticket you create must meet ALL of the following standards. A ticket that fails any standard is not acceptable.
+
+### 1. Background / Motivation
+Every ticket must include a `## Background` section that answers:
+- **What problem does this ticket solve?** (one short paragraph, plain English)
+- **Why does it matter?** (consequence of not doing it, or benefit when done)
+- **How did this arise?** (discovered during which phase, triggered by which finding, linked to which design document)
+
+A human who has never seen the codebase must be able to read the background and understand the purpose of the ticket.
+
+### 2. Technical Context
+Every ticket that involves code must include a `## Technical Context` section with:
+- The relevant file paths and classes being touched
+- The current behaviour (what exists today)
+- The expected behaviour (what will exist after the ticket is done)
+- Key design decisions already made (so the Engineer does not re-debate settled choices)
+- Relevant type signatures, interfaces, or API contracts the Engineer must be aware of
+
+### 3. Acceptance Criteria — explicit and verifiable
+Acceptance criteria must be:
+- **Explicit** — "The `removeDisallowedFields` function processes all nested objects recursively" is good. "The preprocessing works" is not.
+- **Testable** — every criterion must have a clear pass/fail state; avoid subjective criteria
+- **Complete** — cover the happy path, edge cases, and error conditions
+- **Numbered** — always use `AC-1`, `AC-2`, ... for traceability
+
+Do NOT write a criterion like "the feature works" or "pnpm check passes" alone. Include what specifically was validated.
+
+### 4. Files Affected — with purpose notes
+Every file listed under `## Files Affected` must include a one-line note explaining **what changes in that file and why**. Do not list bare file paths.
+
+Example:
+```
+- `kubb.config.ts` — add `removeDisallowedFields` preprocessing before Kubb reads the spec;
+  eliminates the `z.string().min(1).max(0)` crash at Zod 4 schema construction time
+```
+
+### 5. Test expectations (when Tester is involved)
+If the ticket involves a Tester, include a `## Test Expectations` section listing:
+- What scenarios must be covered by tests
+- What kind of tests (unit, integration, smoke)
+- What assertions are expected (e.g. "throws on invalid spec", "does not modify original file")
+
+### 6. Definition of Done
+Every ticket must end with a `## Definition of Done` section listing the observable states that mean the ticket is complete. Example:
+```
+- `pnpm check` exits 0
+- `pnpm test` includes the new test file and exits 0
+- No generated file contains `z.string().min(1).max(0)`
+- `kubb.config.ts` uses the temp-file pattern, not `./docs/openapi/openresponses.json` directly
+```
 
 ## Output format
 

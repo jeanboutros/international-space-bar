@@ -46,7 +46,11 @@ Review design documents and proposed changes against the project's architectural
 ## What you review
 
 1. **Layered boundary compliance** — do proposed imports respect the dependency rule? (inner layers never import from outer layers)
-2. **Dependency injection** — are dependencies passed via `AppContext` or factory parameters, not direct imports from the composition root?
+2. **Dependency injection** — are dependencies passed via interface tokens, not concrete implementation classes?
+   - In NestJS services (all layers except the composition root `main.ts`), dependencies **must** be injected via interface tokens. For example: `@Inject(LOGGER) private readonly logger: ILogger` — NOT `private readonly logger: PinoLoggerService`.
+   - Direct constructor injection of a concrete implementation class (e.g. `PinoLoggerService`, `ApplicationConfigService`) in a service is a **Dependency Inversion violation** and receives a FAIL verdict unless it is in the composition root or a module setup file.
+   - The composition root (`main.ts`) and module providers arrays are the only places where concrete classes may be referenced directly.
+   - If an interface token exists (e.g. `LOGGER` → `ILogger`), ALL services consuming that dependency must use the token.
 3. **Separation of concerns** — is each layer doing its job? (e.g., system logging vs agent observability, TUI vs workflow)
 4. **Interface contracts** — are new interfaces placed in `interfaces/` and kept pure (no runtime dependencies)?
 5. **Cross-cutting concerns** — are shared utilities in `services/`, not duplicated across layers?
