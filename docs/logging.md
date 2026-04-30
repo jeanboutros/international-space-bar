@@ -176,8 +176,24 @@ NestFactory.create(AppModule, { bufferLogs: true })
   ├─ app.useLogger(app.get(PinoLoggerService))
   │    └─ NestJS flushes buffered internal log messages through PinoLoggerService
   │
+  ├─ app.useWebSocketAdapter(new OpenResponsesWsAdapter(app))
+  │    └─ registers native ws adapter for /v1/responses WebSocket gateway
+  │         ⚠ must be called before app.listen() — see §5.1 below
+  │
+  ├─ app.enableCors(...)        ← only when config.server.enableCors is true
+  │
+  ├─ logger.log(...)            ← "Starting international-space-bar-server in <env> mode ..."
+  │
+  ├─ port/host resolution       ← config.server.port → process.env.PORT → 3000
+  │                                config.server.host → process.env.HOST → 127.0.0.1
+  │
+  ├─ logger.debug(...)  ×6      ← config dump (see §5.2 below)
+  │
+  ├─ logger.info(...)           ← "Listening on <host>:<port>"
+  │
+  ├─ app.enableShutdownHooks()
+  │
   └─ app.listen(port, host)
-       └─ "Listening on 127.0.0.1:3000" logged via PinoLoggerService
 ```
 
 **Why `bufferLogs: true`?**
@@ -187,6 +203,31 @@ before `app.useLogger` is called. `bufferLogs: true` holds these messages in
 memory until `useLogger` is called, at which point they are flushed through the
 configured logger. Without this, NestJS's default console logger would emit
 these early messages and `PinoLoggerService` would never see them.
+
+### 5.1 WebSocket adapter ordering
+
+`app.useWebSocketAdapter()` must be called **before** `app.listen()`. If called
+after, the WS adapter may not be registered in time for the first incoming
+connection and the `/v1/responses` WebSocket gateway will not be reachable.
+
+### 5.2 Debug-level config dump
+
+At every startup, `bootstrap()` emits six `debug`-level log lines via
+`PinoLoggerService` to aid config troubleshooting:
+
+```
+[debug] Logging application debug information:
+[debug] Is CORS enabled? <true|false|undefined>
+[debug] Is server.port set? <value|undefined>
+[debug] Is server.host set? <value|undefined>
+[debug] Is environment variable HOST set? <value|"undefined">
+[debug] Is environment variable PORT set? <value|"undefined">
+```
+
+These lines are emitted only when the configured log level is `debug` or lower
+(`trace`). At `info` or higher they are silently suppressed by pino. Set
+`config.logger.level: debug` in `config.dev.yaml` (or `config.test.yaml`) to
+see them.
 
 ---
 
