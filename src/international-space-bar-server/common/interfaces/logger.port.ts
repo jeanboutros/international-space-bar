@@ -6,4 +6,6 @@
  * the innermost layer and may be imported by any outer layer via port contracts.
  * This file is the single declared boundary point for that import.
  */
-export type { ILogger } from "../../international-space-bar/interfaces/logger.interface.js";
+export type { ILogger } from "../../../international-space-bar/interfaces/logger.interface.js";
+
+export const LOGGER = Symbol("LOGGER");

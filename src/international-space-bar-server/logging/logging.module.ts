@@ -1,5 +1,6 @@
 import { Global, Module } from "@nestjs/common";
 import { ApplicationConfigModule } from "../application-config/application-config.module.js";
+import { LOGGER } from "../common/interfaces/logger.port.js";
 import { PinoLoggerService } from "./pino-logger.service.js";
 
 /**
@@ -21,7 +22,7 @@ import { PinoLoggerService } from "./pino-logger.service.js";
 @Global()
 @Module({
     imports: [ApplicationConfigModule],
-    providers: [PinoLoggerService],
-    exports: [PinoLoggerService],
+    providers: [{ provide: LOGGER, useClass: PinoLoggerService }, PinoLoggerService],
+    exports: [LOGGER, PinoLoggerService],
 })
 export class LoggingModule {}

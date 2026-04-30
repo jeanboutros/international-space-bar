@@ -44,7 +44,16 @@ export class ApplicationConfigService {
      * Type-safe accessor for a top-level config key.
      */
     get<T = unknown>(key: string): T | undefined {
-        return this.config[key] as T | undefined;
+        if (key === "environment") {
+            return String(this.environment) as T;
+        }
+        const parts = key.split(".");
+        let current: unknown = this.config;
+        for (const part of parts) {
+            if (current === null || typeof current !== "object") return undefined;
+            current = (current as Record<string, unknown>)[part];
+        }
+        return current as T | undefined;
     }
 
     // ------------------------------------------------------------------
