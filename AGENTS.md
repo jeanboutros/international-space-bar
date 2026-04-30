@@ -159,10 +159,7 @@ the bridge pattern, startup sequence, config reference, and future HTTP logging.
 
 ### Host and port defaults
 
-`DEFAULT_HOST` in `main.ts` is hardcoded to `"127.0.0.1"` (loopback). This is
-intentional: the server binds to loopback by default to avoid accidental
-external exposure. To accept connections from outside the local machine, set
-`server.host` in the config file or the `HOST` environment variable.
+`DEFAULT_HOST` and `DEFAULT_PORT` live in `src/international-space-bar-server/constants.ts`. The loopback-only default (`"127.0.0.1"`) is intentional — it prevents accidental external exposure. To accept connections from outside the local machine, set `server.host` in the config file. Schema-level `.default()` values in `config.schema.ts` own runtime defaults; `constants.ts` provides the compile-time source values those defaults reference.
 
 ## Commands
 
@@ -211,7 +208,8 @@ get-library-docs: context7CompatibleLibraryID="/websites/langchain-ai_github_io_
 ## Conventions
 
 - **Always re-read files before editing.** Never edit based on a previously cached/stale read — always use the Read tool to get the current file contents immediately before writing or editing. Stale reads cause accidental deletions of existing code.
-- **Use `jq` for JSON manipulation in shell commands.** Never use `python3 -c` or inline Python for parsing, filtering, or transforming JSON. `jq` is faster, purpose-built, and already available on macOS (`brew install jq`). Example: `| jq -r '.type'` instead of `| python3 -c "import sys,json; ..."`.
+- **Use `jq` for JSON manipulation in shell commands.** Never use `python3 -c` or inline Python for parsing, filtering, or transforming JSON. `jq` is faster, purpose-built, and already available on macOS (`brew install jq`). Example: `| jq -r '.type'` instead of `| python3 -c "import sys,json; "`.
+- **Server-layer shared constants live in `constants.ts`.** Any compile-time string or number referenced from more than one file in `src/international-space-bar-server/` must be declared in `src/international-space-bar-server/constants.ts`. Do not declare inline module-level constants in individual files for values that are shared (e.g. route paths, auth prefixes, env-var names, default port/host).
 - State schemas use `StateSchema` from `@langchain/langgraph`, not `Annotation.Root`
 - Message fields use `MessagesValue` (prebuilt reducer), not plain Zod arrays
 - Context schemas use a Zod `z.object(...)` passed to `StateGraph({ context: ... })`

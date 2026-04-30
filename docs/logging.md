@@ -184,8 +184,8 @@ NestFactory.create(AppModule, { bufferLogs: true })
   │
   ├─ logger.log(...)            ← "Starting international-space-bar-server in <env> mode ..."
   │
-  ├─ port/host resolution       ← config.server.port → process.env.PORT → 3000
-  │                                config.server.host → process.env.HOST → 127.0.0.1
+  ├─ port/host resolution       ← config.server.port (schema default: 3000)
+  │                                config.server.host (schema default: "127.0.0.1")
   │
   ├─ logger.debug(...)  ×6      ← config dump (see §5.2 below)
   │
