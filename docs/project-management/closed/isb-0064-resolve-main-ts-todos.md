@@ -7,7 +7,7 @@
 | Type | `feature` |
 | Assignee | Engineer |
 | Priority | `low` |
-| Status | `open` |
+| Status | `closed` |
 | Created | 2026-04-30 |
 | Dependencies | none (isb-0059 and isb-0063 are closed) |
 
