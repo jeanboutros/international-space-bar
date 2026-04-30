@@ -20,7 +20,7 @@
 
 import { timingSafeEqual } from "node:crypto";
 import type { IncomingMessage } from "node:http";
-import { Inject, Injectable, Logger } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import {
     type OnGatewayConnection,
     type OnGatewayDisconnect,
@@ -28,6 +28,8 @@ import {
     WebSocketGateway,
 } from "@nestjs/websockets";
 import type WebSocket from "ws";
+import type { ILogger } from "../common/interfaces/index.js";
+import { LOGGER } from "../common/interfaces/logger.port.js";
 import { AGENT_RUNTIME_PORT, type AgentRuntimePort } from "./agent-runtime.port.js";
 import { webSocketErrorEventSchema } from "./generated/zod/webSocketErrorEventSchema.js";
 import { webSocketResponseCreateEventSchema } from "./generated/zod/webSocketResponseCreateEventSchema.js";
@@ -101,10 +103,12 @@ type WsClient = InstanceType<typeof WebSocket>;
 export class ResponsesGateway
     implements OnGatewayConnection<WsClient>, OnGatewayDisconnect<WsClient>
 {
-    private readonly logger = new Logger(ResponsesGateway.name);
     private readonly connections = new WeakMap<WsClient, ConnectionState>();
 
-    constructor(@Inject(AGENT_RUNTIME_PORT) private readonly runtime: AgentRuntimePort) {}
+    constructor(
+        @Inject(AGENT_RUNTIME_PORT) private readonly runtime: AgentRuntimePort,
+        @Inject(LOGGER) private readonly logger: ILogger,
+    ) {}
 
     // ── Connection lifecycle ──────────────────────────────────────────────
 
@@ -129,7 +133,7 @@ export class ResponsesGateway
             processing: false,
             queue: [],
         });
-        this.logger.log("WebSocket client connected");
+        this.logger.info("WebSocket client connected");
     }
 
     handleDisconnect(client: WsClient): void {
@@ -139,7 +143,7 @@ export class ResponsesGateway
             state.queue.length = 0;
         }
         this.connections.delete(client);
-        this.logger.log("WebSocket client disconnected");
+        this.logger.info("WebSocket client disconnected");
     }
 
     // ── Message handling ──────────────────────────────────────────────────
@@ -264,7 +268,7 @@ export class ResponsesGateway
             // REQ-WS-05: Failed continuation cache eviction
             if (previousResponseId) {
                 state.previousResponses.delete(previousResponseId);
-                this.logger.log(
+                this.logger.info(
                     `Evicted previous_response_id='${previousResponseId}' from connection-local cache after error`,
                 );
             }
