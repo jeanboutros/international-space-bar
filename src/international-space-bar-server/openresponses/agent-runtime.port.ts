@@ -12,4 +12,5 @@ export interface AgentInvokeRequest {
     readonly input: string;
     readonly instructions?: string;
     readonly requestId: string;
+    readonly abortSignal?: AbortSignal;
 }
