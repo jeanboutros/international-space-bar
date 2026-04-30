@@ -203,6 +203,7 @@ get-library-docs: context7CompatibleLibraryID="/websites/langchain-ai_github_io_
 
 ## Conventions
 
+- **Always re-read files before editing.** Never edit based on a previously cached/stale read — always use the Read tool to get the current file contents immediately before writing or editing. Stale reads cause accidental deletions of existing code.
 - State schemas use `StateSchema` from `@langchain/langgraph`, not `Annotation.Root`
 - Message fields use `MessagesValue` (prebuilt reducer), not plain Zod arrays
 - Context schemas use a Zod `z.object(...)` passed to `StateGraph({ context: ... })`
