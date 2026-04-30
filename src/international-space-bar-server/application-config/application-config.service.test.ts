@@ -598,14 +598,17 @@ void describe("ApplicationConfigService", () => {
         });
 
         /**
-         * WHAT: Sig2 returns defaultValue when the server block is absent from config.
-         * WHY: T-04 — AC-7: Sig2 must return the default instead of throwing when absent.
+         * WHAT: Schema default (3000) takes precedence over the Sig2 fallback when server block is absent.
+         * WHY: T-04 — isb-0064: ConfigSchema now injects server defaults at parse time via
+         *      .default({ port: DEFAULT_PORT, ... }). When the YAML omits `server:`, the schema
+         *      emits port=3000 before get() is ever called, so the Sig2 fallback (4000) is
+         *      never reached — get() returns the schema-injected value, not the call-site fallback.
          * STEPS:
          *   Arrange — service with config that has no server block (version: 1 only)
          *   Act — call get("server.port", 4000)
-         *   Assert — returns 4000, no throw
+         *   Assert — returns 3000 (schema default), not 4000 (call-site fallback)
          */
-        void it("T-04: get('server.port', 4000) returns default when server block is absent", () => {
+        void it("T-04: get('server.port', 4000) returns schema default 3000 when server block is absent", () => {
             // --- Arrange ---
             process.env.ISB_PROJECT_ENVIRONMENT = "test";
             const service = new ApplicationConfigService(
@@ -617,8 +620,10 @@ void describe("ApplicationConfigService", () => {
             const port = service.get("server.port", 4000);
 
             // --- Assert ---
-            // Traversal hits undefined at "server" → Sig2 returns the default, not throws
-            assert.equal(port, 4000);
+            // Schema default fires at parse time — port is 3000 in the frozen config object;
+            // the Sig2 fallback (4000) is only used when get() traversal returns undefined,
+            // which can no longer happen for server.port after isb-0064.
+            assert.equal(port, 3000);
         });
 
         /**
@@ -856,14 +861,17 @@ void describe("ApplicationConfigService", () => {
         });
 
         /**
-         * WHAT: Sig1 throws ConfigurationException when server block is absent from config.
-         * WHY: T-08b — AC-6: Sig1 (no default) must throw for any absent key path.
+         * WHAT: Sig1 returns 3000 (schema default) when server block is absent — no throw.
+         * WHY: T-08b — isb-0064: ConfigSchema now injects server defaults at parse time via
+         *      .default({ port: DEFAULT_PORT, ... }). When YAML omits `server:`, the schema
+         *      emits a fully-resolved server object with port=3000. get("server.port") traverses
+         *      the frozen config and finds 3000 — it never hits undefined, so it does not throw.
          * STEPS:
          *   Arrange — service with config that has no server block
          *   Act — call get("server.port") with no default (Sig1)
-         *   Assert — throws ConfigurationException referencing the missing key
+         *   Assert — returns 3000, does not throw
          */
-        void it("T-08b: get('server.port') throws ConfigurationException when key is absent", () => {
+        void it("T-08b: get('server.port') returns schema default 3000 when server block is absent", () => {
             // --- Arrange ---
             process.env.ISB_PROJECT_ENVIRONMENT = "test";
             const service = new ApplicationConfigService(
@@ -871,17 +879,12 @@ void describe("ApplicationConfigService", () => {
                 noopStore,
             );
 
-            // --- Act & Assert ---
-            assert.throws(
-                () => service.get("server.port"),
-                (err: unknown) => {
-                    // Must throw ConfigurationException, not a generic error
-                    assert.ok(err instanceof ConfigurationException);
-                    // Message must name the missing key so the caller can diagnose the gap
-                    assert.match(err.message, /server\.port/);
-                    return true;
-                },
-            );
+            // --- Act ---
+            const port = service.get("server.port");
+
+            // --- Assert ---
+            // Schema default injects port=3000 at parse time — Sig1 returns 3000, not throws.
+            assert.equal(port, 3000);
         });
 
         /**

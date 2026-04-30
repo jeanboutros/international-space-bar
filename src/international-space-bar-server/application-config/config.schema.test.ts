@@ -389,4 +389,154 @@ void describe("ConfigSchema", () => {
         // The string "true" is not a boolean — z.boolean() must reject it
         assert.equal(result.success, false);
     });
+
+    // -----------------------------------------------------------------------
+    // TC-5: server block defaults (isb-0064)
+    // -----------------------------------------------------------------------
+
+    /**
+     * WHAT: When the `server:` key is entirely absent, all four server fields
+     *       resolve to their schema defaults.
+     * WHY: T-1 — isb-0064 adds `.default({})` to the server block so that a
+     *      minimal config (e.g. `{ version: 1 }`) produces a fully resolved
+     *      server object rather than undefined. Both port and host are verified
+     *      here because they are the primary security-sensitive defaults.
+     * STEPS:
+     *   Arrange — build a config with only `version: 1` (NO `server:` key)
+     *   Act — call ConfigSchema.safeParse
+     *   Assert — result.data.server.port === 3000 AND .host === "127.0.0.1"
+     */
+    void it("applies server block default when server key is absent — port and host (T-1)", () => {
+        // --- Arrange ---
+        // Explicitly no `server:` key — this is intentional, not { server: undefined }
+        const input = { version: 1 };
+
+        // --- Act ---
+        const result = ConfigSchema.safeParse(input);
+
+        // --- Assert ---
+        assert.ok(result.success);
+        // Direct access (no optional chaining) — .default({}) guarantees the object exists
+        assert.equal(result.data.server.port, 3000);
+        assert.equal(result.data.server.host, "127.0.0.1");
+    });
+
+    /**
+     * WHAT: When `server:` is present but `port` is omitted, port defaults to 3000.
+     * WHY: T-2 — `port` carries `.default(DEFAULT_PORT)`; partial server configs
+     *      (e.g. only specifying host) must not require the user to also supply port.
+     * STEPS:
+     *   Arrange — build a config with `server: { host: "localhost" }` (no port)
+     *   Act — call ConfigSchema.safeParse
+     *   Assert — result.data.server.port === 3000
+     */
+    void it("defaults server.port to 3000 when port is omitted (T-2)", () => {
+        // --- Arrange ---
+        const input = { version: 1, server: { host: "localhost" } };
+
+        // --- Act ---
+        const result = ConfigSchema.safeParse(input);
+
+        // --- Assert ---
+        assert.ok(result.success);
+        assert.equal(result.data.server.port, 3000);
+    });
+
+    /**
+     * WHAT: When `server:` is present but `host` is omitted, host defaults to "127.0.0.1".
+     * WHY: T-3 — `host` carries `.default(DEFAULT_HOST)`; the loopback default is a
+     *      security boundary. Omitting host in config must not expose the server.
+     * STEPS:
+     *   Arrange — build a config with `server: { port: 8080 }` (no host)
+     *   Act — call ConfigSchema.safeParse
+     *   Assert — result.data.server.host === "127.0.0.1"
+     */
+    void it('defaults server.host to "127.0.0.1" when host is omitted (T-3)', () => {
+        // --- Arrange ---
+        const input = { version: 1, server: { port: 8080 } };
+
+        // --- Act ---
+        const result = ConfigSchema.safeParse(input);
+
+        // --- Assert ---
+        assert.ok(result.success);
+        assert.equal(result.data.server.host, "127.0.0.1");
+    });
+
+    /**
+     * WHAT: When `server:` is present but `enableCors` is omitted, it defaults to false.
+     * WHY: T-4 — `enableCors` carries `.default(false)`; CORS must be disabled
+     *      by default so prod configs that omit the key are secure out of the box.
+     * STEPS:
+     *   Arrange — build a config with `server: {}` (no enableCors)
+     *   Act — call ConfigSchema.safeParse
+     *   Assert — result.data.server.enableCors === false
+     */
+    void it("defaults server.enableCors to false when enableCors is omitted (T-4)", () => {
+        // --- Arrange ---
+        const input = { version: 1, server: {} };
+
+        // --- Act ---
+        const result = ConfigSchema.safeParse(input);
+
+        // --- Assert ---
+        assert.ok(result.success);
+        assert.equal(result.data.server.enableCors, false);
+    });
+
+    /**
+     * WHAT: When `server:` is present but `corsOrigins` is omitted, it defaults to [].
+     * WHY: T-5 — `corsOrigins` carries `.default([])`; an absent key must produce
+     *      an empty array (not undefined) so main.ts can safely iterate the list.
+     * STEPS:
+     *   Arrange — build a config with `server: {}` (no corsOrigins)
+     *   Act — call ConfigSchema.safeParse
+     *   Assert — deepEqual(result.data.server.corsOrigins, [])
+     */
+    void it("defaults server.corsOrigins to [] when corsOrigins is omitted (T-5)", () => {
+        // --- Arrange ---
+        const input = { version: 1, server: {} };
+
+        // --- Act ---
+        const result = ConfigSchema.safeParse(input);
+
+        // --- Assert ---
+        assert.ok(result.success);
+        // deepEqual required — [] is a reference type; assert.equal would always fail
+        assert.deepEqual(result.data.server.corsOrigins, []);
+    });
+
+    /**
+     * WHAT: Explicit server field values are preserved and not overridden by defaults.
+     * WHY: T-6 — defaults must only activate when a field is absent; if a user
+     *      explicitly sets port/host/enableCors/corsOrigins, those values must
+     *      not be silently replaced by the schema defaults.
+     * STEPS:
+     *   Arrange — build a config with all four server fields set to non-default values
+     *   Act — call ConfigSchema.safeParse
+     *   Assert — all four fields match the explicitly provided values
+     */
+    void it("preserves explicit server field values — defaults do not override (T-6)", () => {
+        // --- Arrange ---
+        const input = {
+            version: 1,
+            server: {
+                port: 9000,
+                host: "0.0.0.0",
+                enableCors: true,
+                corsOrigins: ["https://example.com"],
+            },
+        };
+
+        // --- Act ---
+        const result = ConfigSchema.safeParse(input);
+
+        // --- Assert ---
+        assert.ok(result.success);
+        assert.equal(result.data.server.port, 9000);
+        assert.equal(result.data.server.host, "0.0.0.0");
+        assert.equal(result.data.server.enableCors, true);
+        // deepEqual required — arrays are reference types
+        assert.deepEqual(result.data.server.corsOrigins, ["https://example.com"]);
+    });
 });

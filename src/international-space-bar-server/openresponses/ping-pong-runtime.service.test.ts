@@ -1,11 +1,24 @@
 import "reflect-metadata";
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import type { ILogger } from "../common/interfaces/index.js";
 import { PingPongRuntimeService } from "./ping-pong-runtime.service.js";
 import type { Message, OutputTextContent } from "./responses.types.js";
 
+function makeNoopLogger(): ILogger {
+    return {
+        info: () => {},
+        warn: () => {},
+        error: () => {},
+        debug: () => {},
+        trace: () => {},
+        fatal: () => {},
+        child: makeNoopLogger,
+    };
+}
+
 void describe("PingPongRuntimeService", () => {
-    const service = new PingPongRuntimeService();
+    const service = new PingPongRuntimeService(makeNoopLogger());
 
     void it("invoke() returns a completed response with pong text", async () => {
         const result = await service.invoke({
