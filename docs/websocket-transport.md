@@ -30,6 +30,15 @@ The WebSocket endpoint shares the same path as the HTTP endpoint. The server upg
 
 The `OpenResponsesWsAdapter` parses `message.type` as the NestJS event name. The gateway validates incoming messages against `webSocketResponseCreateEventSchema` and strips HTTP-only fields (`stream`, `stream_options`, `background`).
 
+Invalid messages are silently discarded — the adapter never throws on bad input. Two cases are handled and both emit a `warn`-level log entry before returning `undefined` (which NestJS drops):
+
+| Case                                  | Log message                                                                                |
+| ------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Valid JSON but no string `type` field | `"Received WebSocket message that is not an object with a string 'type' field. Ignoring."` |
+| Unparseable / non-JSON frame          | `"Failed to parse WebSocket message. Ignoring."`                                           |
+
+Both log entries include the raw `data` or parsed `message` as a structured field so the payload is visible in `app.log` without crashing the connection.
+
 ### REQ-WS-03: Same event format
 
 > "Servers MUST send response progress over the WebSocket using the same streaming event objects defined for streaming HTTP responses."
@@ -115,13 +124,13 @@ Implemented in `handleConnection` — the `IncomingMessage` (HTTP upgrade reques
 
 ### Component Responsibilities
 
-| Component | File | Responsibility |
-|-----------|------|---------------|
-| `OpenResponsesWsAdapter` | `ws-adapter.ts` | Extends NestJS `WsAdapter`, parses `message.type` as event name, mounts on `/v1/responses` |
-| `ResponsesGateway` | `responses.gateway.ts` | Handles `response.create`, auth validation, connection-local state, sequential queue, streaming events, error envelopes |
-| `ResponsesService` | `responses.service.ts` | Shared business logic — `createStream()` called by both HTTP and WebSocket |
-| `AgentRuntimePort` | `agent-runtime.port.ts` | Pluggable runtime interface |
-| `PingPongRuntimeService` | `ping-pong-runtime.service.ts` | Scaffold runtime — uses ChatOllama when available, falls back to simple "pong" streaming |
+| Component                | File                           | Responsibility                                                                                                          |
+| ------------------------ | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `OpenResponsesWsAdapter` | `ws-adapter.ts`                | Extends NestJS `WsAdapter`, parses `message.type` as event name, mounts on `/v1/responses`                              |
+| `ResponsesGateway`       | `responses.gateway.ts`         | Handles `response.create`, auth validation, connection-local state, sequential queue, streaming events, error envelopes |
+| `ResponsesService`       | `responses.service.ts`         | Shared business logic — `createStream()` called by both HTTP and WebSocket                                              |
+| `AgentRuntimePort`       | `agent-runtime.port.ts`        | Pluggable runtime interface                                                                                             |
+| `PingPongRuntimeService` | `ping-pong-runtime.service.ts` | Scaffold runtime — uses ChatOllama when available, falls back to simple "pong" streaming                                |
 
 ---
 
@@ -132,20 +141,24 @@ The easiest way to test the WebSocket transport manually is using `websocat`.
 ### Prerequisites
 
 ```bash
-# Install websocat (macOS)
-brew install websocat
+# Install websocat and rlwrap (macOS)
+brew install websocat rlwrap
 
 # Ensure ISB server is running
 pnpm dev:server
 ```
 
+> **Important — keep the connection open**: The server ties the LLM request lifetime to the WebSocket connection via an `AbortController`. If the client exits before the stream completes, the in-flight request is cancelled. Always use `--no-close` when piping input, or use the interactive form with `rlwrap` described below.
+
 ### Basic response
 
 ```bash
 echo '{"type":"response.create","model":"isb-ping","input":"hello"}' | \
-  websocat "ws://127.0.0.1:3000/v1/responses" \
+  websocat --no-close "ws://127.0.0.1:3000/v1/responses" \
     -H "Authorization: Bearer local-dev-key"
 ```
+
+`--no-close` keeps the connection open after stdin reaches EOF so the full stream is received before the client exits. Without it the connection closes immediately after the message is sent, which triggers the server-side `AbortController` and cancels the LLM request.
 
 Expected: a stream of JSON events ending with `response.completed`.
 
@@ -182,24 +195,32 @@ Expected: `{"type":"error","status":400,"error":{"code":"previous_response_not_f
 
 ### Sequential responses (interactive)
 
+Use `rlwrap` for readline editing, arrow-key history, and reliable paste handling. websocat sends each line on Enter:
+
 ```bash
-# Open an interactive session and send multiple messages
-websocat "ws://127.0.0.1:3000/v1/responses" -H "Authorization: Bearer local-dev-key"
+rlwrap websocat "ws://127.0.0.1:3000/v1/responses" \
+  -H "Authorization: Bearer local-dev-key"
 ```
 
-Then type and send each JSON message:
+Then type (or paste) and press **Enter** to send:
+
 ```json
-{"type":"response.create","model":"isb-ping","input":"first message"}
+{ "type": "response.create", "model": "isb-ping", "input": "first message" }
 ```
+
 Wait for `response.completed`, then:
+
 ```json
-{"type":"response.create","model":"isb-ping","input":"second message"}
+{ "type": "response.create", "model": "isb-ping", "input": "second message" }
 ```
+
+> **Paste tip**: websocat is line-buffered. If a paste does not appear to send, press Enter explicitly. Multi-line JSON will not be sent until a newline is received — always collapse to a single line before pasting.
 
 ### store:false continuation (interactive)
 
 ```bash
-websocat "ws://127.0.0.1:3000/v1/responses" -H "Authorization: Bearer local-dev-key"
+rlwrap websocat "ws://127.0.0.1:3000/v1/responses" \
+  -H "Authorization: Bearer local-dev-key"
 ```
 
 1. Send: `{"type":"response.create","model":"isb-ping","input":"remember this","store":false}`
@@ -212,25 +233,25 @@ websocat "ws://127.0.0.1:3000/v1/responses" -H "Authorization: Bearer local-dev-
 
 ## Compliance Test Matrix
 
-| Test ID | What it tests | Status | Notes |
-|---------|---------------|--------|-------|
-| `websocket-previous-response-not-found` | Missing previous_response_id error envelope | ✅ Passing | Validates REQ-WS-04 error code and REQ-WS-07 error format |
-| `websocket-response` | Basic WebSocket response creation | ❌ Failing | Receives events but compliance test parser expects specific terminal response structure; likely a schema mismatch |
-| `websocket-sequential-responses` | Multiple response.create on one connection | ❌ Failing | Depends on basic response working first |
-| `websocket-continuation` | store:false continuation with previous_response_id | ❌ Failing | Depends on basic response working first |
-| `websocket-reconnect-store-false-recovery` | Reconnect after store:false | ❌ Failing | Depends on basic response working first |
-| `websocket-failed-continuation-evicts-cache` | Failed continuation cache eviction | ❌ Failing | Depends on basic response working first |
-| `websocket-compact-new-chain` | Compact output → new WebSocket chain | ❌ Blocked | `/v1/responses/compact` endpoint not implemented |
-| `basic-response` | Simple text response via HTTP | ✅ Passing | |
-| `streaming-response` | SSE streaming events via HTTP | ✅ Passing | |
-| `system-prompt` | System role message via HTTP | ✅ Passing | |
-| `multi-turn` | Multi-turn conversation via HTTP | ✅ Passing | |
-| `image-input` | Image URL in user content via HTTP | ✅ Passing | |
-| `assistant-phase` | Assistant phase labels via HTTP | ✅ Passing | |
-| `response-output-phase-schema` | ResponseResource schema validation | ✅ Passing | |
-| `tool-calling` | Function tool call output | ❌ Runtime issue | Depends on LLM producing function_call |
-| `compact-response` | /v1/responses/compact endpoint | ❌ Blocked | Endpoint not implemented |
-| `compact-missing-model` | /v1/responses/compact 400 error | ❌ Blocked | Endpoint not implemented |
+| Test ID                                      | What it tests                                      | Status           | Notes                                                                                                             |
+| -------------------------------------------- | -------------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `websocket-previous-response-not-found`      | Missing previous_response_id error envelope        | ✅ Passing       | Validates REQ-WS-04 error code and REQ-WS-07 error format                                                         |
+| `websocket-response`                         | Basic WebSocket response creation                  | ❌ Failing       | Receives events but compliance test parser expects specific terminal response structure; likely a schema mismatch |
+| `websocket-sequential-responses`             | Multiple response.create on one connection         | ❌ Failing       | Depends on basic response working first                                                                           |
+| `websocket-continuation`                     | store:false continuation with previous_response_id | ❌ Failing       | Depends on basic response working first                                                                           |
+| `websocket-reconnect-store-false-recovery`   | Reconnect after store:false                        | ❌ Failing       | Depends on basic response working first                                                                           |
+| `websocket-failed-continuation-evicts-cache` | Failed continuation cache eviction                 | ❌ Failing       | Depends on basic response working first                                                                           |
+| `websocket-compact-new-chain`                | Compact output → new WebSocket chain               | ❌ Blocked       | `/v1/responses/compact` endpoint not implemented                                                                  |
+| `basic-response`                             | Simple text response via HTTP                      | ✅ Passing       |                                                                                                                   |
+| `streaming-response`                         | SSE streaming events via HTTP                      | ✅ Passing       |                                                                                                                   |
+| `system-prompt`                              | System role message via HTTP                       | ✅ Passing       |                                                                                                                   |
+| `multi-turn`                                 | Multi-turn conversation via HTTP                   | ✅ Passing       |                                                                                                                   |
+| `image-input`                                | Image URL in user content via HTTP                 | ✅ Passing       |                                                                                                                   |
+| `assistant-phase`                            | Assistant phase labels via HTTP                    | ✅ Passing       |                                                                                                                   |
+| `response-output-phase-schema`               | ResponseResource schema validation                 | ✅ Passing       |                                                                                                                   |
+| `tool-calling`                               | Function tool call output                          | ❌ Runtime issue | Depends on LLM producing function_call                                                                            |
+| `compact-response`                           | /v1/responses/compact endpoint                     | ❌ Blocked       | Endpoint not implemented                                                                                          |
+| `compact-missing-model`                      | /v1/responses/compact 400 error                    | ❌ Blocked       | Endpoint not implemented                                                                                          |
 
 ### Why most WebSocket tests fail
 
