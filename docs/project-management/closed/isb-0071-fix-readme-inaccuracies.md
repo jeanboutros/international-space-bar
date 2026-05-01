@@ -4,11 +4,11 @@
 |-------|-------|
 | Epic | — (standalone documentation ticket) |
 | Type | `feature` |
-| Status | `backlog` |
+| Status | `closed` |
 | Assignee | Docs Writer |
 | Priority | `high` |
 | Created | 2026-05-01 |
-| Completed | — |
+| Completed | 2026-05-01 |
 | Dependencies | none |
 
 ## Background
