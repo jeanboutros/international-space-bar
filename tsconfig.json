@@ -1,22 +1,22 @@
 {
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "experimentalDecorators": true,
-    "rootDir": "src",
-    "outDir": "dist",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "alwaysStrict": true,
-    "resolveJsonModule": true,
-    "jsx": "react-jsx",
-    "types": ["node"],
-    "paths": {
-        "@llm/*": ["./src/international-space-bar/llm/*"],
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "experimentalDecorators": true,
+        "rootDir": "src",
+        "outDir": "dist",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "alwaysStrict": true,
+        "resolveJsonModule": true,
+        "jsx": "react-jsx",
+        "types": ["node"],
+        "paths": {
+            "@llm/*": ["./src/international-space-bar/llm/*"]
+        }
     },
-  },
-  "include": ["src/**/*"]
+    "include": ["src/**/*"]
 }

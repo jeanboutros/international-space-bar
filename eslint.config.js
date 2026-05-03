@@ -1,38 +1,45 @@
 // @ts-check
 import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
+import eslintConfigPrettier from "eslint-config-prettier";
+import unusedImports from "eslint-plugin-unused-imports";
 
 /**
- * ESLint is intentionally scoped to type-aware rules only.
- * Formatting and non-type-aware linting is handled by Biome (faster, zero-config).
+ * ESLint owns ALL linting (type-aware + non-type-aware).
+ * Prettier owns ALL formatting (via `pnpm format`).
  *
- * `recommendedTypeCheckedOnly` is the preset specifically designed for pairing with
- * another linter — it omits all non-type-aware rules so there is zero overlap with Biome.
+ * Uses `strictTypeChecked` — the strictest preset from typescript-eslint — plus
+ * `stylisticTypeChecked` for consistent code style conventions.
  *
- * Rules enabled here require TypeScript's type checker and cannot be replicated by Biome:
- * - no-floating-promises      — every async call must be awaited or explicitly ignored
- * - no-misused-promises       — prevents passing async functions where void is expected
- * - await-thenable            — disallows awaiting non-Promise values
- * - no-unnecessary-type-assertion — removes redundant `as` casts
- * - no-unsafe-*               — bans implicit `any` from untyped expressions
+ * eslint-config-prettier disables any ESLint rules that conflict with Prettier.
+ * eslint-plugin-unused-imports auto-removes dead imports on `--fix`.
  *
- * Run: pnpm lint
+ * Run: pnpm lint / pnpm lint:fix / pnpm check
  */
 export default defineConfig(
     {
-        // ignore compiled output and generated files
-        ignores: ["dist/**", "src/**/openresponses/openresponses.generated.d.ts", "src/**/openresponses/generated/**"],
+        // ignore compiled output, generated files, and legacy code being retired
+        ignores: [
+            "dist/**",
+            "scripts/**",
+            "src/international-space-bar/**",
+            "src/**/openresponses/openresponses.generated.d.ts",
+            "src/**/openresponses/generated/**",
+        ],
     },
     {
         files: ["src/**/*.ts"],
-        extends: [tseslint.configs.recommendedTypeCheckedOnly],
+        extends: [tseslint.configs.strictTypeChecked, tseslint.configs.stylisticTypeChecked],
+        plugins: {
+            "unused-imports": unusedImports,
+        },
         languageOptions: {
             parserOptions: {
                 projectService: true,
             },
         },
         rules: {
-            // type-aware rules Biome cannot replicate
+            // ── Type-aware (strict) ──────────────────────────────────────
             "@typescript-eslint/no-floating-promises": "error",
             "@typescript-eslint/no-misused-promises": "error",
             "@typescript-eslint/await-thenable": "error",
@@ -42,6 +49,41 @@ export default defineConfig(
             "@typescript-eslint/no-unsafe-call": "error",
             "@typescript-eslint/no-unsafe-member-access": "error",
             "@typescript-eslint/no-unsafe-return": "error",
+
+            // ── Non-type-aware ───────────────────────────────────────────
+            "@typescript-eslint/no-unused-vars": [
+                "error",
+                { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+            ],
+            "@typescript-eslint/no-explicit-any": "warn",
+            "no-console": "warn",
+            "no-debugger": "error",
+            "prefer-const": "error",
+            "prefer-template": "warn",
+
+            // ── Unused imports (auto-fixable) ────────────────────────────
+            "unused-imports/no-unused-imports": "error",
+
+            // ── Relax strict rules where needed ──────────────────────────
+            // NestJS modules are empty decorator-only classes
+            "@typescript-eslint/no-extraneous-class": "off",
+            // NestJS uses empty interfaces for module metadata
+            "@typescript-eslint/no-empty-object-type": "off",
+            // Allow non-null assertions in tests and NestJS DI
+            "@typescript-eslint/no-non-null-assertion": "warn",
+            // Restrict template expressions but allow numbers and booleans
+            "@typescript-eslint/restrict-template-expressions": [
+                "error",
+                { allowNumber: true, allowBoolean: true },
+            ],
+            // Defensive runtime checks on protocol data are intentional
+            "@typescript-eslint/no-unnecessary-condition": "warn",
+            // Empty methods are common in test mocks and NestJS overrides
+            "@typescript-eslint/no-empty-function": [
+                "error",
+                { allow: ["methods", "overrideMethods", "arrowFunctions"] },
+            ],
         },
-    }
+    },
+    eslintConfigPrettier,
 );
