@@ -8,6 +8,7 @@ import type {
     responseFailedStreamingEventSchema,
     responseFunctionCallArgumentsDeltaStreamingEventSchema,
     responseFunctionCallArgumentsDoneStreamingEventSchema,
+    responseIncompleteStreamingEventSchema,
     responseInProgressStreamingEventSchema,
     responseOutputItemAddedStreamingEventSchema,
     responseOutputItemDoneStreamingEventSchema,
@@ -68,4 +69,5 @@ export type ResponseStreamEvent =
     | z.infer<typeof responseReasoningSummaryDoneStreamingEventSchema>
     | z.infer<typeof responseCompletedStreamingEventSchema>
     | z.infer<typeof responseFailedStreamingEventSchema>
+    | z.infer<typeof responseIncompleteStreamingEventSchema>
     | z.infer<typeof errorStreamingEventSchema>;
