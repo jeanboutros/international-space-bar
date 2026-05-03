@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { Inject, Injectable } from "@nestjs/common";
 import { AGENT_RUNTIME_PORT, type AgentRuntimePort } from "./agent-runtime.port.js";
 import type {
@@ -15,25 +14,26 @@ export class ResponsesService {
         this.runtime = runtime;
     }
 
-    async create(body: CreateResponseBody): Promise<ResponseResource> {
-        const input = typeof body.input === "string" ? body.input : JSON.stringify(body.input);
-
+    async create(body: CreateResponseBody, requestId: string): Promise<ResponseResource> {
         return this.runtime.invoke({
-            model: body.model,
-            input,
-            instructions: body.instructions,
-            requestId: `req_${randomUUID()}`,
+            model: body.model as string,
+            input: body.input as string | readonly unknown[] ?? "",
+            instructions: body.instructions as string | undefined,
+            requestId: requestId,
         });
     }
 
-    createStream(body: CreateResponseBody): AsyncIterable<ResponseStreamEvent> {
-        const input = typeof body.input === "string" ? body.input : JSON.stringify(body.input);
-
+    createStream(
+        body: CreateResponseBody,
+        abortSignal: AbortSignal,
+        requestId: string,
+    ): AsyncIterable<ResponseStreamEvent> {
         return this.runtime.stream({
-            model: body.model,
-            input,
-            instructions: body.instructions,
-            requestId: `req_${randomUUID()}`,
+            model: body.model as string,
+            input: body.input as string | readonly unknown[] ?? "",
+            instructions: body.instructions && typeof body.instructions === "string" ? body.instructions : JSON.stringify(body.instructions),
+            requestId: requestId,
+            abortSignal,
         });
     }
 }

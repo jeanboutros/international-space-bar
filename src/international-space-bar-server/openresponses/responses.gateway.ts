@@ -18,12 +18,13 @@
 //   REQ-WS-08  [DONE] sentinel — not needed; terminal events signal completion
 //   REQ-WS-09  60-minute connection limit — TODO(ISB-WS-CONN-LIMIT)
 
-import { timingSafeEqual } from "node:crypto";
+import { randomUUID, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage } from "node:http";
 import { Inject, Injectable } from "@nestjs/common";
 import {
     type OnGatewayConnection,
     type OnGatewayDisconnect,
+    type OnGatewayInit,
     SubscribeMessage,
     WebSocketGateway,
 } from "@nestjs/websockets";
@@ -35,6 +36,7 @@ import { AGENT_RUNTIME_PORT, type AgentRuntimePort } from "./agent-runtime.port.
 import { webSocketErrorEventSchema } from "./generated/zod/webSocketErrorEventSchema.js";
 import { webSocketResponseCreateEventSchema } from "./generated/zod/webSocketResponseCreateEventSchema.js";
 import type { ResponseResource, ResponseStreamEvent } from "./responses.types.js";
+import { WS_ERROR_EVENT, type WsErrorData } from "./ws-adapter.js";
 
 // ── Connection-local state ────────────────────────────────────────────────
 //
@@ -42,12 +44,14 @@ import type { ResponseResource, ResponseStreamEvent } from "./responses.types.js
 // keyed by their id. WeakMap ensures GC when the ws socket is collected.
 
 interface ConnectionState {
+    /** Session ID extracted from x-session-affinity header, or a generated UUID */
+    sessionId: string;
     /** Store:false responses cached for previous_response_id lookup */
     previousResponses: Map<string, ResponseResource>;
     /** Whether a response is currently being streamed on this connection */
     processing: boolean;
     /** Queue of pending messages to process sequentially */
-    queue: Array<{ data: unknown; raw: string }>;
+    queue: { data: unknown; raw: string }[];
     /** Abort controller for the current response stream */
     abortController?: AbortController; //TODO: consider making this mandatory
 }
@@ -75,7 +79,16 @@ function validateAuth(request: IncomingMessage): boolean {
     return isTokenValid(token, apiKey);
 }
 
+function extractSessionId(request: IncomingMessage): string {
+    return (request.headers["x-session-affinity"] as string | undefined) ?? `req_${randomUUID()}`;
+}
+
 // ── Error helpers ─────────────────────────────────────────────────────────
+
+function truncate(str: string, maxLength: number): string {
+    if (str.length <= maxLength) return str;
+    return `${str.slice(0, maxLength)}...`;
+}
 
 function sendError(
     client: WsClient,
@@ -104,16 +117,21 @@ type WsClient = InstanceType<typeof WebSocket>;
 @Injectable()
 @WebSocketGateway({ path: RESPONSES_WS_PATH })
 export class ResponsesGateway
-    implements OnGatewayConnection<WsClient>, OnGatewayDisconnect<WsClient>
-{
+    implements OnGatewayConnection<WsClient>, OnGatewayDisconnect<WsClient>, OnGatewayInit<WsClient> {
+
+    // Store each client's connection with its own state object
     private readonly connections = new WeakMap<WsClient, ConnectionState>();
 
     constructor(
         @Inject(AGENT_RUNTIME_PORT) private readonly runtime: AgentRuntimePort,
         @Inject(LOGGER) private readonly logger: ILogger,
-    ) {}
+    ) { }
 
     // ── Connection lifecycle ──────────────────────────────────────────────
+
+    afterInit(): void {
+        this.logger.info("WebSocket gateway initialized");
+    }
 
     /**
      * Called by NestJS when a new WebSocket connection is established.
@@ -133,6 +151,7 @@ export class ResponsesGateway
 
         const abortController = new AbortController();
         this.connections.set(client, {
+            sessionId: extractSessionId(request),
             previousResponses: new Map(),
             processing: false,
             queue: [],
@@ -172,13 +191,67 @@ export class ResponsesGateway
             return;
         }
 
+        // If the client disconnected while this message was queued, don't start draining.
+        if (state.abortController?.signal.aborted) return;
+
         await this.drainQueue(client, state);
+    }
+
+    // ── Error event handler ───────────────────────────────────────────────
+    //
+    // Routes invalid/unrecognized WebSocket messages to error envelopes per
+    // the OpenResponses spec. The adapter routes three kinds of bad messages
+    // here via WS_ERROR_EVENT:
+    //   - parse_error:   message is not valid JSON
+    //   - invalid_format: valid JSON but no string `type` field
+    //   - unknown_event:  valid JSON with `type` but no @SubscribeMessage handler
+
+    @SubscribeMessage(WS_ERROR_EVENT)
+    handleError(client: WsClient, payload: WsErrorData): void {
+        switch (payload.kind) {
+            case "parse_error":
+                sendError(
+                    client,
+                    400,
+                    "invalid_request",
+                    `Failed to parse message as JSON: ${truncate(payload.raw, 100)}`,
+                );
+                break;
+            case "invalid_format":
+                sendError(
+                    client,
+                    400,
+                    "invalid_request",
+                    "Message must be a JSON object with a string 'type' field",
+                );
+                break;
+            case "unknown_event":
+                sendError(
+                    client,
+                    400,
+                    "invalid_request",
+                    `Unknown event type '${payload.event}'. Supported events: response.create`,
+                );
+                break;
+            default:
+                sendError(
+                    client,
+                    500,
+                    "internal_error",
+                    "Unexpected error processing WebSocket message",
+                );
+                break;
+        }
     }
 
     // ── Sequential message processing ─────────────────────────────────────
 
     private async drainQueue(client: WsClient, state: ConnectionState): Promise<void> {
         while (state.queue.length > 0) {
+            // If the client disconnected (abort signal fired), stop draining.
+            // No point processing queued messages for a gone client.
+            if (state.abortController?.signal.aborted) break;
+
             const item = state.queue.shift();
             if (!item) break;
 
@@ -198,6 +271,7 @@ export class ResponsesGateway
         _raw: string,
     ): Promise<void> {
         // 1. Validate against the WebSocket create event schema
+        this.logger.debug({ data }, "Processing WebSocket message");
         const parseResult = webSocketResponseCreateEventSchema.safeParse(data);
         if (!parseResult.success) {
             const issues = parseResult.error.issues
@@ -240,10 +314,9 @@ export class ResponsesGateway
         }
 
         // 4. Build the request for the runtime
-        const input =
-            typeof message.input === "string" ? message.input : JSON.stringify(message.input);
+        const input = message.input ?? "";
 
-        const requestId = `req_${crypto.randomUUID()}`;
+        const requestId = state.sessionId;
         // The runtime requires a non-null model; default to "isb-ping" if not provided.
         // This matches the ping-pong runtime scaffold behavior.
         const model = message.model ?? "isb-ping";
@@ -270,6 +343,13 @@ export class ResponsesGateway
                 }
             }
         } catch (error) {
+            // If the stream was aborted because the client disconnected, don't send
+            // an error envelope — the client is gone and the abort was intentional.
+            if (error instanceof DOMException && error.name === "AbortError") {
+                this.logger.info("Stream aborted — client disconnected");
+                return;
+            }
+
             const message_ = error instanceof Error ? error.message : String(error);
 
             // REQ-WS-05: Failed continuation cache eviction

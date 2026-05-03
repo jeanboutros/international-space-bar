@@ -8,6 +8,7 @@ import { z } from "zod";
 import type { ILogger } from "../common/interfaces/index.js";
 import { LOGGER } from "../common/interfaces/logger.port.js";
 import type { AgentInvokeRequest, AgentRuntimePort } from "./agent-runtime.port.js";
+import { toBaseMessages } from "./input-to-messages.js";
 import { responseCompletedStreamingEventSchema } from "./generated/zod/responseCompletedStreamingEventSchema.js";
 import { responseContentPartAddedStreamingEventSchema } from "./generated/zod/responseContentPartAddedStreamingEventSchema.js";
 import { responseContentPartDoneStreamingEventSchema } from "./generated/zod/responseContentPartDoneStreamingEventSchema.js";
@@ -58,65 +59,11 @@ const FunctionCallItemShape = z.object({
 
 @Injectable()
 export class PingPongRuntimeService implements AgentRuntimePort {
-    constructor(@Inject(LOGGER) private readonly logger: ILogger) {}
-    invoke(request: AgentInvokeRequest): Promise<ResponseResource> {
-        this.logger.info(`Received ping with input: ${request.input}`);
-        const now = Math.floor(Date.now() / 1000);
-        return Promise.resolve(
-            responseResourceSchema.parse({
-                id: `resp_${randomUUID()}`,
-                object: "response",
-                created_at: now,
-                completed_at: now,
-                status: "completed",
-                model: request.model,
-                previous_response_id: null,
-                instructions: null,
-                output: [
-                    {
-                        id: `msg_${randomUUID()}`,
-                        type: "message",
-                        status: "completed",
-                        role: "assistant",
-                        content: [
-                            {
-                                type: "output_text",
-                                text: "pong",
-                                annotations: [],
-                            },
-                        ],
-                    },
-                ],
-                error: null,
-                tools: [],
-                tool_choice: "auto",
-                truncation: "disabled",
-                parallel_tool_calls: true,
-                text: { format: { type: "text" } },
-                top_p: 1,
-                presence_penalty: 0,
-                frequency_penalty: 0,
-                top_logprobs: 0,
-                temperature: 1,
-                reasoning: null,
-                usage: {
-                    input_tokens: 0,
-                    output_tokens: 1,
-                    total_tokens: 1,
-                    input_tokens_details: { cached_tokens: 0 },
-                    output_tokens_details: { reasoning_tokens: 0 },
-                },
-                max_output_tokens: null,
-                max_tool_calls: null,
-                store: true,
-                background: false,
-                service_tier: "default",
-                metadata: {},
-                safety_identifier: null,
-                prompt_cache_key: null,
-                incomplete_details: null,
-            }),
-        );
+    constructor(@Inject(LOGGER) private readonly logger: ILogger) { }
+
+    // TODO(isb-0020): Implement when LangGraph adapter is wired.
+    invoke(_request: AgentInvokeRequest): Promise<ResponseResource> {
+        throw new Error("invoke() not implemented in scaffold runtime");
     }
 
     // stream() — scaffold implementation.
@@ -124,10 +71,47 @@ export class PingPongRuntimeService implements AgentRuntimePort {
     // Otherwise, falls back to a minimal "pong" streaming sequence for compliance testing.
     // TODO(isb-0020): Delete this entire method when LangGraph adapter is wired.
     async *stream(request: AgentInvokeRequest): AsyncIterable<ResponseStreamEvent> {
-        this.logger.info(`Received streaming ping with input: ${request.input}`);
+        // TODO: Not in a ticket yet. The name of the model, should define which llm or workflow to 
+        // invoke. For example, if the model is "simple-workflow", we should invoke the simpleWorkflowGraph.
+        // The user should be able to switch between different workflows and llms by changing the model name 
+        // in the request.
+        // TODO: Identify how the list of models can be shared with 
+        const v1 = this.streamSimplePong(
+            request,
+            `res_${randomUUID()}`,
+            0,
+            Math.floor(Date.now() / 1000),
+            new AbortController().signal,
+        )
+
+        const v1Iterator = v1[Symbol.iterator]();
+
+        const { value, done } = v1Iterator.next();
+
+        this.logger.debug({ request, response: value, done }, "Request received in PingPongRuntimeService.stream()");
+
+        yield* await Promise.resolve(v1);
+        return;
+        // yield responseOutputTextDoneStreamingEventSchema.parse({
+        //     type: "response.output_text.done",
+        //     sequence_number: seq++,
+        //     item_id: msgId,
+        //     output_index: outputIndex,
+        //     content_index: 0,
+        //     text: accumulated,
+        // });
+        // simpleWorkflowGraph.invoke(request.input, { sessionId: request.requestId, logger: this.logger });
+        // yield Promise.resolve(null as unknown as ResponseStreamEvent); // TODO: REMOVE BEFORE PRODUCTION
+    }
+
+    async * _old(request: AgentInvokeRequest): AsyncIterable<ResponseStreamEvent> {
+        const messages = toBaseMessages(request.input);
+        const inputSummary = typeof request.input === "string" ? request.input : `[${messages.length} messages]`;
+        this.logger.info(`Received streaming ping with input: ${inputSummary}`);
         const respId = `resp_${randomUUID()}`;
         let seq = 0;
         const now = Math.floor(Date.now() / 1000);
+        const abortSignal = request.abortSignal ?? new AbortController().signal;
 
         // Check if Ollama is available for the full streaming experience.
         // If not, fall back to a minimal ping-pong streaming sequence.
@@ -135,13 +119,14 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         const useOllama = await this.isOllamaReachable(ollamaBaseUrl);
 
         if (!useOllama) {
-            yield* this.streamSimplePong(request, respId, seq, now);
+            yield* this.streamSimplePong(request, respId, seq, now, abortSignal);
             return;
         }
 
         // ── Full LLM streaming (Ollama reachable) ───────────────────────────────
         const llm = new ChatOllama({ model: "gemma4:e2b", baseUrl: ollamaBaseUrl });
 
+        
         // ── Tool for index 3 ────────────────────────────────────────────────────
         const weatherTool = {
             type: "function" as const,
@@ -168,6 +153,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
             model: typeof llm,
             messages: BaseMessage[],
             outputIndex: number,
+            abortSignal: AbortSignal,
         ): AsyncIterable<ResponseStreamEvent> {
             const reasoningId = `rs__${randomUUID()}`;
 
@@ -197,7 +183,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
             // stream deltas
             let accumulated = "";
             // TODO: REMOVE BEFORE PRODUCTION
-            for await (const chunk of await model.stream(messages)) {
+            for await (const chunk of await model.stream(messages, { signal: abortSignal })) {
                 // chunk.content is typed as MessageContent = string | MessageContentComplex[].
                 // It is a plain string for text-only streaming deltas (the common case with
                 // text-generation models). It is a MessageContentComplex[] when the model returns
@@ -262,6 +248,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
             model: typeof llm,
             prompt: string,
             outputIndex: number,
+            abortSignal: AbortSignal,
         ): AsyncIterable<ResponseStreamEvent> {
             const msgId = `msg_${randomUUID()}`;
 
@@ -296,7 +283,9 @@ export class PingPongRuntimeService implements AgentRuntimePort {
             // stream deltas
             let accumulated = "";
             // TODO: REMOVE BEFORE PRODUCTION
-            for await (const chunk of await model.stream([new HumanMessage(prompt)])) {
+            for await (const chunk of await model.stream([new HumanMessage(prompt)], {
+                signal: abortSignal,
+            })) {
                 // chunk.content is typed as MessageContent = string | MessageContentComplex[].
                 // It is a plain string for text-only streaming deltas (the common case with
                 // text-generation models). It is a MessageContentComplex[] when the model returns
@@ -401,6 +390,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
             incomplete_details: null,
         });
 
+        if (abortSignal.aborted) return;
         yield responseCreatedStreamingEventSchema.parse({
             type: "response.created",
             sequence_number: seq++,
@@ -408,24 +398,30 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         });
 
         // ── OUTPUT 0: reasoning ─────────────────────────────────────────────────
+        if (abortSignal.aborted) return;
         yield* streamReasoningBlock(
             llm,
             [
+                ...messages,
                 new HumanMessage(
-                    `Think step by step about what the user is asking: ${request.input}`,
+                    "Think step by step about what the user is asking.",
                 ),
             ],
             0,
+            abortSignal,
         );
 
         // ── OUTPUT 1: message ───────────────────────────────────────────────────
-        yield* streamMessageBlock(llm, `Respond helpfully to: ${request.input}`, 1);
+        if (abortSignal.aborted) return;
+        yield* streamMessageBlock(llm, `Respond helpfully to: ${inputSummary}`, 1, abortSignal);
 
         // ── OUTPUT 2: reasoning ─────────────────────────────────────────────────
+        if (abortSignal.aborted) return;
         yield* streamReasoningBlock(
             llm,
-            [new HumanMessage(`Think about what tool you need to fully answer: ${request.input}`)],
+            [...messages, new HumanMessage("Think about what tool you need to fully answer this.")],
             2,
+            abortSignal,
         );
 
         // ── OUTPUT 3: function_call ─────────────────────────────────────────────
@@ -448,29 +444,35 @@ export class PingPongRuntimeService implements AgentRuntimePort {
 
         let argsAccumulated = "";
         // TODO: REMOVE BEFORE PRODUCTION
-        for await (const chunk of await llmWithTools.stream([
-            new HumanMessage(
-                `You must call the get_weather function. The user asked: ${request.input}`,
-            ),
-        ])) {
+        for await (const chunk of await llmWithTools.stream(
+            [
+                new HumanMessage(
+                    `You must call the get_weather function. The user asked: ${inputSummary}`,
+                ),
+            ],
+            { signal: abortSignal },
+        )) {
+            if (abortSignal.aborted) return;
             // Collect tool call argument fragments from the chunk
             const toolCalls =
-                (chunk.tool_calls as Array<{ args?: string }> | undefined) ??
+                (chunk.tool_calls as { args?: string }[] | undefined) ??
                 (
                     chunk.additional_kwargs as
-                        | { tool_calls?: Array<{ function?: { arguments?: string } }> }
-                        | undefined
+                    | { tool_calls?: { function?: { arguments?: string } }[] }
+                    | undefined
                 )?.tool_calls;
 
             if (toolCalls && toolCalls.length > 0) {
                 const tc = toolCalls[0];
                 const fragment =
                     typeof (tc as { function?: { arguments?: string } }).function?.arguments ===
-                    "string"
+                        "string"
                         ? ((tc as { function?: { arguments?: string } }).function?.arguments ?? "")
                         : "";
                 if (fragment) {
                     argsAccumulated += fragment;
+
+                    if (abortSignal.aborted) return;
                     yield responseFunctionCallArgumentsDeltaStreamingEventSchema.parse({
                         type: "response.function_call_arguments.delta",
                         sequence_number: seq++,
@@ -484,6 +486,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
 
         const finalArgs = argsAccumulated || "{}";
 
+        if (abortSignal.aborted) return;
         yield responseFunctionCallArgumentsDoneStreamingEventSchema.parse({
             type: "response.function_call_arguments.done",
             sequence_number: seq++,
@@ -492,6 +495,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
             arguments: finalArgs,
         });
 
+        if (abortSignal.aborted) return;
         yield responseOutputItemDoneStreamingEventSchema.parse({
             type: "response.output_item.done",
             sequence_number: seq++,
@@ -510,7 +514,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         yield* streamReasoningBlock(
             llm,
             [
-                new HumanMessage(String(request.input)),
+                ...messages,
                 new ToolMessage({
                     content: `{"temperature": 22, "unit": "celsius", "description": "Partly cloudy"}`,
                     tool_call_id: callId,
@@ -519,13 +523,15 @@ export class PingPongRuntimeService implements AgentRuntimePort {
                 new HumanMessage("Reflect on the tool result and how to use it in your answer."),
             ],
             4,
+            abortSignal,
         );
 
         // ── OUTPUT 5: message ───────────────────────────────────────────────────
         yield* streamMessageBlock(
             llm,
-            `Give a final helpful answer incorporating weather info for: ${request.input}`,
+            `Give a final helpful answer incorporating weather info for: ${inputSummary}`,
             5,
+            abortSignal,
         );
 
         // ── response.completed ──────────────────────────────────────────────────
@@ -552,7 +558,8 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         respId: string,
         seq: number,
         now: number,
-    ): AsyncIterable<ResponseStreamEvent> {
+        abortSignal: AbortSignal,
+    ): Iterable<ResponseStreamEvent> {
         const msgId = `msg_${randomUUID()}`;
 
         const inProgressResponse = responseResourceSchema.parse({
@@ -596,6 +603,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         });
 
         // response.created
+        if (abortSignal.aborted) return;
         yield responseCreatedStreamingEventSchema.parse({
             type: "response.created",
             sequence_number: seq++,
@@ -603,6 +611,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         });
 
         // output_item.added
+        if (abortSignal.aborted) return;
         yield responseOutputItemAddedStreamingEventSchema.parse({
             type: "response.output_item.added",
             sequence_number: seq++,
@@ -617,6 +626,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         });
 
         // content_part.added
+        if (abortSignal.aborted) return;
         yield responseContentPartAddedStreamingEventSchema.parse({
             type: "response.content_part.added",
             sequence_number: seq++,
@@ -631,6 +641,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         });
 
         // output_text.delta
+        if (abortSignal.aborted) return;
         yield responseOutputTextDeltaStreamingEventSchema.parse({
             type: "response.output_text.delta",
             sequence_number: seq++,
@@ -641,6 +652,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         });
 
         // output_text.done
+        if (abortSignal.aborted) return;
         yield responseOutputTextDoneStreamingEventSchema.parse({
             type: "response.output_text.done",
             sequence_number: seq++,
@@ -651,6 +663,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         });
 
         // content_part.done
+        if (abortSignal.aborted) return;
         yield responseContentPartDoneStreamingEventSchema.parse({
             type: "response.content_part.done",
             sequence_number: seq++,
@@ -665,6 +678,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         });
 
         // output_item.done
+        if (abortSignal.aborted) return;
         yield responseOutputItemDoneStreamingEventSchema.parse({
             type: "response.output_item.done",
             sequence_number: seq++,
@@ -679,6 +693,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         });
 
         // response.completed
+        if (abortSignal.aborted) return;
         yield responseCompletedStreamingEventSchema.parse({
             type: "response.completed",
             sequence_number: seq++,
@@ -710,7 +725,9 @@ export class PingPongRuntimeService implements AgentRuntimePort {
     private async isOllamaReachable(baseUrl: string): Promise<boolean> {
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 2000);
+            const timeoutId = setTimeout(() => {
+                controller.abort();
+            }, 2000);
             const response = await fetch(`${baseUrl}/api/tags`, {
                 signal: controller.signal,
             });
