@@ -44,9 +44,8 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         const llm = new ChatOllama({ model: request.model, baseUrl: ollamaBaseUrl });
         const graph = wrapAsGraph(llm);
         const input = messages.length > 0 ? messages : [new HumanMessage(request.input as string)];
-        const blocks = await langGraphBlocks(graph, input);
 
-        yield* rs.run(blocks);
+        yield* rs.run(langGraphBlocks(graph, input));
     }
 
     private async isOllamaReachable(baseUrl: string): Promise<boolean> {
