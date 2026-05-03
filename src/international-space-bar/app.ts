@@ -98,10 +98,10 @@ export class App {
         App.log.debug("Logging initialised.");
     }
 
-    private static initialisationStack: Array<{
+    private static initialisationStack: {
         callableName: string;
         callable: () => Promise<unknown>;
-    }> = [
+    }[] = [
         {
             // Config must be first — logging reads config values to configure itself.
             callableName: "config",
@@ -146,10 +146,10 @@ export class App {
         App.initialisationStack.push({ callableName, callable });
     }
 
-    private static runnableStack: Array<{
+    private static runnableStack: {
         runnableName: string;
         runnable: (ctx: AppContext) => Promise<unknown>;
-    }> = [
+    }[] = [
         // Register the main application runnables here using addRunnable(),
         // or push directly into this array before calling app.run().
     ];

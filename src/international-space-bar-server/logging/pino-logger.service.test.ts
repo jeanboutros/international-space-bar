@@ -244,8 +244,12 @@ void describe("PinoLoggerService", () => {
                 info(msg: string): void;
                 flush(cb: () => void): void;
             };
-            captureStdout(() => pinoInst.info("pre-teardown fd-open trigger"));
-            await new Promise<void>((resolve) => pinoInst.flush(resolve));
+            captureStdout(() => {
+                pinoInst.info("pre-teardown fd-open trigger");
+            });
+            await new Promise<void>((resolve) => {
+                pinoInst.flush(resolve);
+            });
         });
     });
 
@@ -308,12 +312,24 @@ void describe("PinoLoggerService", () => {
         void it("all ILogger methods accept a string argument without throwing", () => {
             // --- Act + Assert ---
             captureStdout(() => {
-                assert.doesNotThrow(() => service.info("info message"));
-                assert.doesNotThrow(() => service.warn("warn message"));
-                assert.doesNotThrow(() => service.error("error message"));
-                assert.doesNotThrow(() => service.debug("debug message"));
-                assert.doesNotThrow(() => service.trace("trace message"));
-                assert.doesNotThrow(() => service.fatal("fatal message"));
+                assert.doesNotThrow(() => {
+                    service.info("info message");
+                });
+                assert.doesNotThrow(() => {
+                    service.warn("warn message");
+                });
+                assert.doesNotThrow(() => {
+                    service.error("error message");
+                });
+                assert.doesNotThrow(() => {
+                    service.debug("debug message");
+                });
+                assert.doesNotThrow(() => {
+                    service.trace("trace message");
+                });
+                assert.doesNotThrow(() => {
+                    service.fatal("fatal message");
+                });
             });
         });
 
@@ -332,9 +348,15 @@ void describe("PinoLoggerService", () => {
 
             // --- Act + Assert ---
             captureStdout(() => {
-                assert.doesNotThrow(() => service.info(ctx, "info with context"));
-                assert.doesNotThrow(() => service.warn(ctx, "warn with context"));
-                assert.doesNotThrow(() => service.error(ctx, "error with context"));
+                assert.doesNotThrow(() => {
+                    service.info(ctx, "info with context");
+                });
+                assert.doesNotThrow(() => {
+                    service.warn(ctx, "warn with context");
+                });
+                assert.doesNotThrow(() => {
+                    service.error(ctx, "error with context");
+                });
             });
         });
 
@@ -386,7 +408,9 @@ void describe("PinoLoggerService", () => {
 
             // --- Act + Assert ---
             captureStdout(() => {
-                assert.doesNotThrow(() => child.info("child log message"));
+                assert.doesNotThrow(() => {
+                    child.info("child log message");
+                });
             });
         });
     });

@@ -22,15 +22,15 @@ async function bootstrap() {
         app.enableCors({ origin: origins });
     }
 
-    logger.log(`Starting international-space-bar-server in ${String(config.environment)} mode ...`);
+    logger.log(`Starting international-space-bar-server in ${config.environment} mode ...`);
 
     const port = config.get("server.port");
     const host = config.get("server.host");
 
     logger.debug("Logging application debug information:");
-    logger.debug(`Is CORS enabled? ${String(config.get("server.enableCors"))}`);
-    logger.debug(`Is server.port set? ${String(config.get("server.port"))}`);
-    logger.debug(`Is server.host set? ${String(config.get("server.host"))}`);
+    logger.debug(`Is CORS enabled? ${config.get("server.enableCors")}`);
+    logger.debug(`Is server.port set? ${config.get("server.port")}`);
+    logger.debug(`Is server.host set? ${config.get("server.host")}`);
     logger.debug(`Is environment variable HOST set? ${process.env.HOST ?? "undefined"}`);
     logger.debug(`Is environment variable PORT set? ${process.env.PORT ?? "undefined"}`);
 

@@ -166,16 +166,14 @@ export class Logging {
      * ```
      */
     public static getInstance(config: IConfig): Promise<Logging> {
-        if (!Logging.instance) {
-            // TODO: Once `initialize` performs real async I/O (e.g. loading log
-            // configuration from a file or secrets manager), remove `Promise.resolve()`
-            // and make `initialize` async, returning `Promise<Logging>` directly.
-            // The `getInstance` signature stays unchanged.
-            Logging.instance = Promise.resolve(Logging.initialize(config)).then((inst) => {
-                Logging.resolvedInstance = inst;
-                return inst;
-            });
-        }
+        // TODO: Once `initialize` performs real async I/O (e.g. loading log
+        // configuration from a file or secrets manager), remove `Promise.resolve()`
+        // and make `initialize` async, returning `Promise<Logging>` directly.
+        // The `getInstance` signature stays unchanged.
+        Logging.instance ??= Promise.resolve(Logging.initialize(config)).then((inst) => {
+            Logging.resolvedInstance = inst;
+            return inst;
+        });
         return Logging.instance;
     }
 
@@ -220,9 +218,7 @@ export class Logging {
         if (Logging.resolvedInstance) {
             return Logging.resolvedInstance.getLogger(name);
         }
-        if (!Logging._preInitLogger) {
-            Logging._preInitLogger = new StdoutLoggerAdapter({}, "debug");
-        }
+        Logging._preInitLogger ??= new StdoutLoggerAdapter({}, "debug");
         return name ? Logging._preInitLogger.child(name) : Logging._preInitLogger;
     }
 
@@ -263,22 +259,22 @@ class LazyLogger implements ILogger {
     }
 
     trace(contextOrMessage: Record<string, unknown> | string, message?: string): void {
-        this.resolve().trace(contextOrMessage as Record<string, unknown>, message as string);
+        this.resolve().trace(contextOrMessage as Record<string, unknown>, message!);
     }
     debug(contextOrMessage: Record<string, unknown> | string, message?: string): void {
-        this.resolve().debug(contextOrMessage as Record<string, unknown>, message as string);
+        this.resolve().debug(contextOrMessage as Record<string, unknown>, message!);
     }
     info(contextOrMessage: Record<string, unknown> | string, message?: string): void {
-        this.resolve().info(contextOrMessage as Record<string, unknown>, message as string);
+        this.resolve().info(contextOrMessage as Record<string, unknown>, message!);
     }
     warn(contextOrMessage: Record<string, unknown> | string, message?: string): void {
-        this.resolve().warn(contextOrMessage as Record<string, unknown>, message as string);
+        this.resolve().warn(contextOrMessage as Record<string, unknown>, message!);
     }
     error(contextOrMessage: Record<string, unknown> | string, message?: string): void {
-        this.resolve().error(contextOrMessage as Record<string, unknown>, message as string);
+        this.resolve().error(contextOrMessage as Record<string, unknown>, message!);
     }
     fatal(contextOrMessage: Record<string, unknown> | string, message?: string): void {
-        this.resolve().fatal(contextOrMessage as Record<string, unknown>, message as string);
+        this.resolve().fatal(contextOrMessage as Record<string, unknown>, message!);
     }
 }
 

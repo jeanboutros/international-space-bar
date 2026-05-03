@@ -148,7 +148,7 @@ export class OpenResponsesWsAdapter extends BaseWsAdapter {
     // API surface — we cannot tighten these types without breaking the override.
 
     /* eslint-disable @typescript-eslint/no-unsafe-argument */
-     
+
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
     public override bindMessageHandler(
@@ -196,6 +196,5 @@ export class OpenResponsesWsAdapter extends BaseWsAdapter {
 
     /* eslint-enable @typescript-eslint/no-unsafe-argument */
 
-     
     /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 }

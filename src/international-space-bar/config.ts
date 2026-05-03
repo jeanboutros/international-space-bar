@@ -131,9 +131,7 @@ export class Config {
      * @throws {Error} If the YAML file cannot be read or secrets cannot be resolved.
      */
     public static getInstance(secretsStore?: ISecretsStore): Promise<Config> {
-        if (!Config.instance) {
-            Config.instance = Config.initialize(secretsStore);
-        }
+        Config.instance ??= Config.initialize(secretsStore);
         return Config.instance;
     }
 

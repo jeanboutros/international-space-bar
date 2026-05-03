@@ -95,10 +95,12 @@ export class ApplicationConfigService {
      * regardless of whether a defaultValue is supplied.
      */
     get<K extends DotKeys<AppConfig>>(key: K): DotValue<AppConfig, K>;
+    /* eslint-disable @typescript-eslint/unified-signatures -- separate overloads for distinct caller intent (required vs optional default) */
     get<K extends DotKeys<AppConfig>>(
         key: K,
         defaultValue: DotValue<AppConfig, K>,
     ): DotValue<AppConfig, K>;
+    /* eslint-enable @typescript-eslint/unified-signatures */
     get<K extends DotKeys<AppConfig>>(
         key: K,
         defaultValue: DotValue<AppConfig, K> | typeof MISSING = MISSING,

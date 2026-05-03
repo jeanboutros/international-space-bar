@@ -86,6 +86,7 @@ void describe("ApplicationConfigService", () => {
     afterEach(() => {
         for (const key of ENV_KEYS) {
             if (savedEnv[key] === undefined) {
+                // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- restoring env vars by computed key is the standard cleanup pattern
                 delete process.env[key];
             } else {
                 process.env[key] = savedEnv[key];
@@ -515,7 +516,7 @@ void describe("ApplicationConfigService", () => {
             fullGetConfigPath = join(tmpGetDir, "full.yaml");
             writeFileSync(
                 fullGetConfigPath,
-                [
+                `${[
                     "version: 1",
                     "server:",
                     "  port: 3001",
@@ -523,7 +524,7 @@ void describe("ApplicationConfigService", () => {
                     "  enableCors: true",
                     "  corsOrigins:",
                     '    - "http://example.com"',
-                ].join("\n") + "\n",
+                ].join("\n")}\n`,
             );
 
             noServerGetConfigPath = join(tmpGetDir, "no-server.yaml");

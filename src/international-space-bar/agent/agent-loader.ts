@@ -69,9 +69,7 @@ function resolveModel(
  */
 function ensureOllamaEnvVars(config: IConfig): void {
     const baseUrl = config.ollamaBaseUrl.href.replace(/\/$/, "");
-    if (!process.env.OLLAMA_BASE_URL) {
-        process.env.OLLAMA_BASE_URL = baseUrl;
-    }
+    process.env.OLLAMA_BASE_URL ??= baseUrl;
 }
 
 // ---------------------------------------------------------------------------

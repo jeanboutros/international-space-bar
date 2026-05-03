@@ -21,12 +21,7 @@ const webFetchToolSchema = {
     schema: webFetchSchema,
 };
 
-async function webFetchFunction({
-    query,
-    maxResults = 5,
-    topic = "general",
-    includeRawContent = false,
-}: WebFetchSchema) {
+async function webFetchFunction({ query, maxResults, topic, includeRawContent }: WebFetchSchema) {
     const validatedInput = webFetchSchema.parse({ query, maxResults, topic, includeRawContent });
     const tavily = new TavilySearch({
         tavilyApiKey:
