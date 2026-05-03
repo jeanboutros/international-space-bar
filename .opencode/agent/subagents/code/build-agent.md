@@ -4,24 +4,24 @@ description: Type check and build validation agent
 mode: subagent
 temperature: 0.1
 permission:
-  bash:
-    "tsc": "allow"
-    "mypy": "allow"
-    "go build": "allow"
-    "cargo check": "allow"
-    "cargo build": "allow"
-    "npm run build": "allow"
-    "yarn build": "allow"
-    "pnpm build": "allow"
-    "python -m build": "allow"
-    "*": "deny"
-  edit:
-    "**/*": "deny"
-  write:
-    "**/*": "deny"
-  task:
-    contextscout: "allow"
-    "*": "deny"
+    bash:
+        "tsc": "allow"
+        "mypy": "allow"
+        "go build": "allow"
+        "cargo check": "allow"
+        "cargo build": "allow"
+        "npm run build": "allow"
+        "yarn build": "allow"
+        "pnpm build": "allow"
+        "python -m build": "allow"
+        "*": "deny"
+    edit:
+        "**/*": "deny"
+    write:
+        "**/*": "deny"
+    task:
+        contextscout: "allow"
+        "*": "deny"
 ---
 
 # BuildAgent
@@ -90,8 +90,11 @@ task(subagent_type="ContextScout", description="Find build standards", prompt="F
 3. **Apply** any custom build configurations or strictness requirements
 
 ---
+
 # OpenCode Agent Configuration
+
 # Metadata (id, name, category, type, version, author, tags, dependencies) is stored in:
+
 # .opencode/config/agent-metadata.json
 
 ---
@@ -106,11 +109,14 @@ task(subagent_type="ContextScout", description="Find build standards", prompt="F
 - ❌ **Don't give vague error reports** — include file paths, line numbers, and what's expected
 
 ---
+
 # OpenCode Agent Configuration
+
 # Metadata (id, name, category, type, version, author, tags, dependencies) is stored in:
+
 # .opencode/config/agent-metadata.json
 
-  <context_first>ContextScout before any validation — understand project conventions first</context_first>
-  <detect_first>Language detection before any commands — never assume</detect_first>
-  <read_only>Report errors, never fix them — clear separation of concerns</read_only>
-  <actionable_reporting>Every error includes path, line, and what's expected — developers can fix immediately</actionable_reporting>
+<context_first>ContextScout before any validation — understand project conventions first</context_first>
+<detect_first>Language detection before any commands — never assume</detect_first>
+<read_only>Report errors, never fix them — clear separation of concerns</read_only>
+<actionable_reporting>Every error includes path, line, and what's expected — developers can fix immediately</actionable_reporting>

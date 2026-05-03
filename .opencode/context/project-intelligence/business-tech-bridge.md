@@ -1,94 +1,66 @@
-<!-- Context: project-intelligence/bridge | Priority: high | Version: 1.0 | Updated: 2025-01-12 -->
+<!-- Context: project-intelligence/bridge | Priority: high | Version: 2.0 | Updated: 2026-05-01 -->
 
 # Business ↔ Tech Bridge
 
-> Document how business needs translate to technical solutions. This is the critical connection point.
-
-## Quick Reference
-
-- **Purpose**: Show stakeholders technical choices serve business goals
-- **Purpose**: Show developers business constraints drive architecture
-- **Update When**: New features, refactoring, business pivot
+**Purpose**: How business needs map to technical solutions. The critical connection point.
+**Last Updated**: 2026-05-01 | **Update Triggers**: New features, refactoring, business pivot
 
 ## Core Mapping
 
-| Business Need | Technical Solution | Why This Mapping | Business Value |
-|---------------|-------------------|------------------|----------------|
-| [Users need X] | [Technical implementation] | [Why this maps] | [Value delivered] |
-| [Business wants Y] | [Technical implementation] | [Why this maps] | [Value delivered] |
-| [Compliance requires Z] | [Technical implementation] | [Why this maps] | [Value delivered] |
+| Business Need                    | Technical Solution                                        | Why This Mapping                                  | Value                                    |
+| -------------------------------- | --------------------------------------------------------- | ------------------------------------------------- | ---------------------------------------- |
+| Clients need a standard protocol | OpenResponses (HTTP/SSE + WebSocket)                      | Industry-standard response API                    | Any compatible client connects instantly |
+| Quality outcomes                 | Satisfaction evaluation loop (0–1 score, iterate at <0.7) | Automated quality gate per request                | No manual re-prompting                   |
+| Multi-perspective decisions      | Council sub-graph (5 advisors + 5 reviewers + chairman)   | Parallel fan-out + anonymised peer review         | Reduces groupthink, surfaces blind spots |
+| Protocol compliance              | Kubb auto-generation from OpenAPI spec                    | Spec is source of truth; never hand-write schemas | Compliance by construction               |
+| Security by default              | Bearer auth + loopback-only + SECRET syntax               | Prevent accidental credential exposure            | Safe to run on any machine               |
+| Observable agents                | Separate pino instances per concern                       | System log ≠ agent audit ≠ server log             | Each audience tunes their own signal     |
+| Self-hosted deployment           | NestJS + tsup build + env-config YAML                     | No cloud dependency; run anywhere                 | Full control over data and infra         |
 
-## Feature Mapping Examples
+## Feature Mappings
 
-### Feature: [Feature Name]
+### Feature: OpenResponses Server
 
-**Business Context**:
-- User need: [What users need]
-- Business goal: [Why this matters to business]
-- Priority: [Why this was prioritized]
+**Business**: Users need to point any OpenResponses client at a self-hosted remote model.
+**Tech**: NestJS controller + service at `POST /v1/responses` with SSE streaming + WebSocket gateway.
+**Connection**: The protocol surface is the product. Without spec compliance, no client can connect. The dual-transport design (HTTP/SSE + WebSocket) supports both stateless and persistent clients.
 
-**Technical Implementation**:
-- Solution: [What was built]
-- Architecture: [How it fits the system]
-- Trade-offs: [What was considered and why it won]
+### Feature: Council Deliberation Protocol
 
-**Connection**:
-[Explain clearly how the technical solution serves the business need. What would happen without this feature? What does this feature enable for the business?]
+**Business**: Decisions with stakes need diverse perspectives, not single-model answers.
+**Tech**: LangGraph `Send` fan-out to 5 advisor nodes → anonymise → 5 reviewer nodes → chairman synthesis → Markdown report.
+**Connection**: The council is the unique selling point. The anonymisation step (shuffle + relabel A–E) prevents authority bias. The chairman de-anonymises for the final verdict.
 
-### Feature: [Feature Name]
+### Feature: Satisfaction Evaluation Loop
 
-**Business Context**:
-- User need: [What users need]
-- Business goal: [Why this matters to business]
-- Priority: [Why this was prioritized]
+**Business**: Users shouldn't need to manually re-prompt when quality is low.
+**Tech**: `evaluate` node scores outcome on 4 dimensions (completeness, accuracy, clarity, actionability). Score <0.7 → inject feedback + iterate. Max 3 iterations.
+**Connection**: Transforms the system from "single-shot" to "self-improving per request". Council baseline starts at 0.6 (inherently thorough).
 
-**Technical Implementation**:
-- Solution: [What was built]
-- Architecture: [How it fits the system]
-- Trade-offs: [What was considered and why it won]
+### Feature: Agent Validation Pipeline
 
-**Connection**:
-[Explain clearly how the technical solution serves the business need.]
+**Business**: Every feature must be architecturally sound, tested, secure before merging.
+**Tech**: Phase A (architect + engineer + security → tech-validator) → Phase B (test-planner + docs-planner → PM) → Phase C (engineer implements, tester/docs/security parallel, challenger validates).
+**Connection**: Prevents regressions at scale. Max 3 loops per phase ensures convergence without infinite cycles.
 
 ## Trade-off Decisions
 
-When business and technical needs conflict, document the trade-off:
+| Conflict                           | Business Priority      | Tech Priority       | Decision                          | Rationale                                                                 |
+| ---------------------------------- | ---------------------- | ------------------- | --------------------------------- | ------------------------------------------------------------------------- |
+| Quick launch vs. clean arch        | Ship fast              | Layered boundaries  | Clean arch first                  | Protocol surface is the product; shortcuts create unmaintainable coupling |
+| Agent workflow vs. server first    | Full AI experience     | Stable API surface  | Server first, agents second       | Server must be spec-compliant before agent wiring                         |
+| pino-http convenience vs. security | Faster request tracing | No credential leaks | pino-http blocked until redaction | Logging raw headers = credentials leak — non-negotiable                   |
 
-| Situation | Business Priority | Technical Priority | Decision Made | Rationale |
-|-----------|-------------------|-------------------|---------------|-----------|
-| [Conflict] | [What business wants] | [What tech wants] | [What was chosen] | [Why this was right] |
+## 📂 Codebase References
 
-## Common Misalignments
-
-| Misalignment | Warning Signs | Resolution Approach |
-|--------------|---------------|---------------------|
-| [Type of mismatch] | [Symptoms to watch for] | [How to address] |
-
-## Stakeholder Communication
-
-This file helps translate between worlds:
-
-**For Business Stakeholders**:
-- Shows that technical investments serve business goals
-- Provides context for why certain choices were made
-- Demonstrates ROI of technical decisions
-
-**For Technical Stakeholders**:
-- Provides business context for architectural decisions
-- Shows the "why" behind constraints and requirements
-- Helps prioritize technical debt with business impact
-
-## Onboarding Checklist
-
-- [ ] Understand the core business needs this project addresses
-- [ ] See how each major feature maps to business value
-- [ ] Know the key trade-offs and why decisions were made
-- [ ] Be able to explain to stakeholders why technical choices matter
-- [ ] Be able to explain to developers why business constraints exist
+**Protocol**: `src/international-space-bar-server/openresponses/` — controller, service, WebSocket
+**Council**: `src/international-space-bar/workflow/council.workflow.ts`, `council.state.ts`
+**Satisfaction loop**: `src/international-space-bar/agent/satisfaction-evaluator.ts`
+**Validation pipeline**: `docs/agent-validation-pipeline.md`
+**Runtime port**: `src/international-space-bar-server/openresponses/agent-runtime.port.ts`
 
 ## Related Files
 
-- `business-domain.md` - Business needs in detail
-- `technical-domain.md` - Technical implementation in detail
-- `decisions-log.md` - Decisions made with full context
-- `living-notes.md` - Current open questions and issues
+- `business-domain.md` — Business needs in detail
+- `technical-domain.md` — Technical implementation in detail
+- `decisions-log.md` — Decisions with full context

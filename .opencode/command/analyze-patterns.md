@@ -21,28 +21,31 @@ Analyze codebase for recurring patterns, similar implementations, and refactorin
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `--pattern` | string | No | Pattern name or regex to search for (e.g., "singleton", "factory", "error-handling") |
-| `--language` | string | No | Filter by language: js, ts, py, go, rust, java, etc. |
-| `--depth` | string | No | Search depth: shallow (current dir) \| medium (src/) \| deep (entire repo) |
-| `--output` | string | No | Output format: text (default) \| json \| markdown |
+| Parameter    | Type   | Required | Description                                                                          |
+| ------------ | ------ | -------- | ------------------------------------------------------------------------------------ |
+| `--pattern`  | string | No       | Pattern name or regex to search for (e.g., "singleton", "factory", "error-handling") |
+| `--language` | string | No       | Filter by language: js, ts, py, go, rust, java, etc.                                 |
+| `--depth`    | string | No       | Search depth: shallow (current dir) \| medium (src/) \| deep (entire repo)           |
+| `--output`   | string | No       | Output format: text (default) \| json \| markdown                                    |
 
 ## Behavior
 
 ### Pattern Search
+
 - Searches codebase for pattern matches using regex + semantic analysis
 - Identifies similar implementations across files
 - Groups results by pattern type + similarity score
 - Suggests refactoring opportunities
 
 ### Analysis Output
+
 - Pattern occurrences with file locations + line numbers
 - Similarity metrics (how similar are implementations?)
 - Refactoring suggestions (consolidate, extract, standardize)
 - Code quality insights (duplication, inconsistency)
 
 ### Result Format
+
 ```
 Pattern Analysis Report
 =======================
@@ -70,21 +73,25 @@ Quality Insights:
 ## Examples
 
 ### Find all error handling patterns
+
 ```bash
 /analyze-patterns --pattern="error-handling" --language=ts
 ```
 
 ### Analyze factory patterns across codebase
+
 ```bash
 /analyze-patterns --pattern="factory" --depth=deep --output=json
 ```
 
 ### Find similar API endpoint implementations
+
 ```bash
 /analyze-patterns --pattern="api-endpoint" --language=js --output=markdown
 ```
 
 ### Search for singleton patterns
+
 ```bash
 /analyze-patterns --pattern="singleton" --depth=medium
 ```
@@ -92,17 +99,20 @@ Quality Insights:
 ## Implementation
 
 ### Delegation
+
 - Delegates to: **opencoder** (primary)
 - Uses context search capabilities for pattern matching
 - Returns structured pattern analysis results
 
 ### Context Requirements
+
 - Codebase structure + file organization
 - Language-specific patterns + conventions
 - Project-specific naming conventions
 - Existing refactoring guidelines
 
 ### Processing Steps
+
 1. Parse command parameters
 2. Validate pattern syntax (regex or predefined)
 3. Search codebase using glob + grep tools
@@ -115,6 +125,7 @@ Quality Insights:
 ## Predefined Patterns
 
 ### JavaScript/TypeScript
+
 - `singleton` - Singleton pattern implementations
 - `factory` - Factory pattern implementations
 - `observer` - Observer/event pattern implementations
@@ -124,6 +135,7 @@ Quality Insights:
 - `middleware` - Middleware implementations
 
 ### Python
+
 - `decorator` - Decorator pattern implementations
 - `context-manager` - Context manager patterns
 - `error-handling` - Exception handling patterns
@@ -131,40 +143,47 @@ Quality Insights:
 - `class-patterns` - Class design patterns
 
 ### Go
+
 - `interface-patterns` - Interface implementations
 - `error-handling` - Error handling patterns
 - `goroutine-patterns` - Goroutine patterns
 - `middleware` - Middleware implementations
 
 ### Custom Patterns
+
 Users can provide custom regex patterns for domain-specific analysis.
 
 ## Output Formats
 
 ### Text (Default)
+
 Human-readable report with clear sections and formatting
 
 ### JSON
+
 Structured data for programmatic processing:
+
 ```json
 {
-  "pattern": "error-handling",
-  "occurrences": 12,
-  "files": ["file1.ts", "file2.ts"],
-  "implementations": [
-    {
-      "file": "file1.ts",
-      "line": 42,
-      "description": "try-catch block",
-      "similarity": 0.95
-    }
-  ],
-  "suggestions": ["Consolidate error handling", "Extract to utility"]
+    "pattern": "error-handling",
+    "occurrences": 12,
+    "files": ["file1.ts", "file2.ts"],
+    "implementations": [
+        {
+            "file": "file1.ts",
+            "line": 42,
+            "description": "try-catch block",
+            "similarity": 0.95
+        }
+    ],
+    "suggestions": ["Consolidate error handling", "Extract to utility"]
 }
 ```
 
 ### Markdown
+
 Formatted for documentation + sharing:
+
 ```markdown
 # Pattern Analysis: error-handling
 
@@ -173,25 +192,28 @@ Formatted for documentation + sharing:
 **Similarity Range**: 85-98%
 
 ## Implementations
+
 ...
 ```
 
 ## Integration
 
 ### Registry Entry
+
 ```json
 {
-  "id": "analyze-patterns",
-  "name": "analyze-patterns",
-  "type": "command",
-  "category": "analysis",
-  "description": "Analyze codebase for patterns and similar implementations",
-  "delegates_to": ["opencoder"],
-  "parameters": ["pattern", "language", "depth", "output"]
+    "id": "analyze-patterns",
+    "name": "analyze-patterns",
+    "type": "command",
+    "category": "analysis",
+    "description": "Analyze codebase for patterns and similar implementations",
+    "delegates_to": ["opencoder"],
+    "parameters": ["pattern", "language", "depth", "output"]
 }
 ```
 
 ### Profile Assignment
+
 - **Developer Profile**: ✅ Included
 - **Full Profile**: ✅ Included
 - **Advanced Profile**: ✅ Included
@@ -216,6 +238,6 @@ Formatted for documentation + sharing:
 ✅ Implementation details included  
 ✅ Output formats defined  
 ✅ Integration ready  
-✅ Ready for registry integration  
+✅ Ready for registry integration
 
 **Status**: Ready for deployment

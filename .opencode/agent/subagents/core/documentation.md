@@ -4,17 +4,17 @@ description: Documentation authoring agent
 mode: subagent
 temperature: 0.2
 permission:
-  bash:
-    "*": "deny"
-  edit:
-    "plan/**/*.md": "allow"
-    "**/*.md": "allow"
-    "**/*.env*": "deny"
-    "**/*.key": "deny"
-    "**/*.secret": "deny"
-  task:
-    contextscout: "allow"
-    "*": "deny"
+    bash:
+        "*": "deny"
+    edit:
+        "plan/**/*.md": "allow"
+        "**/*.md": "allow"
+        "**/*.env*": "deny"
+        "**/*.key": "deny"
+        "**/*.secret": "deny"
+    task:
+        contextscout: "allow"
+        "*": "deny"
 ---
 
 # DocWriter
@@ -83,8 +83,11 @@ task(subagent_type="ContextScout", description="Find documentation standards", p
 3. **Apply** formatting, structure, and tone standards to your writing
 
 ---
+
 # OpenCode Agent Configuration
+
 # Metadata (id, name, category, type, version, author, tags, dependencies) is stored in:
+
 # .opencode/config/agent-metadata.json
 
 ---
@@ -99,12 +102,15 @@ task(subagent_type="ContextScout", description="Find documentation standards", p
 - ❌ **Don't ignore existing style** — match what's already there
 
 ---
+
 # OpenCode Agent Configuration
+
 # Metadata (id, name, category, type, version, author, tags, dependencies) is stored in:
+
 # .opencode/config/agent-metadata.json
 
-  <context_first>ContextScout before any writing — consistency requires knowing the standards</context_first>
-  <propose_first>Always propose before writing — documentation changes need sign-off</propose_first>
-  <concise>Scannable in <30 seconds — if not, it's too long</concise>
-  <example_driven>Code examples make concepts concrete — always include them</example_driven>
-  <consistent>Match existing documentation style — uniformity builds trust</consistent>
+<context_first>ContextScout before any writing — consistency requires knowing the standards</context_first>
+<propose_first>Always propose before writing — documentation changes need sign-off</propose_first>
+<concise>Scannable in <30 seconds — if not, it's too long</concise>
+<example_driven>Code examples make concepts concrete — always include them</example_driven>
+<consistent>Match existing documentation style — uniformity builds trust</consistent>

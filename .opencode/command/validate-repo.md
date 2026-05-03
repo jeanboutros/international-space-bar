@@ -13,46 +13,47 @@ Comprehensive validation command that checks the entire OpenAgents Control repos
 This command performs a comprehensive validation of:
 
 1. **Registry Integrity**
-   - JSON syntax validation
-   - Component definitions completeness
-   - File path references
-   - Dependency declarations
+    - JSON syntax validation
+    - Component definitions completeness
+    - File path references
+    - Dependency declarations
 
 2. **Component Existence**
-   - All agents exist at specified paths
-   - All subagents exist at specified paths
-   - All commands exist at specified paths
-   - All tools exist at specified paths
-   - All plugins exist at specified paths
-   - All context files exist at specified paths
-   - All config files exist at specified paths
+    - All agents exist at specified paths
+    - All subagents exist at specified paths
+    - All commands exist at specified paths
+    - All tools exist at specified paths
+    - All plugins exist at specified paths
+    - All context files exist at specified paths
+    - All config files exist at specified paths
 
 3. **Profile Consistency**
-   - Component counts match documentation
-   - Profile descriptions are accurate
-   - Dependencies are satisfied
-   - No duplicate components
+    - Component counts match documentation
+    - Profile descriptions are accurate
+    - Dependencies are satisfied
+    - No duplicate components
 
 4. **Documentation Accuracy**
-   - README component counts match registry
-   - OpenAgent documentation references are valid
-   - Context file references are correct
-   - Installation guide is up to date
+    - README component counts match registry
+    - OpenAgent documentation references are valid
+    - Context file references are correct
+    - Installation guide is up to date
 
 5. **Context File Structure**
-   - All referenced context files exist
-   - Context file organization is correct
-   - No orphaned context files
+    - All referenced context files exist
+    - Context file organization is correct
+    - No orphaned context files
 
 6. **Cross-References**
-   - Agent dependencies exist
-   - Subagent references are valid
-   - Command references are valid
-   - Tool dependencies are satisfied
+    - Agent dependencies exist
+    - Subagent references are valid
+    - Command references are valid
+    - Tool dependencies are satisfied
 
 ## Output
 
 The command generates a detailed report showing:
+
 - ✅ What's correct and validated
 - ⚠️ Warnings for potential issues
 - ❌ Errors that need fixing
@@ -67,26 +68,26 @@ You are a validation specialist. Your task is to comprehensively validate the Op
 1. Read and parse `registry.json`
 2. Validate JSON syntax
 3. Check schema structure:
-   - `version` field exists
-   - `repository` field exists
-   - `categories` object exists
-   - `components` object exists with all types
-   - `profiles` object exists
-   - `metadata` object exists
+    - `version` field exists
+    - `repository` field exists
+    - `categories` object exists
+    - `components` object exists with all types
+    - `profiles` object exists
+    - `metadata` object exists
 
 ### Step 2: Validate Component Definitions
 
 For each component type (agents, subagents, commands, tools, plugins, contexts, config):
 
 1. Check required fields:
-   - `id` (unique)
-   - `name`
-   - `type`
-   - `path`
-   - `description`
-   - `tags` (array)
-   - `dependencies` (array)
-   - `category`
+    - `id` (unique)
+    - `name`
+    - `type`
+    - `path`
+    - `description`
+    - `tags` (array)
+    - `dependencies` (array)
+    - `category`
 
 2. Verify file exists at `path`
 3. Check for duplicate IDs
@@ -104,18 +105,18 @@ For each profile (essential, developer, business, full, advanced):
 ### Step 4: Cross-Reference with Documentation
 
 1. **navigation.md**:
-   - Extract component counts from profile descriptions
-   - Compare with actual registry counts
-   - Check profile descriptions match registry descriptions
+    - Extract component counts from profile descriptions
+    - Compare with actual registry counts
+    - Check profile descriptions match registry descriptions
 
 2. **docs/agents/openagent.md**:
-   - Verify delegation criteria mentioned
-   - Check context file references
-   - Validate workflow descriptions
+    - Verify delegation criteria mentioned
+    - Check context file references
+    - Validate workflow descriptions
 
 3. **docs/getting-started/installation.md**:
-   - Check profile descriptions
-   - Verify installation commands
+    - Check profile descriptions
+    - Verify installation commands
 
 ### Step 5: Validate Context File Structure
 
@@ -124,10 +125,10 @@ For each profile (essential, developer, business, full, advanced):
 3. Identify orphaned files (exist but not in registry)
 4. Identify missing files (in registry but don't exist)
 5. Validate structure:
-   - `core/standards/` files
-   - `core/workflows/` files
-   - `core/system/` files
-   - `project/` files
+    - `core/standards/` files
+    - `core/workflows/` files
+    - `core/system/` files
+    - `project/` files
 
 ### Step 6: Validate Dependencies
 
@@ -143,6 +144,7 @@ For each component with dependencies:
 Create a comprehensive report with sections:
 
 #### ✅ Validated Successfully
+
 - Registry JSON syntax
 - Component file existence
 - Profile integrity
@@ -151,12 +153,14 @@ Create a comprehensive report with sections:
 - Dependency chains
 
 #### ⚠️ Warnings
+
 - Orphaned files (exist but not referenced)
 - Unused components (defined but not in any profile)
 - Missing descriptions or tags
 - Outdated metadata dates
 
 #### ❌ Errors
+
 - Missing files
 - Broken dependencies
 - Invalid JSON
@@ -165,6 +169,7 @@ Create a comprehensive report with sections:
 - Duplicate component IDs
 
 #### 📊 Statistics
+
 - Total components: X
 - Total profiles: X
 - Total context files: X
@@ -174,6 +179,7 @@ Create a comprehensive report with sections:
 ### Step 8: Provide Recommendations
 
 Based on findings, suggest:
+
 - Files to create
 - Registry entries to add/remove
 - Documentation to update
@@ -197,11 +203,13 @@ Generated: 2025-11-19 14:30:00
 ## ✅ Validated Successfully
 
 ### Registry Integrity
+
 ✅ JSON syntax valid
 ✅ All required fields present
 ✅ Schema structure correct
 
 ### Component Existence (45/47 files found)
+
 ✅ Agents: 3/3 files exist
 ✅ Subagents: 15/15 files exist
 ✅ Commands: 8/8 files exist
@@ -211,6 +219,7 @@ Generated: 2025-11-19 14:30:00
 ✅ Config: 2/2 files exist
 
 ### Profile Consistency
+
 ✅ Essential: 9 components (matches README)
 ✅ Developer: 29 components (matches README)
 ✅ Business: 15 components (matches README)
@@ -218,6 +227,7 @@ Generated: 2025-11-19 14:30:00
 ✅ Advanced: 42 components (matches README)
 
 ### Documentation Accuracy
+
 ✅ README component counts match registry
 ✅ OpenAgent documentation up to date
 ✅ Installation guide accurate
@@ -227,41 +237,42 @@ Generated: 2025-11-19 14:30:00
 ## ⚠️ Warnings (3)
 
 1. **Orphaned Context File**
-   - File: `.opencode/context/legacy/old-patterns.md`
-   - Issue: Exists but not referenced in registry
-   - Recommendation: Add to registry or remove file
+    - File: `.opencode/context/legacy/old-patterns.md`
+    - Issue: Exists but not referenced in registry
+    - Recommendation: Add to registry or remove file
 
 2. **Unused Component**
-   - Component: `workflow-orchestrator` (agent)
-   - Issue: Defined in registry but not in any profile
-   - Recommendation: Add to a profile or mark as deprecated
+    - Component: `workflow-orchestrator` (agent)
+    - Issue: Defined in registry but not in any profile
+    - Recommendation: Add to a profile or mark as deprecated
 
 3. **Outdated Metadata**
-   - Field: `metadata.lastUpdated`
-   - Current: 2025-11-15
-   - Recommendation: Update to current date
+    - Field: `metadata.lastUpdated`
+    - Current: 2025-11-15
+    - Recommendation: Update to current date
 
 ---
 
 ## ❌ Errors (2)
 
 1. **Missing Context File**
-   - Component: `context:advanced-patterns`
-   - Expected path: `.opencode/context/core/advanced-patterns.md`
-   - Referenced in: developer, full, advanced profiles
-   - Action: Create file or remove from registry
+    - Component: `context:advanced-patterns`
+    - Expected path: `.opencode/context/core/advanced-patterns.md`
+    - Referenced in: developer, full, advanced profiles
+    - Action: Create file or remove from registry
 
 2. **Broken Dependency**
-   - Component: `agent:opencoder`
-   - Dependency: `subagent:pattern-matcher`
-   - Issue: Dependency not found in registry
-   - Action: Add missing subagent or fix dependency reference
+    - Component: `agent:opencoder`
+    - Dependency: `subagent:pattern-matcher`
+    - Issue: Dependency not found in registry
+    - Action: Add missing subagent or fix dependency reference
 
 ---
 
 ## 📊 Statistics
 
 ### Component Distribution
+
 - Agents: 3
 - Subagents: 15
 - Commands: 8
@@ -272,6 +283,7 @@ Generated: 2025-11-19 14:30:00
 - **Total: 47 components**
 
 ### Profile Breakdown
+
 - Essential: 9 components (19%)
 - Developer: 29 components (62%)
 - Business: 15 components (32%)
@@ -279,12 +291,14 @@ Generated: 2025-11-19 14:30:00
 - Advanced: 42 components (89%)
 
 ### File Coverage
+
 - Total files defined: 47
 - Files found: 45 (96%)
 - Files missing: 2 (4%)
 - Orphaned files: 1
 
 ### Dependency Health
+
 - Total dependencies: 23
 - Valid dependencies: 22 (96%)
 - Broken dependencies: 1 (4%)
@@ -295,15 +309,18 @@ Generated: 2025-11-19 14:30:00
 ## 🔧 Recommended Actions
 
 ### High Priority (Errors)
+
 1. Create missing file: `.opencode/context/core/advanced-patterns.md`
 2. Fix broken dependency in `opencoder`
 
 ### Medium Priority (Warnings)
+
 1. Remove orphaned file or add to registry
 2. Add `workflow-orchestrator` to a profile or deprecate
 3. Update metadata.lastUpdated to 2025-11-19
 
 ### Low Priority (Improvements)
+
 1. Add more tags to components for better searchability
 2. Consider adding descriptions to all context files
 3. Document component categories in README
@@ -325,6 +342,7 @@ Generated: 2025-11-19 14:30:00
 ## Implementation Notes
 
 The command should:
+
 - Use bash/python for file system operations
 - Parse JSON with proper error handling
 - Generate markdown report

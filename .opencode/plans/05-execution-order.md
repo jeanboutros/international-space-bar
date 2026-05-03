@@ -10,6 +10,7 @@ The TUI refactoring (Stream 1) and workflow loop (Stream 2) are **mostly indepen
 ## Recommended Execution Order
 
 ### Step 1 (Foundation — do first)
+
 - Install zustand
 - Create `tui/store.ts` with current fields only
 - Refactor TuiApp + children to use the store
@@ -17,12 +18,14 @@ The TUI refactoring (Stream 1) and workflow loop (Stream 2) are **mostly indepen
 - Fix scroll estimation
 
 ### Step 2 (Workflow loop — independent of Step 1 completion)
+
 - Add iteration/satisfaction fields to DirectorState (threshold: 0.7, maxIterations: 3)
 - Create `satisfaction-evaluator.ts` (uses `ollama:glm-5.1` for important evaluations)
 - Add evaluate node + loop edges to director workflow
 - Test with `pnpm dev`
 
 ### Step 3 (Merge point)
+
 - Add streaming `WorkflowEvent` types to interfaces
 - Add `stream()` to `IWorkflowRunner`
 - Update zustand store to handle workflow events
@@ -30,6 +33,7 @@ The TUI refactoring (Stream 1) and workflow loop (Stream 2) are **mostly indepen
 - Add iteration/satisfaction display to StatusPane
 
 ### Step 4 (Clean up)
+
 - Fix YAML model references
 - Add model alias resolver
 - Remove/archive `graph.ts`
@@ -38,11 +42,13 @@ The TUI refactoring (Stream 1) and workflow loop (Stream 2) are **mostly indepen
 ## Verification
 
 After each step, run:
+
 ```bash
 pnpm check
 ```
 
 After step 2 (workflow loop), manually test:
+
 1. Simple query → should complete in 1 iteration
 2. Vague query → should loop and improve
 3. Max iterations → should stop and present best result

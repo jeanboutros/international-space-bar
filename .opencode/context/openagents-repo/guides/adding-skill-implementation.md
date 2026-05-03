@@ -16,40 +16,40 @@
 // CLI implementation for {skill-name} skill
 
 interface Args {
-  command: string
-  [key: string]: any
+    command: string;
+    [key: string]: any;
 }
 
 async function main() {
-  const args = parseArgs()
-  
-  switch (args.command) {
-    case 'command1':
-      await handleCommand1(args)
-      break
-    case 'command2':
-      await handleCommand2(args)
-      break
-    case 'help':
-    default:
-      showHelp()
-  }
+    const args = parseArgs();
+
+    switch (args.command) {
+        case "command1":
+            await handleCommand1(args);
+            break;
+        case "command2":
+            await handleCommand2(args);
+            break;
+        case "help":
+        default:
+            showHelp();
+    }
 }
 
 function parseArgs(): Args {
-  const args = process.argv.slice(2)
-  return {
-    command: args[0] || 'help',
-    ...parseOptions(args.slice(1))
-  }
+    const args = process.argv.slice(2);
+    return {
+        command: args[0] || "help",
+        ...parseOptions(args.slice(1)),
+    };
 }
 
 async function handleCommand1(args: Args) {
-  console.log('Running command1...')
+    console.log("Running command1...");
 }
 
 function showHelp() {
-  console.log(`
+    console.log(`
 {Skill Name}
 
 Usage: npx ts-node scripts/skill-cli.ts <command> [options]
@@ -58,10 +58,10 @@ Commands:
   command1    Description
   command2    Description
   help        Show this help
-`)
+`);
 }
 
-main().catch(console.error)
+main().catch(console.error);
 ```
 
 ---
@@ -72,17 +72,17 @@ main().catch(console.error)
 
 ```json
 {
-  "skills": [
-    {
-      "id": "{skill-name}",
-      "name": "Skill Name",
-      "type": "skill",
-      "path": ".opencode/skills/{skill-name}/SKILL.md",
-      "description": "Brief description",
-      "tags": ["tag1", "tag2"],
-      "dependencies": []
-    }
-  ]
+    "skills": [
+        {
+            "id": "{skill-name}",
+            "name": "Skill Name",
+            "type": "skill",
+            "path": ".opencode/skills/{skill-name}/SKILL.md",
+            "description": "Brief description",
+            "tags": ["tag1", "tag2"],
+            "dependencies": []
+        }
+    ]
 }
 ```
 
@@ -90,13 +90,11 @@ main().catch(console.error)
 
 ```json
 {
-  "profiles": {
-    "essential": {
-      "components": [
-        "skill:{skill-name}"
-      ]
+    "profiles": {
+        "essential": {
+            "components": ["skill:{skill-name}"]
+        }
     }
-  }
 }
 ```
 
@@ -129,20 +127,24 @@ npx ts-node .opencode/skills/{skill-name}/scripts/skill-cli.ts help
 ## Best Practices
 
 ### Keep Skills Focused
+
 - ✅ Task management skill → Tracks tasks
 - ❌ Task management + code generation + testing → Too broad
 
 ### Clear Documentation
+
 - Provide usage examples
 - Document all commands
 - Include expected outputs
 
 ### Error Handling
+
 - Handle missing arguments gracefully
 - Provide helpful error messages
 - Validate inputs before processing
 
 ### Performance
+
 - Use efficient algorithms
 - Cache when appropriate
 - Avoid unnecessary file operations

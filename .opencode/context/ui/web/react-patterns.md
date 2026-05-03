@@ -17,122 +17,121 @@ This guide covers modern React patterns using functional components, hooks, and 
 ### 1. Functional Components with Hooks
 
 **Always use functional components**:
+
 ```jsx
 // Good
 function UserProfile({ userId }) {
-  const [user, setUser] = useState(null);
-  
-  useEffect(() => {
-    fetchUser(userId).then(setUser);
-  }, [userId]);
-  
-  return <div>{user?.name}</div>;
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        fetchUser(userId).then(setUser);
+    }, [userId]);
+
+    return <div>{user?.name}</div>;
 }
 ```
 
 ### 2. Custom Hooks for Reusable Logic
 
 **Extract common logic into custom hooks**:
+
 ```jsx
 // Custom hook
 function useUser(userId) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
-  useEffect(() => {
-    setLoading(true);
-    fetchUser(userId)
-      .then(setUser)
-      .catch(setError)
-      .finally(() => setLoading(false));
-  }, [userId]);
-  
-  return { user, loading, error };
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        setLoading(true);
+        fetchUser(userId)
+            .then(setUser)
+            .catch(setError)
+            .finally(() => setLoading(false));
+    }, [userId]);
+
+    return { user, loading, error };
 }
 
 // Usage
 function UserProfile({ userId }) {
-  const { user, loading, error } = useUser(userId);
-  
-  if (loading) return <Spinner />;
-  if (error) return <Error message={error.message} />;
-  return <div>{user.name}</div>;
+    const { user, loading, error } = useUser(userId);
+
+    if (loading) return <Spinner />;
+    if (error) return <Error message={error.message} />;
+    return <div>{user.name}</div>;
 }
 ```
 
 ### 3. Composition Over Props Drilling
 
 **Use composition to avoid prop drilling**:
+
 ```jsx
 // Bad - Props drilling
 function App() {
-  const [theme, setTheme] = useState('light');
-  return <Layout theme={theme} setTheme={setTheme} />;
+    const [theme, setTheme] = useState("light");
+    return <Layout theme={theme} setTheme={setTheme} />;
 }
 
 // Good - Composition with Context
 const ThemeContext = createContext();
 
 function App() {
-  const [theme, setTheme] = useState('light');
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
-      <Layout />
-    </ThemeContext.Provider>
-  );
+    const [theme, setTheme] = useState("light");
+    return (
+        <ThemeContext.Provider value={{ theme, setTheme }}>
+            <Layout />
+        </ThemeContext.Provider>
+    );
 }
 
 function Layout() {
-  const { theme } = useContext(ThemeContext);
-  return <div className={theme}>...</div>;
+    const { theme } = useContext(ThemeContext);
+    return <div className={theme}>...</div>;
 }
 ```
 
 ### 4. Compound Components
 
 **For complex, related components**:
+
 ```jsx
 function Tabs({ children }) {
-  const [activeTab, setActiveTab] = useState(0);
-  
-  return (
-    <TabsContext.Provider value={{ activeTab, setActiveTab }}>
-      {children}
-    </TabsContext.Provider>
-  );
+    const [activeTab, setActiveTab] = useState(0);
+
+    return (
+        <TabsContext.Provider value={{ activeTab, setActiveTab }}>{children}</TabsContext.Provider>
+    );
 }
 
 Tabs.List = function TabsList({ children }) {
-  return <div className="tabs-list">{children}</div>;
+    return <div className="tabs-list">{children}</div>;
 };
 
 Tabs.Tab = function Tab({ index, children }) {
-  const { activeTab, setActiveTab } = useContext(TabsContext);
-  return (
-    <button 
-      className={activeTab === index ? 'active' : ''}
-      onClick={() => setActiveTab(index)}
-    >
-      {children}
-    </button>
-  );
+    const { activeTab, setActiveTab } = useContext(TabsContext);
+    return (
+        <button className={activeTab === index ? "active" : ""} onClick={() => setActiveTab(index)}>
+            {children}
+        </button>
+    );
 };
 
 Tabs.Panel = function TabPanel({ index, children }) {
-  const { activeTab } = useContext(TabsContext);
-  return activeTab === index ? <div>{children}</div> : null;
+    const { activeTab } = useContext(TabsContext);
+    return activeTab === index ? <div>{children}</div> : null;
 };
 
 // Usage
 <Tabs>
-  <Tabs.List>
-    <Tabs.Tab index={0}>Tab 1</Tabs.Tab>
-    <Tabs.Tab index={1}>Tab 2</Tabs.Tab>
-  </Tabs.List>
-  <Tabs.Panel index={0}>Content 1</Tabs.Panel>
-  <Tabs.Panel index={1}>Content 2</Tabs.Panel>
-</Tabs>
+    <Tabs.List>
+        <Tabs.Tab index={0}>Tab 1</Tabs.Tab>
+        <Tabs.Tab index={1}>Tab 2</Tabs.Tab>
+    </Tabs.List>
+    <Tabs.Panel index={0}>Content 1</Tabs.Panel>
+    <Tabs.Panel index={1}>Content 2</Tabs.Panel>
+</Tabs>;
 ```
 
 ## Hooks Best Practices
@@ -140,62 +139,63 @@ Tabs.Panel = function TabPanel({ index, children }) {
 ### 1. useEffect Dependencies
 
 **Always specify dependencies correctly**:
+
 ```jsx
 // Bad - Missing dependencies
 useEffect(() => {
-  fetchData(userId);
+    fetchData(userId);
 }, []);
 
 // Good - Correct dependencies
 useEffect(() => {
-  fetchData(userId);
+    fetchData(userId);
 }, [userId]);
 
 // Good - Stable function reference
 const fetchData = useCallback((id) => {
-  api.getUser(id).then(setUser);
+    api.getUser(id).then(setUser);
 }, []);
 
 useEffect(() => {
-  fetchData(userId);
+    fetchData(userId);
 }, [userId, fetchData]);
 ```
 
 ### 2. useMemo for Expensive Calculations
 
 **Memoize expensive computations**:
+
 ```jsx
 function DataTable({ data, filters }) {
-  const filteredData = useMemo(() => {
-    return data.filter(item => 
-      filters.every(filter => filter(item))
-    );
-  }, [data, filters]);
-  
-  return <Table data={filteredData} />;
+    const filteredData = useMemo(() => {
+        return data.filter((item) => filters.every((filter) => filter(item)));
+    }, [data, filters]);
+
+    return <Table data={filteredData} />;
 }
 ```
 
 ### 3. useCallback for Stable References
 
 **Prevent unnecessary re-renders**:
+
 ```jsx
 function Parent() {
-  const [count, setCount] = useState(0);
-  
-  // Bad - New function on every render
-  const handleClick = () => setCount(c => c + 1);
-  
-  // Good - Stable function reference
-  const handleClick = useCallback(() => {
-    setCount(c => c + 1);
-  }, []);
-  
-  return <Child onClick={handleClick} />;
+    const [count, setCount] = useState(0);
+
+    // Bad - New function on every render
+    const handleClick = () => setCount((c) => c + 1);
+
+    // Good - Stable function reference
+    const handleClick = useCallback(() => {
+        setCount((c) => c + 1);
+    }, []);
+
+    return <Child onClick={handleClick} />;
 }
 
 const Child = memo(function Child({ onClick }) {
-  return <button onClick={onClick}>Click</button>;
+    return <button onClick={onClick}>Click</button>;
 });
 ```
 
@@ -204,54 +204,56 @@ const Child = memo(function Child({ onClick }) {
 ### 1. Local State First
 
 **Start with local state, lift when needed**:
+
 ```jsx
 // Local state
 function Counter() {
-  const [count, setCount] = useState(0);
-  return <button onClick={() => setCount(c => c + 1)}>{count}</button>;
+    const [count, setCount] = useState(0);
+    return <button onClick={() => setCount((c) => c + 1)}>{count}</button>;
 }
 
 // Lifted state when shared
 function App() {
-  const [count, setCount] = useState(0);
-  return (
-    <>
-      <Counter count={count} setCount={setCount} />
-      <Display count={count} />
-    </>
-  );
+    const [count, setCount] = useState(0);
+    return (
+        <>
+            <Counter count={count} setCount={setCount} />
+            <Display count={count} />
+        </>
+    );
 }
 ```
 
 ### 2. useReducer for Complex State
 
 **Use reducer for related state updates**:
+
 ```jsx
 const initialState = { count: 0, step: 1 };
 
 function reducer(state, action) {
-  switch (action.type) {
-    case 'increment':
-      return { ...state, count: state.count + state.step };
-    case 'decrement':
-      return { ...state, count: state.count - state.step };
-    case 'setStep':
-      return { ...state, step: action.payload };
-    default:
-      return state;
-  }
+    switch (action.type) {
+        case "increment":
+            return { ...state, count: state.count + state.step };
+        case "decrement":
+            return { ...state, count: state.count - state.step };
+        case "setStep":
+            return { ...state, step: action.payload };
+        default:
+            return state;
+    }
 }
 
 function Counter() {
-  const [state, dispatch] = useReducer(reducer, initialState);
-  
-  return (
-    <>
-      <button onClick={() => dispatch({ type: 'decrement' })}>-</button>
-      <span>{state.count}</span>
-      <button onClick={() => dispatch({ type: 'increment' })}>+</button>
-    </>
-  );
+    const [state, dispatch] = useReducer(reducer, initialState);
+
+    return (
+        <>
+            <button onClick={() => dispatch({ type: "decrement" })}>-</button>
+            <span>{state.count}</span>
+            <button onClick={() => dispatch({ type: "increment" })}>+</button>
+        </>
+    );
 }
 ```
 
@@ -260,45 +262,40 @@ function Counter() {
 ### 1. Code Splitting
 
 **Lazy load routes and heavy components**:
-```jsx
-import { lazy, Suspense } from 'react';
 
-const Dashboard = lazy(() => import('./Dashboard'));
-const Settings = lazy(() => import('./Settings'));
+```jsx
+import { lazy, Suspense } from "react";
+
+const Dashboard = lazy(() => import("./Dashboard"));
+const Settings = lazy(() => import("./Settings"));
 
 function App() {
-  return (
-    <Suspense fallback={<Loading />}>
-      <Routes>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/settings" element={<Settings />} />
-      </Routes>
-    </Suspense>
-  );
+    return (
+        <Suspense fallback={<Loading />}>
+            <Routes>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/settings" element={<Settings />} />
+            </Routes>
+        </Suspense>
+    );
 }
 ```
 
 ### 2. Virtualization for Long Lists
 
 **Use virtualization for large datasets**:
+
 ```jsx
-import { FixedSizeList } from 'react-window';
+import { FixedSizeList } from "react-window";
 
 function VirtualList({ items }) {
-  const Row = ({ index, style }) => (
-    <div style={style}>{items[index].name}</div>
-  );
-  
-  return (
-    <FixedSizeList
-      height={600}
-      itemCount={items.length}
-      itemSize={50}
-      width="100%"
-    >
-      {Row}
-    </FixedSizeList>
-  );
+    const Row = ({ index, style }) => <div style={style}>{items[index].name}</div>;
+
+    return (
+        <FixedSizeList height={600} itemCount={items.length} itemSize={50} width="100%">
+            {Row}
+        </FixedSizeList>
+    );
 }
 ```
 

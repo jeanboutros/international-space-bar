@@ -20,12 +20,12 @@ my-plugin/
 
 ```json
 {
-  "name": "my-plugin",
-  "description": "A custom plugin",
-  "version": "1.0.0",
-  "author": {
-    "name": "Your Name"
-  }
+    "name": "my-plugin",
+    "description": "A custom plugin",
+    "version": "1.0.0",
+    "author": {
+        "name": "Your Name"
+    }
 }
 ```
 
@@ -34,6 +34,7 @@ The `name` becomes the namespace prefix for commands: `/my-plugin:command`.
 ## SDK Access
 
 Plugins have full access to the OpenCode SDK via `context.client`. This allows:
+
 - Sending prompts programmatically: `client.session.prompt()`
 - Managing sessions: `client.session.list()`, `client.session.get()`
 - Showing UI elements: `client.tui.showToast()`

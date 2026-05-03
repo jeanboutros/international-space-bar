@@ -30,6 +30,7 @@
 ## 1. Initiation (TaskManager)
 
 Create feature folder and files:
+
 ```
 .tmp/tasks/{feature-slug}/
 ├── task.json
@@ -45,12 +46,14 @@ Validate with: `task-cli.ts validate {feature}`
 ## 2. Task Selection
 
 Find eligible tasks using CLI:
+
 ```bash
 task-cli.ts next {feature}      # All ready tasks
 task-cli.ts parallel {feature}  # Parallelizable only
 ```
 
 Selection criteria:
+
 - `status == "pending"`
 - All `depends_on` tasks have `status == "completed"`
 
@@ -62,13 +65,13 @@ When picking up task:
 
 1. Read subtask JSON
 2. Update status:
-   ```json
-   {
-     "status": "in_progress",
-     "agent_id": "coder-agent",
-     "started_at": "2026-01-11T14:30:00Z"
-   }
-   ```
+    ```json
+    {
+        "status": "in_progress",
+        "agent_id": "coder-agent",
+        "started_at": "2026-01-11T14:30:00Z"
+    }
+    ```
 3. Load `context_files` (lazy)
 4. Implement `deliverables`
 5. Add `completion_summary` (max 200 chars)
@@ -81,9 +84,9 @@ After agent signals completion:
 
 1. Check each `acceptance_criteria`
 2. If all pass → Mark completed:
-   ```bash
-   task-cli.ts complete {feature} {seq} "summary"
-   ```
+    ```bash
+    task-cli.ts complete {feature} {seq} "summary"
+    ```
 3. If fail → Keep in_progress, report failures
 
 ---
@@ -99,26 +102,26 @@ When `completed_count == subtask_count`:
 
 ## Status Ownership
 
-| Status | Who Sets | When |
-|--------|----------|------|
-| pending | TaskManager | Initial creation |
-| in_progress | Working agent | Picks up task |
-| completed | TaskManager | After verification |
-| blocked | Either | Dependency/issue found |
+| Status      | Who Sets      | When                   |
+| ----------- | ------------- | ---------------------- |
+| pending     | TaskManager   | Initial creation       |
+| in_progress | Working agent | Picks up task          |
+| completed   | TaskManager   | After verification     |
+| blocked     | Either        | Dependency/issue found |
 
 ---
 
 ## CLI Commands Summary
 
-| Command | Use Case |
-|---------|----------|
-| `status` | Quick overview |
-| `next` | What to work on |
+| Command    | Use Case            |
+| ---------- | ------------------- |
+| `status`   | Quick overview      |
+| `next`     | What to work on     |
 | `parallel` | Batch parallel work |
-| `deps` | Understand blockers |
-| `blocked` | Identify issues |
-| `complete` | Mark task done |
-| `validate` | Health check |
+| `deps`     | Understand blockers |
+| `blocked`  | Identify issues     |
+| `complete` | Mark task done      |
+| `validate` | Health check        |
 
 ---
 

@@ -1,6 +1,7 @@
 # Documentation — LangChain/LangGraph/DeepAgents Reference
 
 ## Deep Agents (deepagents)
+
 - Built on top of LangChain core + LangGraph runtime
 - `createDeepAgent()` returns a compiled LangGraph graph with built-in: planning (`write_todos`), virtual filesystem (`ls`, `read_file`, `write_file`, `edit_file`), subagent spawning (`task` tool), auto-summarization, and human-in-the-loop (interrupts)
 - Supports pluggable filesystem backends (in-memory, local disk, LangGraph store, sandboxes)
@@ -8,6 +9,7 @@
 - This project uses `createDeepAgent` from `deepagents` which is the "batteries-included" harness
 
 ## LangGraph
+
 - Low-level orchestration: `StateGraph`, `StateSchema`, `MessagesValue`, `ReducedValue`
 - Nodes are functions `(state, config) => Partial<State>`
 - Edges: `.addEdge()`, `.addConditionalEdges()`, fan-out via `Send`
@@ -17,6 +19,7 @@
 - Human-in-the-loop: `Command({ resume })` + `INTERRUPT`
 
 ## LangChain
+
 - Higher-level: `createAgent()` creates a prebuilt agent with tool-calling loop
 - `tool()` function from `@langchain/core/tools` for defining custom tools
 - `ChatOllama` from `@langchain/ollama` for Ollama integration

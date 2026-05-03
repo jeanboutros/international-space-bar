@@ -17,11 +17,13 @@ Clean code is code that is easy to read, understand, and maintain. It follows co
 ### 1. Meaningful Names
 
 **Use intention-revealing names**:
+
 - Variable names should reveal intent
 - Function names should describe what they do
 - Class names should describe what they represent
 
 **Examples**:
+
 ```javascript
 // Bad
 const d = new Date();
@@ -35,62 +37,67 @@ const activeUserProfile = getUserData();
 ### 2. Functions Should Do One Thing
 
 **Single Responsibility**:
+
 - Each function should have one clear purpose
 - Functions should be small (ideally < 20 lines)
 - Extract complex logic into separate functions
 
 **Example**:
+
 ```javascript
 // Bad
 function processUser(user) {
-  validateUser(user);
-  saveToDatabase(user);
-  sendEmail(user);
-  logActivity(user);
+    validateUser(user);
+    saveToDatabase(user);
+    sendEmail(user);
+    logActivity(user);
 }
 
 // Good
 function processUser(user) {
-  const validatedUser = validateUser(user);
-  const savedUser = saveUserToDatabase(validatedUser);
-  notifyUser(savedUser);
-  return savedUser;
+    const validatedUser = validateUser(user);
+    const savedUser = saveUserToDatabase(validatedUser);
+    notifyUser(savedUser);
+    return savedUser;
 }
 ```
 
 ### 3. Avoid Deep Nesting
 
 **Keep nesting shallow**:
+
 - Use early returns
 - Extract nested logic into functions
 - Prefer guard clauses
 
 **Example**:
+
 ```javascript
 // Bad
 function processOrder(order) {
-  if (order) {
-    if (order.items.length > 0) {
-      if (order.total > 0) {
-        // process order
-      }
+    if (order) {
+        if (order.items.length > 0) {
+            if (order.total > 0) {
+                // process order
+            }
+        }
     }
-  }
 }
 
 // Good
 function processOrder(order) {
-  if (!order) return;
-  if (order.items.length === 0) return;
-  if (order.total <= 0) return;
-  
-  // process order
+    if (!order) return;
+    if (order.items.length === 0) return;
+    if (order.total <= 0) return;
+
+    // process order
 }
 ```
 
 ### 4. DRY (Don't Repeat Yourself)
 
 **Eliminate duplication**:
+
 - Extract common logic into reusable functions
 - Use composition over inheritance
 - Create utility functions for repeated patterns
@@ -98,29 +105,31 @@ function processOrder(order) {
 ### 5. Error Handling
 
 **Handle errors explicitly**:
+
 - Use try-catch for expected errors
 - Provide meaningful error messages
 - Don't ignore errors silently
 
 **Example**:
+
 ```javascript
 // Bad
 function fetchData() {
-  try {
-    return api.getData();
-  } catch (e) {
-    return null;
-  }
+    try {
+        return api.getData();
+    } catch (e) {
+        return null;
+    }
 }
 
 // Good
 async function fetchData() {
-  try {
-    return await api.getData();
-  } catch (error) {
-    logger.error('Failed to fetch data', { error });
-    throw new DataFetchError('Unable to retrieve data', { cause: error });
-  }
+    try {
+        return await api.getData();
+    } catch (error) {
+        logger.error("Failed to fetch data", { error });
+        throw new DataFetchError("Unable to retrieve data", { cause: error });
+    }
 }
 ```
 
@@ -148,24 +157,28 @@ async function fetchData() {
 ## Language-Specific Guidelines
 
 ### JavaScript/TypeScript
+
 - Use `const` by default, `let` when needed, never `var`
 - Prefer arrow functions for callbacks
 - Use async/await over raw promises
 - Destructure objects and arrays for clarity
 
 ### Python
+
 - Follow PEP 8 style guide
 - Use list comprehensions for simple transformations
 - Prefer context managers (`with` statements)
 - Use type hints for function signatures
 
 ### Go
+
 - Follow effective Go guidelines
 - Use defer for cleanup
 - Handle errors explicitly
 - Keep interfaces small
 
 ### Rust
+
 - Embrace ownership and borrowing
 - Use pattern matching
 - Prefer iterators over loops
