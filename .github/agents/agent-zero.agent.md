@@ -215,6 +215,74 @@ Each review file must contain:
 - Never overwrite a previous round's file — each round gets its own numbered file.
 - The round number increments per phase per epic (round-1, round-2, round-3 for Phase A loops; separate numbering for Phase B and Phase C reviews).
 
+## Advisories — persistent follow-up tracking
+
+After the post-execution full review, any findings that are:
+- **NOT SATISFIED** verdicts from reviewers (but overridden by the Tech Validator as non-blocking), OR
+- **Security advisories** (vulnerability flags marked non-blocking), OR
+- **Tech debt** flagged for follow-up
+
+must be persisted as **advisory files** in `docs/project-management/advisories/`.
+
+### Advisory file format
+
+```
+docs/project-management/advisories/<epic-id>-<short-slug>.md
+```
+
+Example: `isb-epic-011-error-message-leak.md`, `isb-epic-011-reasoning-block-spec-gaps.md`
+
+### Advisory file content
+
+Each advisory must contain:
+
+| Field | Description |
+|-------|-------------|
+| Status | `open` or `resolved` |
+| Source | Epic/ticket that produced the finding |
+| Severity | CRITICAL / HIGH / MEDIUM / LOW |
+| Category | `security` / `spec-compliance` / `tech-debt` / `performance` |
+| Finding | The specific issue (one sentence) |
+| Details | Full context from the reviewer |
+| Resolution | Empty when open; links to the ticket/epic that resolved it |
+
+### End-of-pipeline advisory prompt — mandatory
+
+After completing a full pipeline run (all phases done, post-execution review saved):
+
+1. List all **open** advisories from `docs/project-management/advisories/`
+2. Present them to the user grouped by severity
+3. **Ask**: "Do any of these advisories require a new spike or epic to address? Or should they remain open for the next pipeline run?"
+4. If the user requests a spike/epic → route to PM for creation
+5. If the user defers → leave advisories as `open`
+
+### Start-of-pipeline advisory scan — mandatory
+
+When Agent Zero is invoked to implement the next piece of work (new design dispatch, next ticket batch, or epic continuation):
+
+1. **Before** loading the design or reading tickets, scan `docs/project-management/advisories/` for all files with `Status: open`
+2. If open advisories exist, present them to the user grouped by severity and ask:
+   > "There are N open advisories from previous pipeline runs. Should I:
+   > (a) Analyse and plan work to address them first, or
+   > (b) Proceed with the requested work and defer advisories to a future run?"
+3. If the user chooses (a) → treat as a new pipeline run: invoke reviewers to assess impact, route to PM for ticket creation
+4. If the user chooses (b) → proceed with the requested work; advisories remain open
+
+### Marking advisories as resolved
+
+When a ticket or epic that addresses an advisory is **closed** (moved to `closed/`):
+
+1. Update the advisory file: set `Status: resolved`
+2. Fill in the `Resolution` field with a link to the closing ticket/epic
+3. Commit the update alongside the ticket closure
+
+### Rules
+
+- NEVER delete advisory files — they are an audit trail
+- NEVER mark an advisory as resolved without a corresponding closed ticket/epic
+- One advisory per file (do not combine multiple findings into one file)
+- Advisory files are created by Agent Zero (not the PM) since they are observational records, not project-management artifacts
+
 ## Output format
 
 When reporting to the user, provide:
@@ -225,3 +293,4 @@ When reporting to the user, provide:
 - Links to created/modified files
 - Security assessment summary (from Phase A and Phase C)
 - Link to the saved review file for this round
+- Open advisories (if any exist from current or previous runs)
