@@ -1,13 +1,13 @@
 # isb-0029: API-level observability (separate from app.log and agents.log)
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-006 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `medium` |
-| Created | 2026-04-28 |
-| Dependencies | isb-0028 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-006 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `medium`     |
+| Created      | 2026-04-28   |
+| Dependencies | isb-0028     |
 
 ## Description
 

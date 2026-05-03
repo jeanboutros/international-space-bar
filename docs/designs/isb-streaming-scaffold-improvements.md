@@ -1,7 +1,9 @@
 # Design: Streaming Scaffold Improvements — explicit item shapes, chunk-content comment, multi-role input
 
 ## Status: DRAFT
+
 ## Date: 2026-04-29
+
 ## Scope: `src/international-space-bar-server/openresponses/ping-pong-runtime.service.ts`
 
 ---
@@ -19,12 +21,15 @@
 ### 1b — `chunk.content` type narrowing is unexplained
 
 The expression:
+
 ```typescript
 const text = typeof chunk.content === "string" ? chunk.content : "";
 ```
+
 appears twice in the scaffold (in `streamReasoningBlock` and `streamMessageBlock`) with no comment. The narrowing is silent about what `chunk.content` can be when it is **not** a string, and what would be lost.
 
 **Requested change**: Add an inline comment documenting:
+
 - What `chunk.content` is at runtime (either a `string` for text deltas, or a `MessageContentComplex[]` for structured content — image, tool use, tool result, etc.)
 - Why the non-string case is silently dropped here
 - What additional handling would be needed if non-string content parts need to be forwarded
@@ -32,6 +37,7 @@ appears twice in the scaffold (in `streamReasoningBlock` and `streamMessageBlock
 ### 1c — `streamReasoningBlock` only accepts a `string` prompt
 
 `streamReasoningBlock` calls `model.stream([new HumanMessage(prompt)])` where `prompt` is always a plain string constructed by the caller. However the agent runtime may need to stream reasoning in the context of:
+
 - A system message (e.g. `SystemMessage` — sets the LLM's persona/context)
 - A user message (`HumanMessage`)
 - A function call result (`ToolMessage`) — the LLM reasons about what a tool returned
@@ -76,6 +82,7 @@ const FunctionCallItemShape = z.object({
 ```
 
 Usage (example):
+
 ```typescript
 yield {
     type: "response.output_item.added",
@@ -111,6 +118,7 @@ const text = typeof chunk.content === "string" ? chunk.content : "";
 ### 2c — Generalise `streamReasoningBlock` to `BaseMessage[]`
 
 Change signature:
+
 ```typescript
 // Before
 async function* streamReasoningBlock(
@@ -128,6 +136,7 @@ async function* streamReasoningBlock(
 ```
 
 Update internal call:
+
 ```typescript
 // Before
 for await (const chunk of await model.stream([new HumanMessage(prompt)])) {
@@ -137,38 +146,43 @@ for await (const chunk of await model.stream(messages)) {
 ```
 
 Update call sites (3 total in the `stream()` method):
+
 ```typescript
 // OUTPUT 0
-yield* streamReasoningBlock(
-    llm,
-    [new HumanMessage(`Think step by step about what the user is asking: ${request.input}`)],
-    0,
-);
+yield *
+    streamReasoningBlock(
+        llm,
+        [new HumanMessage(`Think step by step about what the user is asking: ${request.input}`)],
+        0,
+    );
 
 // OUTPUT 2
-yield* streamReasoningBlock(
-    llm,
-    [new HumanMessage(`Think about what tool you need to fully answer: ${request.input}`)],
-    2,
-);
+yield *
+    streamReasoningBlock(
+        llm,
+        [new HumanMessage(`Think about what tool you need to fully answer: ${request.input}`)],
+        2,
+    );
 
 // OUTPUT 4 — demonstrates ToolMessage context after function call
-yield* streamReasoningBlock(
-    llm,
-    [
-        new HumanMessage(String(request.input)),
-        new ToolMessage({
-            content: `{"temperature": 22, "unit": "celsius", "description": "Partly cloudy"}`,
-            tool_call_id: callId,
-            name: "get_weather",
-        }),
-        new HumanMessage("Reflect on the tool result and how to use it in your answer."),
-    ],
-    4,
-);
+yield *
+    streamReasoningBlock(
+        llm,
+        [
+            new HumanMessage(String(request.input)),
+            new ToolMessage({
+                content: `{"temperature": 22, "unit": "celsius", "description": "Partly cloudy"}`,
+                tool_call_id: callId,
+                name: "get_weather",
+            }),
+            new HumanMessage("Reflect on the tool result and how to use it in your answer."),
+        ],
+        4,
+    );
 ```
 
 Imports to add:
+
 ```typescript
 import { z } from "zod";
 import { BaseMessage, HumanMessage, ToolMessage } from "@langchain/core/messages"; // TODO: REMOVE BEFORE PRODUCTION

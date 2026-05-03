@@ -1,15 +1,15 @@
 # isb-0054: Add explicit Zod schemas, document chunk.content, and generalise streamReasoningBlock to BaseMessage[]
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-002 |
-| Type | `feature` |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `medium` |
-| Created | 2026-04-29 |
-| Completed | — |
-| Dependencies | none |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-002 |
+| Type         | `feature`    |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `medium`     |
+| Created      | 2026-04-29   |
+| Completed    | —            |
+| Dependencies | none         |
 
 ## Description
 
@@ -24,29 +24,29 @@ Three tightly-coupled improvements to `ping-pong-runtime.service.ts` (scaffold),
 ## Acceptance Criteria
 
 - [ ] Zod schemas defined locally at the top of `ping-pong-runtime.service.ts`, marked `// SCAFFOLD TYPES — delete with file (TODO isb-0020)`:
-  ```typescript
-  const ReasoningItemShape = z.object({
-    id: z.string(),
-    type: z.literal("reasoning"),
-    summary: z.array(z.unknown()),
-    content: z.array(z.unknown()).optional(),
-  });
-  const MessageItemShape = z.object({
-    id: z.string(),
-    type: z.literal("message"),
-    status: z.enum(["in_progress", "completed"]),
-    role: z.literal("assistant"),
-    content: z.array(z.unknown()),
-  });
-  const FunctionCallItemShape = z.object({
-    id: z.string(),
-    type: z.literal("function_call"),
-    call_id: z.string(),
-    name: z.string(),
-    arguments: z.string(),
-    status: z.enum(["in_progress", "completed"]),
-  });
-  ```
+    ```typescript
+    const ReasoningItemShape = z.object({
+        id: z.string(),
+        type: z.literal("reasoning"),
+        summary: z.array(z.unknown()),
+        content: z.array(z.unknown()).optional(),
+    });
+    const MessageItemShape = z.object({
+        id: z.string(),
+        type: z.literal("message"),
+        status: z.enum(["in_progress", "completed"]),
+        role: z.literal("assistant"),
+        content: z.array(z.unknown()),
+    });
+    const FunctionCallItemShape = z.object({
+        id: z.string(),
+        type: z.literal("function_call"),
+        call_id: z.string(),
+        name: z.string(),
+        arguments: z.string(),
+        status: z.enum(["in_progress", "completed"]),
+    });
+    ```
 - [ ] All `item:` payloads in `response.output_item.added` and `response.output_item.done` events are passed through the corresponding schema's `.parse()` before yielding — `streamReasoningBlock` uses `ReasoningItemShape`, `streamMessageBlock` uses `MessageItemShape`, the OUTPUT 3 function_call block uses `FunctionCallItemShape`
 - [ ] The `chunk.content` type-narrowing line in both `streamReasoningBlock` and `streamMessageBlock` has an inline comment documenting: (a) what `chunk.content` is at runtime when not a string (`MessageContentComplex[]`), (b) why non-string is dropped here, (c) what additional handling would be needed to forward non-string content parts
 - [ ] `streamReasoningBlock` signature changed to accept `messages: BaseMessage[]` instead of `prompt: string`; internal `model.stream([new HumanMessage(prompt)])` replaced with `model.stream(messages)`
@@ -62,7 +62,7 @@ Three tightly-coupled improvements to `ping-pong-runtime.service.ts` (scaffold),
 
 Rationale: this scaffold is deleted when isb-0020 lands. The Zod `.parse()` path is a developer-ergonomics feature — it throws a `ZodError` with a named path on malformed payloads during development. TypeScript static checks via `pnpm check` plus the existing `responses.controller.test.ts` B-4 regression guard are sufficient acceptance gates. Adding `mock.module('@langchain/ollama')` or equivalent module-level mocks for a temporary file would create maintenance overhead with zero long-term value.
 
-*Flag resolution: Test Planner flag "Testing strategy for PingPongRuntimeService.stream()" → Option 3 accepted.*
+_Flag resolution: Test Planner flag "Testing strategy for PingPongRuntimeService.stream()" → Option 3 accepted._
 
 ## Files Affected
 

@@ -1,15 +1,15 @@
 # isb-0072: Update technical-stack.md to remove stale tui/ references
 
-| Field | Value |
-|-------|-------|
-| Epic | — (standalone documentation ticket) |
-| Type | `feature` |
-| Status | `backlog` |
-| Assignee | Docs Writer |
-| Priority | `medium` |
-| Created | 2026-05-01 |
-| Completed | — |
-| Dependencies | none |
+| Field        | Value                               |
+| ------------ | ----------------------------------- |
+| Epic         | — (standalone documentation ticket) |
+| Type         | `feature`                           |
+| Status       | `backlog`                           |
+| Assignee     | Docs Writer                         |
+| Priority     | `medium`                            |
+| Created      | 2026-05-01                          |
+| Completed    | —                                   |
+| Dependencies | none                                |
 
 ## Background
 
@@ -23,15 +23,15 @@ Remove all `tui/` references from `docs/technical-stack.md` and add the `interna
 
 - **Current file**: `docs/technical-stack.md`
 - **Current behaviour**:
-  - The layered ASCII diagram (around line 161) includes `tui/` as the presentation layer
-  - The "Allowed imports per layer" table (around line 183) has a `tui/` row
-  - The project structure tree (around line 221) lists `tui/` as an active directory
-  - The `international-space-bar-server/` NestJS layer is not shown in the layered diagram or imports table
+    - The layered ASCII diagram (around line 161) includes `tui/` as the presentation layer
+    - The "Allowed imports per layer" table (around line 183) has a `tui/` row
+    - The project structure tree (around line 221) lists `tui/` as an active directory
+    - The `international-space-bar-server/` NestJS layer is not shown in the layered diagram or imports table
 - **Expected behaviour**:
-  - `tui/` removed from all three locations
-  - `international-space-bar-server/` added to the layered diagram as the outermost layer (above composition root)
-  - `international-space-bar-server/` added to the imports table with its allowed imports (`interfaces/` via port contracts; NestJS framework only)
-  - Project structure tree updated to show the server layer instead of `tui/`
+    - `tui/` removed from all three locations
+    - `international-space-bar-server/` added to the layered diagram as the outermost layer (above composition root)
+    - `international-space-bar-server/` added to the imports table with its allowed imports (`interfaces/` via port contracts; NestJS framework only)
+    - Project structure tree updated to show the server layer instead of `tui/`
 
 ## Acceptance Criteria
 

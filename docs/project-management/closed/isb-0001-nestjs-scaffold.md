@@ -1,14 +1,14 @@
 # isb-0001: NestJS scaffold + tsconfig + dependencies
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-001 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `critical` |
-| Created | 2026-04-28 |
-| Completed | — |
-| Dependencies | none |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-001 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `critical`   |
+| Created      | 2026-04-28   |
+| Completed    | —            |
+| Dependencies | none         |
 
 ## Description
 
@@ -39,33 +39,33 @@ Bootstrap the NestJS 11 backend service. Install all required dependencies, conf
 
 ```typescript
 // main.ts
-import 'reflect-metadata';
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module.js';
+import "reflect-metadata";
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "./app.module.js";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3007);
+    const app = await NestFactory.create(AppModule);
+    await app.listen(process.env.PORT ?? 3007);
 }
 bootstrap();
 ```
 
 ```typescript
 // zod-validation.pipe.ts
-import { type PipeTransform, Injectable, BadRequestException } from '@nestjs/common';
-import type { ZodSchema } from 'zod';
+import { type PipeTransform, Injectable, BadRequestException } from "@nestjs/common";
+import type { ZodSchema } from "zod";
 
 @Injectable()
 export class ZodValidationPipe implements PipeTransform {
-  constructor(private schema: ZodSchema) {}
+    constructor(private schema: ZodSchema) {}
 
-  transform(value: unknown) {
-    const result = this.schema.safeParse(value);
-    if (!result.success) {
-      throw new BadRequestException(result.error.format());
+    transform(value: unknown) {
+        const result = this.schema.safeParse(value);
+        if (!result.success) {
+            throw new BadRequestException(result.error.format());
+        }
+        return result.data;
     }
-    return result.data;
-  }
 }
 ```
 

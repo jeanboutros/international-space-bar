@@ -1,13 +1,13 @@
 # isb-0004: OpenResponses controller + service + module wiring
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-001 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `critical` |
-| Created | 2026-04-28 |
-| Completed | — |
+| Field        | Value                        |
+| ------------ | ---------------------------- |
+| Epic         | isb-epic-001                 |
+| Status       | `backlog`                    |
+| Assignee     | Engineer                     |
+| Priority     | `critical`                   |
+| Created      | 2026-04-28                   |
+| Completed    | —                            |
 | Dependencies | isb-0001, isb-0002, isb-0003 |
 
 ## Description
@@ -39,39 +39,37 @@ Create the OpenResponses controller with a `POST /v1/responses` route, a service
 
 ```typescript
 // responses.controller.ts
-import { Controller, Post, Body, UsePipes, UseGuards } from '@nestjs/common';
-import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
-import { CreateResponseSchema } from './responses.schemas.js';
-import { ResponsesService } from './responses.service.js';
-import { BearerAuthGuard } from '../common/bearer-auth.guard.js';
+import { Controller, Post, Body, UsePipes, UseGuards } from "@nestjs/common";
+import { ZodValidationPipe } from "../common/zod-validation.pipe.js";
+import { CreateResponseSchema } from "./responses.schemas.js";
+import { ResponsesService } from "./responses.service.js";
+import { BearerAuthGuard } from "../common/bearer-auth.guard.js";
 
-@Controller('v1/responses')
+@Controller("v1/responses")
 export class ResponsesController {
-  constructor(private readonly responsesService: ResponsesService) {}
+    constructor(private readonly responsesService: ResponsesService) {}
 
-  @Post()
-  @UseGuards(BearerAuthGuard)
-  @UsePipes(new ZodValidationPipe(CreateResponseSchema))
-  async create(@Body() body: CreateResponseInput) {
-    return this.responsesService.create(body);
-  }
+    @Post()
+    @UseGuards(BearerAuthGuard)
+    @UsePipes(new ZodValidationPipe(CreateResponseSchema))
+    async create(@Body() body: CreateResponseInput) {
+        return this.responsesService.create(body);
+    }
 }
 ```
 
 ```typescript
 // responses.service.ts
-import { Inject, Injectable } from '@nestjs/common';
-import { AGENT_RUNTIME_PORT, type AgentRuntimePort } from './agent-runtime.port.js';
+import { Inject, Injectable } from "@nestjs/common";
+import { AGENT_RUNTIME_PORT, type AgentRuntimePort } from "./agent-runtime.port.js";
 
 @Injectable()
 export class ResponsesService {
-  constructor(
-    @Inject(AGENT_RUNTIME_PORT) private readonly runtime: AgentRuntimePort,
-  ) {}
+    constructor(@Inject(AGENT_RUNTIME_PORT) private readonly runtime: AgentRuntimePort) {}
 
-  async create(input: CreateResponseInput) {
-    return this.runtime.run(input);
-  }
+    async create(input: CreateResponseInput) {
+        return this.runtime.run(input);
+    }
 }
 ```
 

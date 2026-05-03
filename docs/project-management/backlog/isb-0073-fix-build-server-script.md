@@ -1,15 +1,15 @@
 # isb-0073: Fix build:server script in package.json
 
-| Field | Value |
-|-------|-------|
-| Epic | — (standalone bug fix) |
-| Type | `bug` |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `medium` |
-| Created | 2026-05-01 |
-| Completed | — |
-| Dependencies | none |
+| Field        | Value                  |
+| ------------ | ---------------------- |
+| Epic         | — (standalone bug fix) |
+| Type         | `bug`                  |
+| Status       | `backlog`              |
+| Assignee     | Engineer               |
+| Priority     | `medium`               |
+| Created      | 2026-05-01             |
+| Completed    | —                      |
+| Dependencies | none                   |
 
 ## Background
 
@@ -22,19 +22,19 @@ Fix the `build:server` script so that it produces a valid production build of th
 ## Technical Context
 
 - **Current script** (line 13 of `package.json`):
-  ```json
-  "build:server": "tsx watch src/international-space-bar-server/main.ts --format esm --outDir dist"
-  ```
+    ```json
+    "build:server": "tsx watch src/international-space-bar-server/main.ts --format esm --outDir dist"
+    ```
 - **Problem**: `tsx watch` is a dev-time TypeScript runner with file-watching; it does not accept `--format` or `--outDir` flags. Those are `tsup` CLI flags. The command either ignores the flags silently or errors, and never produces compiled output in `dist/`.
 - **Expected fix**: Replace with a `tsup` invocation that compiles the server entry point to ESM in `dist/`. Example:
-  ```json
-  "build:server": "tsup src/international-space-bar-server/main.ts --format esm --out-dir dist"
-  ```
-  The existing `tsup` configuration in `kubb.config.ts` or a new minimal `tsup.config.ts` may be referenced, but the simplest fix is an inline CLI invocation.
+    ```json
+    "build:server": "tsup src/international-space-bar-server/main.ts --format esm --out-dir dist"
+    ```
+    The existing `tsup` configuration in `kubb.config.ts` or a new minimal `tsup.config.ts` may be referenced, but the simplest fix is an inline CLI invocation.
 - **Related scripts**:
-  - `"dev:server"` uses `tsx watch` correctly (for dev)
-  - `"start:server"` uses `node dist/main.js` — expects `dist/` to contain the build output
-  - `"build"` aliases to `pnpm build:server` — so the top-level `build` command is also broken
+    - `"dev:server"` uses `tsx watch` correctly (for dev)
+    - `"start:server"` uses `node dist/main.js` — expects `dist/` to contain the build output
+    - `"build"` aliases to `pnpm build:server` — so the top-level `build` command is also broken
 
 ## Acceptance Criteria
 

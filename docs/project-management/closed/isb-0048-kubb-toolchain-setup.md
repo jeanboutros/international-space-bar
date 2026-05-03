@@ -1,15 +1,15 @@
 # isb-0048: Kubb toolchain setup — install packages, config, linter excludes
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-002 |
-| Type | feature |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-29 |
-| Dependencies | none |
-| Parent | isb-0046 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-002 |
+| Type         | feature      |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-29   |
+| Dependencies | none         |
+| Parent       | isb-0046     |
 
 ## Description
 
@@ -21,10 +21,10 @@ No schema generation is performed in this ticket. The linter configuration must 
 
 - [ ] Kubb dev-dependencies installed: `@kubb/core`, `@kubb/plugin-oas`, `@kubb/plugin-ts`, `@kubb/plugin-zod`, `@kubb/cli`
 - [ ] `kubb.config.ts` created at workspace root with:
-  - `input.path: "./docs/openapi/openresponses.json"`
-  - `output.path: "./src/international-space-bar-server/openresponses/generated"`
-  - `output.extension: { '.ts': '.js' }` (NodeNext ESM requirement)
-  - `pluginOas()`, `pluginTs()`, `pluginZod({ output: { path: './zod' }, version: '4', unknownType: 'unknown', typed: true, inferred: true })`
+    - `input.path: "./docs/openapi/openresponses.json"`
+    - `output.path: "./src/international-space-bar-server/openresponses/generated"`
+    - `output.extension: { '.ts': '.js' }` (NodeNext ESM requirement)
+    - `pluginOas()`, `pluginTs()`, `pluginZod({ output: { path: './zod' }, version: '4', unknownType: 'unknown', typed: true, inferred: true })`
 - [ ] `"generate:schemas": "kubb generate"` script added to `package.json`
 - [ ] `"src/**/openresponses/generated/**"` added to `biome.json` `files.ignore` array
 - [ ] `"src/**/openresponses/generated/**"` added to `eslint.config.js` top-level `ignores` array

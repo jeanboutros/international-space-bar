@@ -1,13 +1,13 @@
 # isb-0030: Update technical-stack.md, agent-observability-logging.md, workflow.md
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-006 |
-| Status | `backlog` |
-| Assignee | Docs Writer |
-| Priority | `medium` |
-| Created | 2026-04-28 |
-| Dependencies | isb-0029 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-006 |
+| Status       | `backlog`    |
+| Assignee     | Docs Writer  |
+| Priority     | `medium`     |
+| Created      | 2026-04-28   |
+| Dependencies | isb-0029     |
 
 ## Description
 

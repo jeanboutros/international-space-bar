@@ -1,15 +1,15 @@
 # isb-0055: Add NestJS pino logging module to international-space-bar-server
 
-| Field | Value |
-|-------|-------|
-| Epic | — |
-| Type | `feature` |
-| Status | `open` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-29 |
-| Completed | — |
-| Dependencies | none |
+| Field        | Value      |
+| ------------ | ---------- |
+| Epic         | —          |
+| Type         | `feature`  |
+| Status       | `open`     |
+| Assignee     | Engineer   |
+| Priority     | `high`     |
+| Created      | 2026-04-29 |
+| Completed    | —          |
+| Dependencies | none       |
 
 ## Description
 
@@ -46,12 +46,14 @@ The spike is intentionally limited: `pino-http` middleware is **out of scope** a
 ## Files Affected
 
 ### New files
+
 - `src/international-space-bar-server/logging/logging.module.ts` — `@Global()` NestJS module that provides and exports `PinoLoggerService`
 - `src/international-space-bar-server/logging/pino-logger.service.ts` — implements `LoggerService` (NestJS) + `ILogger` (inner interfaces layer); resolves `logFilePath`; falls back level to `"info"`
 - `src/international-space-bar-server/common/interfaces/logger.port.ts` — re-exports `ILogger` from `../../interfaces/` (bridge shim)
 - `docs/logging.md` — full design document (9 sections)
 
 ### Modified files
+
 - `src/international-space-bar-server/common/interfaces/index.ts` — add `export * from "./logger.port.js"` to barrel
 - `src/international-space-bar-server/app.module.ts` — import and register `LoggingModule`
 - `src/international-space-bar-server/main.ts` — replace `logger: [...]` with `app.useLogger(app.get(PinoLoggerService))` (atomic)
@@ -60,6 +62,7 @@ The spike is intentionally limited: `pino-http` middleware is **out of scope** a
 - `docs/technical-stack.md` — minor architecture note on the bridge pattern
 
 ### Test files (separate Tester ticket scope)
+
 - `src/international-space-bar-server/logging/pino-logger.service.test.ts`
 - `src/international-space-bar-server/logging/logging.module.test.ts`
 - `src/international-space-bar-server/application-config/config.schema.test.ts` (update)
@@ -68,17 +71,17 @@ The spike is intentionally limited: `pino-http` middleware is **out of scope** a
 
 ```typescript
 // pino-logger.service.ts — level fallback
-const resolvedLevel = config.logger?.level ?? (() => {
-  this.warn("config.logger.level is undefined — falling back to 'info'");
-  return "info" as const;
-})();
+const resolvedLevel =
+    config.logger?.level ??
+    (() => {
+        this.warn("config.logger.level is undefined — falling back to 'info'");
+        return "info" as const;
+    })();
 ```
 
 ```typescript
 // pino-logger.service.ts — path resolution
-const destination = pino.destination(
-  path.resolve(process.cwd(), config.logger.logFilePath)
-);
+const destination = pino.destination(path.resolve(process.cwd(), config.logger.logFilePath));
 ```
 
 ```typescript

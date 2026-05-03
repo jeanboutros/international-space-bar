@@ -1,13 +1,13 @@
 # isb-0023: Map LangChain tool calls to internal event envelopes
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-005 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-28 |
-| Dependencies | isb-0022 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-005 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-28   |
+| Dependencies | isb-0022     |
 
 ## Description
 

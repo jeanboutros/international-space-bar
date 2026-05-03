@@ -1,14 +1,14 @@
 # isb-0002: Bearer token auth guard
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-001 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `critical` |
-| Created | 2026-04-28 |
-| Completed | — |
-| Dependencies | isb-0001 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-001 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `critical`   |
+| Created      | 2026-04-28   |
+| Completed    | —            |
+| Dependencies | isb-0001     |
 
 ## Description
 
@@ -33,38 +33,38 @@ Create a NestJS `CanActivate` guard that validates bearer tokens against the `IS
 
 ```typescript
 import {
-  type CanActivate,
-  type ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { timingSafeEqual } from 'node:crypto';
-import type { Request } from 'express';
+    type CanActivate,
+    type ExecutionContext,
+    Injectable,
+    UnauthorizedException,
+} from "@nestjs/common";
+import { timingSafeEqual } from "node:crypto";
+import type { Request } from "express";
 
 @Injectable()
 export class BearerAuthGuard implements CanActivate {
-  private readonly apiKey: string;
+    private readonly apiKey: string;
 
-  constructor() {
-    const key = process.env.ISB_OPENRESPONSES_API_KEY;
-    if (!key) throw new Error('ISB_OPENRESPONSES_API_KEY is not set');
-    this.apiKey = key;
-  }
-
-  canActivate(context: ExecutionContext): boolean {
-    const req = context.switchToHttp().getRequest<Request>();
-    const auth = req.headers.authorization;
-    if (!auth?.startsWith('Bearer ')) throw new UnauthorizedException();
-
-    const token = auth.slice(7);
-    const expected = Buffer.from(this.apiKey);
-    const actual = Buffer.from(token);
-
-    if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
-      throw new UnauthorizedException();
+    constructor() {
+        const key = process.env.ISB_OPENRESPONSES_API_KEY;
+        if (!key) throw new Error("ISB_OPENRESPONSES_API_KEY is not set");
+        this.apiKey = key;
     }
-    return true;
-  }
+
+    canActivate(context: ExecutionContext): boolean {
+        const req = context.switchToHttp().getRequest<Request>();
+        const auth = req.headers.authorization;
+        if (!auth?.startsWith("Bearer ")) throw new UnauthorizedException();
+
+        const token = auth.slice(7);
+        const expected = Buffer.from(this.apiKey);
+        const actual = Buffer.from(token);
+
+        if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
+            throw new UnauthorizedException();
+        }
+        return true;
+    }
 }
 ```
 

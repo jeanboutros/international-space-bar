@@ -1,14 +1,14 @@
 # isb-0063: Improve ApplicationConfigService.get() to typed key paths
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-010 |
-| Type | `feature` |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `low` |
-| Created | 2026-04-30 |
-| Completed | — |
+| Field        | Value                                              |
+| ------------ | -------------------------------------------------- |
+| Epic         | isb-epic-010                                       |
+| Type         | `feature`                                          |
+| Status       | `backlog`                                          |
+| Assignee     | Engineer                                           |
+| Priority     | `low`                                              |
+| Created      | 2026-04-30                                         |
+| Completed    | —                                                  |
 | Dependencies | `isb-0059` (hard — see AC-3 and Technical Context) |
 
 ## Description
@@ -29,9 +29,9 @@ and traverses the config object at runtime. There is no compile-time check that
 the key is valid. For example:
 
 ```typescript
-config.get("server.enableCors")   // valid — compiles and works
-config.get("server.enabelCors")   // typo — silently returns undefined at runtime
-config.get("nonexistent.key")     // invalid — silently returns undefined at runtime
+config.get("server.enableCors"); // valid — compiles and works
+config.get("server.enabelCors"); // typo — silently returns undefined at runtime
+config.get("nonexistent.key"); // invalid — silently returns undefined at runtime
 ```
 
 When `get()` returns `undefined` for a mistyped key, downstream logic silently
@@ -39,6 +39,7 @@ treats it as falsy. In `main.ts`, CORS would be silently disabled with no log
 message, no error, and no compiler warning.
 
 The correct fix is:
+
 1. A **two-overload design**: one overload for "required" lookups (throws on
    absent key), one for "optional with default" lookups (returns the default
    when absent).
@@ -48,6 +49,7 @@ The correct fix is:
 This eliminates silent failures for known keys at both compile time and runtime.
 
 This debt was explicitly called out in the `TODO` comment in `main.ts`:
+
 > `TODO: Constants should all live in one place, ideally typed and validated via zod.`
 
 ## Technical Context
@@ -57,6 +59,7 @@ This debt was explicitly called out in the `TODO` comment in `main.ts`:
 **Service file:** `src/international-space-bar-server/application-config/application-config.service.ts`
 
 **Current signature (to be replaced):**
+
 ```typescript
 get<T = unknown>(key: string): T | undefined {
     if (key === "environment") {
@@ -92,20 +95,18 @@ type StripIndex<T> = {
 };
 
 type DotKeys<T> = {
-    [K in keyof StripIndex<T> & string]:
-        StripIndex<T>[K] extends Record<string, unknown>
-            ? `${K}` | `${K}.${DotKeys<StripIndex<T>[K]>}`
-            : `${K}`;
+    [K in keyof StripIndex<T> & string]: StripIndex<T>[K] extends Record<string, unknown>
+        ? `${K}` | `${K}.${DotKeys<StripIndex<T>[K]>}`
+        : `${K}`;
 }[keyof StripIndex<T> & string];
 
-type DotValue<T, K extends string> =
-    K extends `${infer Head}.${infer Tail}`
-        ? Head extends keyof StripIndex<T>
-            ? DotValue<StripIndex<T>[Head], Tail>
-            : never
-        : K extends keyof StripIndex<T>
-            ? StripIndex<T>[K]
-            : never;
+type DotValue<T, K extends string> = K extends `${infer Head}.${infer Tail}`
+    ? Head extends keyof StripIndex<T>
+        ? DotValue<StripIndex<T>[Head], Tail>
+        : never
+    : K extends keyof StripIndex<T>
+      ? StripIndex<T>[K]
+      : never;
 ```
 
 **Known limitation:** For paths where a parent is optional (e.g., `server?:
@@ -144,6 +145,7 @@ Using `Symbol("MISSING")` avoids `arguments.length` (which fails ESLint
 ### Malformation rule
 
 A key is **malformed** if it matches any of these four cases:
+
 1. Empty string: `""`
 2. Leading dot: `".server.port"`
 3. Trailing dot: `"server.port."`
@@ -163,9 +165,11 @@ must migrate to the direct property access (see AC-3 below).
 
 All throws within the updated `get()` must use the existing
 `ConfigurationException` class already imported in the service file:
+
 ```typescript
 import { ConfigurationException } from "../common/exceptions/index.js";
 ```
+
 Do NOT introduce a new exception class.
 
 ### `isb-0059` hard dependency
@@ -181,15 +185,15 @@ per-call-site migration plan.
 The current `main.ts` (as of 2026-04-30) has 7 `config.get(...)` calls, on
 lines 29, 32, 35, 36, 39, 40, and 41:
 
-| Line | Expression | Current |
-|------|-----------|---------|
-| 29 | `config.get("server.enableCors")` | CORS gate |
-| 32 | `config.get("environment")` | log message |
-| 35 | `config.get("server.port")` | port resolution |
-| 36 | `config.get("server.host")` | host resolution |
-| 39 | `config.get("server.enableCors")` | debug log |
-| 40 | `config.get("server.port")` | debug log |
-| 41 | `config.get("server.host")` | debug log |
+| Line | Expression                        | Current         |
+| ---- | --------------------------------- | --------------- |
+| 29   | `config.get("server.enableCors")` | CORS gate       |
+| 32   | `config.get("environment")`       | log message     |
+| 35   | `config.get("server.port")`       | port resolution |
+| 36   | `config.get("server.host")`       | host resolution |
+| 39   | `config.get("server.enableCors")` | debug log       |
+| 40   | `config.get("server.port")`       | debug log       |
+| 41   | `config.get("server.host")`       | debug log       |
 
 See AC-3 for the required migration of each call site.
 
@@ -200,35 +204,35 @@ See AC-3 for the required migration of each call site.
   rejects `config.get("server.nonExistentKey")` with a type error.
 
 - **AC-2**: The return type of `get()` is inferred from the key path:
-  - `config.get("server.port", DEFAULT_PORT)` → return type `number`
-  - `config.get("server.host", DEFAULT_HOST)` → return type `string`
-  No overload returns `unknown` or `T | undefined` for known key paths.
+    - `config.get("server.port", DEFAULT_PORT)` → return type `number`
+    - `config.get("server.host", DEFAULT_HOST)` → return type `string`
+      No overload returns `unknown` or `T | undefined` for known key paths.
 
 - **AC-3**: All 7 call sites in `main.ts` are handled as follows — no other
   migration is required for this ticket:
-  - **Line 29** (`config.get("server.enableCors")`) — **deferred**. Leave
-    as-is, add comment:
-    `// TODO(isb-0059): migrate to typed get() once server.enableCors is in ConfigSchema`
-  - **Line 32** (`String(config.get("environment"))`) — migrate to
-    `String(config.environment)` (direct property access; removes the virtual
-    key branch from `get()`).
-  - **Line 35** (`config.get("server.port") ?? process.env.PORT ?? DEFAULT_PORT`) —
-    migrate to `config.get("server.port", DEFAULT_PORT)` using Sig2; return type
-    is `number`; `?? process.env.PORT ?? DEFAULT_PORT` fallback chain can be
-    simplified or retained (Engineer decides, but the `get()` call must use the
-    typed overload).
-  - **Line 36** (`config.get("server.host") ?? process.env.HOST ?? DEFAULT_HOST`) —
-    migrate to `config.get("server.host", DEFAULT_HOST)` using Sig2; return type
-    is `string`.
-  - **Line 39** (`config.get("server.enableCors")`) — **deferred**. Leave
-    as-is, add comment:
-    `// TODO(isb-0059): migrate to typed get() once server.enableCors is in ConfigSchema`
-  - **Line 40** (`config.get("server.port")`) — migrate using Sig1 or Sig2
-    (Engineer decides; used only in a debug log string).
-  - **Line 41** (`config.get("server.host")`) — migrate using Sig1 or Sig2
-    (Engineer decides; used only in a debug log string).
+    - **Line 29** (`config.get("server.enableCors")`) — **deferred**. Leave
+      as-is, add comment:
+      `// TODO(isb-0059): migrate to typed get() once server.enableCors is in ConfigSchema`
+    - **Line 32** (`String(config.get("environment"))`) — migrate to
+      `String(config.environment)` (direct property access; removes the virtual
+      key branch from `get()`).
+    - **Line 35** (`config.get("server.port") ?? process.env.PORT ?? DEFAULT_PORT`) —
+      migrate to `config.get("server.port", DEFAULT_PORT)` using Sig2; return type
+      is `number`; `?? process.env.PORT ?? DEFAULT_PORT` fallback chain can be
+      simplified or retained (Engineer decides, but the `get()` call must use the
+      typed overload).
+    - **Line 36** (`config.get("server.host") ?? process.env.HOST ?? DEFAULT_HOST`) —
+      migrate to `config.get("server.host", DEFAULT_HOST)` using Sig2; return type
+      is `string`.
+    - **Line 39** (`config.get("server.enableCors")`) — **deferred**. Leave
+      as-is, add comment:
+      `// TODO(isb-0059): migrate to typed get() once server.enableCors is in ConfigSchema`
+    - **Line 40** (`config.get("server.port")`) — migrate using Sig1 or Sig2
+      (Engineer decides; used only in a debug log string).
+    - **Line 41** (`config.get("server.host")`) — migrate using Sig1 or Sig2
+      (Engineer decides; used only in a debug log string).
 
-  `pnpm check` must exit 0 with the two deferred lines still present as-is.
+    `pnpm check` must exit 0 with the two deferred lines still present as-is.
 
 - **AC-4**: ~~`environment` virtual key~~ — the `if (key === "environment")` branch
   is **removed** from `get()`. The `environment` property is accessed via
@@ -271,19 +275,19 @@ See AC-3 for the required migration of each call site.
 Add the following scenarios to `application-config.service.test.ts`. All tests
 use `ISB_PROJECT_ENVIRONMENT=test` and a minimal in-memory config fixture.
 
-| ID | Scenario | Kind | Expected |
-|----|----------|------|----------|
-| T-01 | Sig1 — key present in config | unit | Returns typed value, no throw |
-| T-02 | Sig1 — key absent in config | unit | Throws `ConfigurationException` |
-| T-03 | Sig2 — key present in config | unit | Returns config value (not default) |
-| T-04 | Sig2 — key absent in config | unit | Returns `defaultValue`, no throw |
-| T-05 | Malformed: empty string `""` | unit | Throws `ConfigurationException` (both sigs) |
-| T-06 | Malformed: leading dot `".server.port"` | unit | Throws `ConfigurationException` |
-| T-07 | Malformed: trailing dot `"server.port."` | unit | Throws `ConfigurationException` |
-| T-08 | Malformed: consecutive dots `"server..port"` | unit | Throws `ConfigurationException` |
-| T-09 | Sig2 with malformed key | unit | Throws `ConfigurationException` (not returns default) |
-| T-10 | `config.environment` direct access | unit | Returns `ProjectEnvironment` value |
-| T-11 | Negative compile test — invalid key path | compile | `// @ts-expect-error` on `config.get("server.nonExistentKey")` |
+| ID   | Scenario                                     | Kind    | Expected                                                       |
+| ---- | -------------------------------------------- | ------- | -------------------------------------------------------------- |
+| T-01 | Sig1 — key present in config                 | unit    | Returns typed value, no throw                                  |
+| T-02 | Sig1 — key absent in config                  | unit    | Throws `ConfigurationException`                                |
+| T-03 | Sig2 — key present in config                 | unit    | Returns config value (not default)                             |
+| T-04 | Sig2 — key absent in config                  | unit    | Returns `defaultValue`, no throw                               |
+| T-05 | Malformed: empty string `""`                 | unit    | Throws `ConfigurationException` (both sigs)                    |
+| T-06 | Malformed: leading dot `".server.port"`      | unit    | Throws `ConfigurationException`                                |
+| T-07 | Malformed: trailing dot `"server.port."`     | unit    | Throws `ConfigurationException`                                |
+| T-08 | Malformed: consecutive dots `"server..port"` | unit    | Throws `ConfigurationException`                                |
+| T-09 | Sig2 with malformed key                      | unit    | Throws `ConfigurationException` (not returns default)          |
+| T-10 | `config.environment` direct access           | unit    | Returns `ProjectEnvironment` value                             |
+| T-11 | Negative compile test — invalid key path     | compile | `// @ts-expect-error` on `config.get("server.nonExistentKey")` |
 
 Test T-11 must appear as an inline `// @ts-expect-error` comment in the test
 file so the TypeScript compiler enforces it (it is not a runtime assertion).

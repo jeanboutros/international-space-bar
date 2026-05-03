@@ -1,15 +1,15 @@
 # isb-0051: Schema validation tests — unit, integration, and smoke
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-002 |
-| Type | feature |
-| Status | `backlog` |
-| Assignee | Tester |
-| Priority | `high` |
-| Created | 2026-04-29 |
-| Dependencies | isb-0050 |
-| Parent | isb-0046 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-002 |
+| Type         | feature      |
+| Status       | `backlog`    |
+| Assignee     | Tester       |
+| Priority     | `high`       |
+| Created      | 2026-04-29   |
+| Dependencies | isb-0050     |
+| Parent       | isb-0046     |
 
 ## Description
 
@@ -27,22 +27,22 @@ Add three test layers covering the migrated schema:
 
 - [ ] New file `src/international-space-bar-server/openresponses/responses.schemas.test.ts` created
 - [ ] 8 test cases cover:
-  1. Valid minimal request (model + input string) → parses successfully
-  2. `model` absent → parse fails
-  3. `model: ""` (empty string) → parse fails (`min(1)` violated)
-  4. `model: " "` (single space) → parse **succeeds** (accepted by design — `min(1)` checks length, not whitespace; documented in test comment)
-  5. `model: null` → parse fails
-  6. `input` as array (valid item array) → parses successfully
-  7. Unknown field present → preserved in parse output (`.passthrough()` contract)
-  8. `stream: true` → parses successfully
+    1. Valid minimal request (model + input string) → parses successfully
+    2. `model` absent → parse fails
+    3. `model: ""` (empty string) → parse fails (`min(1)` violated)
+    4. `model: " "` (single space) → parse **succeeds** (accepted by design — `min(1)` checks length, not whitespace; documented in test comment)
+    5. `model: null` → parse fails
+    6. `input` as array (valid item array) → parses successfully
+    7. Unknown field present → preserved in parse output (`.passthrough()` contract)
+    8. `stream: true` → parses successfully
 
 ### Group B — Integration test additions (`responses.controller.test.ts`)
 
 - [ ] 4 new test cases added to existing `responses.controller.test.ts`:
-  1. B-1: `model: ""` → HTTP 400 (NestJS `ZodValidationPipe` throws `BadRequestException` by default; consistent with all existing controller tests)
-  2. B-2: `model: null` → HTTP 400 (same pipe behaviour; consistent with all existing controller tests)
-  3. B-3: `input` as array → HTTP 2xx (valid array form accepted)
-  4. B-4: `stream: true` → response is SSE content-type (streaming path exercised)
+    1. B-1: `model: ""` → HTTP 400 (NestJS `ZodValidationPipe` throws `BadRequestException` by default; consistent with all existing controller tests)
+    2. B-2: `model: null` → HTTP 400 (same pipe behaviour; consistent with all existing controller tests)
+    3. B-3: `input` as array → HTTP 2xx (valid array form accepted)
+    4. B-4: `stream: true` → response is SSE content-type (streaming path exercised)
 
 ### Group C — Smoke script (`scripts/test-api-schema-validation.mjs`)
 

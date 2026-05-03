@@ -1,14 +1,14 @@
 # isb-0008: Generate OpenResponses types from OpenAPI spec
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-001 |
-| Status | `open` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-28 |
-| Completed | — |
-| Dependencies | isb-0004 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-001 |
+| Status       | `open`       |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-28   |
+| Completed    | —            |
+| Dependencies | isb-0004     |
 
 ## Description
 

@@ -1,15 +1,15 @@
 # isb-0062: Document server bootstrap startup sequence changes
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-010 |
-| Type | `feature` |
-| Status | `backlog` |
-| Assignee | Docs Writer |
-| Priority | `low` |
-| Created | 2026-04-30 |
-| Completed | — |
-| Dependencies | none |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-010 |
+| Type         | `feature`    |
+| Status       | `backlog`    |
+| Assignee     | Docs Writer  |
+| Priority     | `low`        |
+| Created      | 2026-04-30   |
+| Completed    | —            |
+| Dependencies | none         |
 
 ## Description
 
@@ -39,6 +39,7 @@ bootstrap hardening implementation:
    which can cause confusion when someone sees unexpected `debug` level output.
 
 Without documentation, engineers:
+
 - Will not know the correct startup order (WS adapter must be registered before `app.listen()`)
 - May wonder why the server is not accessible externally and not know to set `HOST`
 - May be confused by the debug-level config dump at startup
@@ -65,9 +66,11 @@ called after `listen()`, the WS adapter may not be registered in time for the
 first connection.
 
 **`DEFAULT_HOST`** is defined in `main.ts` as:
+
 ```typescript
 const DEFAULT_HOST = "127.0.0.1";
 ```
+
 The TODO comment in the file explains it should be overrideable, but the
 rationale for loopback-only (rather than `0.0.0.0`) is not stated anywhere.
 

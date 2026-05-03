@@ -1,15 +1,15 @@
 # isb-0067: Introduce `IResponsesService` interface + `RESPONSES_SERVICE` injection token
 
-| Field | Value |
-|-------|-------|
-| ID | isb-0067 |
-| Epic | [isb-epic-010](../epics/isb-epic-010-kubb-preprocessing-server-bootstrap-hardening.md) |
-| Type | `feature` |
-| Assignee | Engineer |
-| Priority | `medium` |
-| Status | `open` |
-| Created | 2026-04-30 |
-| Dependencies | none |
+| Field        | Value                                                                                  |
+| ------------ | -------------------------------------------------------------------------------------- |
+| ID           | isb-0067                                                                               |
+| Epic         | [isb-epic-010](../epics/isb-epic-010-kubb-preprocessing-server-bootstrap-hardening.md) |
+| Type         | `feature`                                                                              |
+| Assignee     | Engineer                                                                               |
+| Priority     | `medium`                                                                               |
+| Status       | `open`                                                                                 |
+| Created      | 2026-04-30                                                                             |
+| Dependencies | none                                                                                   |
 
 ---
 

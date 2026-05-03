@@ -1,15 +1,15 @@
 # isb-0058: Extract removeDisallowedFields and write unit tests
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-010 |
-| Type | `feature` |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-30 |
-| Completed | — |
-| Dependencies | none |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-010 |
+| Type         | `feature`    |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-30   |
+| Completed    | —            |
+| Dependencies | none         |
 
 ## Description
 
@@ -31,6 +31,7 @@ testing the function impossible without complex mocking.
 
 The function must be extracted to a standalone module (`scripts/kubb-preprocessing.ts`)
 that:
+
 - exports `removeDisallowedFields` as a named export
 - has no module-level side effects
 - lives outside `src/` (it is a build-time tool, not a server runtime module)
@@ -81,6 +82,7 @@ removeDisallowedFields(rawSpec);
 **Expected state after extraction:**
 
 New file `scripts/kubb-preprocessing.ts`:
+
 ```typescript
 /**
  * Build-time preprocessing for the OpenResponses OpenAPI spec.
@@ -110,6 +112,7 @@ export function removeDisallowedFields(node: unknown): void {
 ```
 
 Updated `kubb.config.ts`:
+
 ```typescript
 import { removeDisallowedFields } from "./scripts/kubb-preprocessing.js";
 // ... (all other imports remain)
@@ -121,6 +124,7 @@ removeDisallowedFields(rawSpec);
 
 **Sentinel convention (for test reference):** A property is marked disallowed
 when its schema value satisfies all three simultaneously:
+
 - `minLength === 1`
 - `maxLength === 0`
 - `x-openresponses-disallowed === true`
@@ -151,17 +155,17 @@ Test runner: Node.js built-in `node:test` (same as all other test files in the r
 All tests must use deep-clone inputs to verify source immutability (i.e. pass
 `structuredClone(input)` into the function and verify the original is untouched).
 
-| ID | Scenario | Type | Key assertion |
-|----|----------|------|--------------|
-| T-01 | All three conditions present — property removed | Unit | Object no longer contains the key after call |
-| T-02 | Only `minLength: 1` present (missing `maxLength` and `x-openresponses-disallowed`) — property retained | Unit | Key still present after call |
-| T-03 | Only `maxLength: 0` present — property retained | Unit | Key still present after call |
-| T-04 | Only `x-openresponses-disallowed: true` present — property retained | Unit | Key still present after call |
-| T-05 | Two of three conditions present (`minLength` + `maxLength` but no sentinel) — property retained | Unit | Key still present after call |
-| T-06 | Nested object — disallowed property inside a nested schema is removed | Unit | Nested key removed; outer object intact |
-| T-07 | Array of objects — disallowed property inside an array element is removed | Unit | Element's key removed |
-| T-08 | Null value — function does not throw | Unit | Returns without error; no keys affected |
-| T-09 | Primitive value (string, number, boolean) — function does not throw | Unit | Returns without error |
+| ID   | Scenario                                                                                               | Type | Key assertion                                |
+| ---- | ------------------------------------------------------------------------------------------------------ | ---- | -------------------------------------------- |
+| T-01 | All three conditions present — property removed                                                        | Unit | Object no longer contains the key after call |
+| T-02 | Only `minLength: 1` present (missing `maxLength` and `x-openresponses-disallowed`) — property retained | Unit | Key still present after call                 |
+| T-03 | Only `maxLength: 0` present — property retained                                                        | Unit | Key still present after call                 |
+| T-04 | Only `x-openresponses-disallowed: true` present — property retained                                    | Unit | Key still present after call                 |
+| T-05 | Two of three conditions present (`minLength` + `maxLength` but no sentinel) — property retained        | Unit | Key still present after call                 |
+| T-06 | Nested object — disallowed property inside a nested schema is removed                                  | Unit | Nested key removed; outer object intact      |
+| T-07 | Array of objects — disallowed property inside an array element is removed                              | Unit | Element's key removed                        |
+| T-08 | Null value — function does not throw                                                                   | Unit | Returns without error; no keys affected      |
+| T-09 | Primitive value (string, number, boolean) — function does not throw                                    | Unit | Returns without error                        |
 
 ## Definition of Done
 

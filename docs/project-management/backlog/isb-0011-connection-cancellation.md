@@ -1,13 +1,13 @@
 # isb-0011: Connection cancellation handling
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-002 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `medium` |
-| Created | 2026-04-28 |
-| Dependencies | isb-0010 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-002 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `medium`     |
+| Created      | 2026-04-28   |
+| Dependencies | isb-0010     |
 
 ## Description
 

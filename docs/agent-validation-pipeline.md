@@ -9,19 +9,19 @@ A multi-agent execution pipeline for validating, planning, and implementing chan
 <constraints enforcement="absolute">
   These constraints apply to every agent in every phase. They override all other considerations.
 
-  1. **NEVER execute without loading context first.** Every agent must load relevant standards, skills, and project conventions before producing any output. No agent may skip context loading for speed or simplicity.
+1. **NEVER execute without loading context first.** Every agent must load relevant standards, skills, and project conventions before producing any output. No agent may skip context loading for speed or simplicity.
 
-  2. **NEVER skip an approval gate.** No phase transition happens without explicit go-ahead from the gatekeeper (Tech Validator for A→B, PM readiness for B→C, Challenger for commit). No agent may proceed past a failing quality gate.
+2. **NEVER skip an approval gate.** No phase transition happens without explicit go-ahead from the gatekeeper (Tech Validator for A→B, PM readiness for B→C, Challenger for commit). No agent may proceed past a failing quality gate.
 
-  3. **NEVER auto-fix errors.** When an error is found during validation or implementation, the discovering agent must **report first** and request direction. Report the error, propose a fix, and get approval before applying it. Silent self-fixing is prohibited.
+3. **NEVER auto-fix errors.** When an error is found during validation or implementation, the discovering agent must **report first** and request direction. Report the error, propose a fix, and get approval before applying it. Silent self-fixing is prohibited.
 
-  4. **NEVER implement an entire plan at once.** Break work into incremental logical steps. Implement one unit of work, validate it, then proceed to the next. Each step gets its own quality check between steps, not just once at the end.
+4. **NEVER implement an entire plan at once.** Break work into incremental logical steps. Implement one unit of work, validate it, then proceed to the next. Each step gets its own quality check between steps, not just once at the end.
 
-  5. **ALWAYS validate after each step.** Run the project's quality command (e.g. `pnpm check`) after each logical unit of work within a ticket, not just once after the whole ticket. Catch regressions early.
+5. **ALWAYS validate after each step.** Run the project's quality command (e.g. `pnpm check`) after each logical unit of work within a ticket, not just once after the whole ticket. Catch regressions early.
 
-  6. **NEVER create project-management artifacts directly.** Only the PM creates tickets, epics, clarifications, and ADRs. Any agent that identifies work requiring a ticket must raise a **flag** (structured request) to the PM. The PM evaluates the flag, assigns an ID via `next-id.mjs`, and creates the artifact. No agent bypasses the PM to create project-management artifacts directly. (See: Flag Protocol below.)
+6. **NEVER create project-management artifacts directly.** Only the PM creates tickets, epics, clarifications, and ADRs. Any agent that identifies work requiring a ticket must raise a **flag** (structured request) to the PM. The PM evaluates the flag, assigns an ID via `next-id.mjs`, and creates the artifact. No agent bypasses the PM to create project-management artifacts directly. (See: Flag Protocol below.)
 
-  If you find yourself violating these rules, STOP and correct course.
+If you find yourself violating these rules, STOP and correct course.
 </constraints>
 
 ### Flag Protocol
@@ -31,13 +31,13 @@ When any agent identifies work that needs a ticket, clarification, epic, or ADR,
 ```markdown
 ## Flag: [type] — [short title]
 
-| Field | Value |
-|-------|-------|
-| Type | `ticket` / `clarification` / `epic` / `adr` |
-| Priority | `critical` / `high` / `medium` / `low` |
-| Raised by | Agent role (e.g. "Security Reviewer", "Architect") |
-| Blocking | `yes` / `no` — does this block the current pipeline step? |
-| Reference | Current ticket/phase (e.g. "isb-0042", "Phase A") |
+| Field     | Value                                                     |
+| --------- | --------------------------------------------------------- |
+| Type      | `ticket` / `clarification` / `epic` / `adr`               |
+| Priority  | `critical` / `high` / `medium` / `low`                    |
+| Raised by | Agent role (e.g. "Security Reviewer", "Architect")        |
+| Blocking  | `yes` / `no` — does this block the current pipeline step? |
+| Reference | Current ticket/phase (e.g. "isb-0042", "Phase A")         |
 
 ## Description
 
@@ -58,16 +58,16 @@ Agent Zero routes flags to the PM. The PM evaluates whether to create the artifa
 
 Every agent must load relevant skills **before** producing any output. Skills are loaded in order: general first, then project-specific.
 
-| Skill | When to load | By whom |
-|-------|-------------|---------|
-| `assumption-trap` | Before any agent's work begins | All agents — universal |
-| `pau-loop` | Before any implementation task | Engineer, Tester, Docs Writer |
-| `backend-engineering` | Before any backend work | Architect, Engineer, Tech Validator, Security Reviewer, Challenger |
-| `frontend-engineering` | Before any frontend work | Architect, Engineer, Tech Validator, Security Reviewer, Challenger |
-| `isb-backend` | Before any ISB-specific backend work | Architect, Engineer, Tech Validator, Security Reviewer, Challenger |
-| `isb-frontend` | Before any ISB-specific frontend work | Architect, Engineer, Tech Validator, Security Reviewer, Challenger |
-| `tester-standards` | Before writing any test code | Tester |
-| `complex-reasoning` | When validation is ambiguous or multi-factor | Tech Validator, Security Reviewer |
+| Skill                  | When to load                                 | By whom                                                            |
+| ---------------------- | -------------------------------------------- | ------------------------------------------------------------------ |
+| `assumption-trap`      | Before any agent's work begins               | All agents — universal                                             |
+| `pau-loop`             | Before any implementation task               | Engineer, Tester, Docs Writer                                      |
+| `backend-engineering`  | Before any backend work                      | Architect, Engineer, Tech Validator, Security Reviewer, Challenger |
+| `frontend-engineering` | Before any frontend work                     | Architect, Engineer, Tech Validator, Security Reviewer, Challenger |
+| `isb-backend`          | Before any ISB-specific backend work         | Architect, Engineer, Tech Validator, Security Reviewer, Challenger |
+| `isb-frontend`         | Before any ISB-specific frontend work        | Architect, Engineer, Tech Validator, Security Reviewer, Challenger |
+| `tester-standards`     | Before writing any test code                 | Tester                                                             |
+| `complex-reasoning`    | When validation is ambiguous or multi-factor | Tech Validator, Security Reviewer                                  |
 
 Agents load only the skills relevant to their domain. If the ticket spans both backend and frontend, load both domain skill pairs.
 
@@ -141,19 +141,19 @@ Agents load only the skills relevant to their domain. If the ticket spans both b
 Each pipeline role maps to a `.agent.md` file in `.github/agents/`. Agent Zero
 is the only user-invocable agent — all others are subagents invoked by Agent Zero.
 
-| Pipeline role | Agent file | Phase | Tools | Mode |
-|---------------|-----------|-------|-------|------|
-| **Agent Zero** (orchestrator) | `agent-zero.agent.md` | All | read, search, execute, edit, agent, todo, web, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/runCommand, vscode/switchAgent, vscode/askQuestions, vscode/toolSearch | User-invocable |
-| **Architect** (Agent 1) | `architect.agent.md` | A | read, search, context7, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/askQuestions, vscode/toolSearch | Subagent |
-| **Engineer** (Agent 2 / 7a) | `engineer.agent.md` | A, C | read, search, edit, execute, context7, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/runCommand, vscode/askQuestions, vscode/toolSearch | Subagent |
-| **Security Reviewer** (Agent 1b / 7d) | `security-reviewer.agent.md` | A, C | read, search, execute, context7, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/runCommand, vscode/askQuestions, vscode/toolSearch | Subagent |
-| **Tech Validator** (Agent 3) | `tech-validator.agent.md` | A | read, search, execute, web, context7, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/runCommand, vscode/askQuestions, vscode/toolSearch | Subagent |
-| **Test Planner** (Agent 4) | `test-planner.agent.md` | B | read, search, context7, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/askQuestions, vscode/toolSearch | Subagent |
-| **Docs Planner** (Agent 5) | `docs-planner.agent.md` | B | read, search, context7, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/askQuestions, vscode/toolSearch | Subagent |
-| **PM** (Agent 6) | `pm.agent.md` | B | read, search, edit, execute, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/runCommand, vscode/askQuestions, vscode/toolSearch | Subagent |
-| **Tester** (Agent 7b) | `tester.agent.md` | C | read, search, edit, execute, context7, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/runCommand, vscode/askQuestions, vscode/toolSearch | Subagent |
-| **Docs Writer** (Agent 7c) | `docs-writer.agent.md` | C | read, search, edit, context7, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/askQuestions, vscode/toolSearch | Subagent |
-| **Challenger** (Agent 8) | `challenger.agent.md` | C | execute, read, search, web, context7, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/runCommand, vscode/askQuestions, vscode/toolSearch | Subagent |
+| Pipeline role                         | Agent file                   | Phase | Tools                                                                                                                                                                                                | Mode           |
+| ------------------------------------- | ---------------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| **Agent Zero** (orchestrator)         | `agent-zero.agent.md`        | All   | read, search, execute, edit, agent, todo, web, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/runCommand, vscode/switchAgent, vscode/askQuestions, vscode/toolSearch | User-invocable |
+| **Architect** (Agent 1)               | `architect.agent.md`         | A     | read, search, context7, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/askQuestions, vscode/toolSearch                                                               | Subagent       |
+| **Engineer** (Agent 2 / 7a)           | `engineer.agent.md`          | A, C  | read, search, edit, execute, context7, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/runCommand, vscode/askQuestions, vscode/toolSearch                             | Subagent       |
+| **Security Reviewer** (Agent 1b / 7d) | `security-reviewer.agent.md` | A, C  | read, search, execute, context7, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/runCommand, vscode/askQuestions, vscode/toolSearch                                   | Subagent       |
+| **Tech Validator** (Agent 3)          | `tech-validator.agent.md`    | A     | read, search, execute, web, context7, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/runCommand, vscode/askQuestions, vscode/toolSearch                              | Subagent       |
+| **Test Planner** (Agent 4)            | `test-planner.agent.md`      | B     | read, search, context7, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/askQuestions, vscode/toolSearch                                                               | Subagent       |
+| **Docs Planner** (Agent 5)            | `docs-planner.agent.md`      | B     | read, search, context7, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/askQuestions, vscode/toolSearch                                                               | Subagent       |
+| **PM** (Agent 6)                      | `pm.agent.md`                | B     | read, search, edit, execute, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/runCommand, vscode/askQuestions, vscode/toolSearch                                       | Subagent       |
+| **Tester** (Agent 7b)                 | `tester.agent.md`            | C     | read, search, edit, execute, context7, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/runCommand, vscode/askQuestions, vscode/toolSearch                             | Subagent       |
+| **Docs Writer** (Agent 7c)            | `docs-writer.agent.md`       | C     | read, search, edit, context7, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/askQuestions, vscode/toolSearch                                                         | Subagent       |
+| **Challenger** (Agent 8)              | `challenger.agent.md`        | C     | execute, read, search, web, context7, vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/runCommand, vscode/askQuestions, vscode/toolSearch                              | Subagent       |
 
 ### Handoff diagram
 
@@ -211,16 +211,17 @@ Validate that a design document or feature request is architecturally sound, eng
 
 ### Agents
 
-| # | Role | Receives | Produces | Runs |
-|---|------|----------|----------|------|
-| 1 | **Architect** | Design document + AGENTS.md | Architecture review: layered boundaries, DI patterns, separation of concerns | Parallel with Agents 2 and 1b |
-| 2 | **Engineer** | Design document + relevant source files | Engineering review: API signatures, implementation feasibility, code patterns | Parallel with Agents 1 and 1b |
-| 1b | **Security Reviewer** | Design document + relevant source files | Security review: attack surfaces, trust boundaries, security gotchas, recommendations | Parallel with Agents 1 and 2 |
-| 3 | **Tech Validator** | Combined output from Agents 1 + 2 + 1b | Validated findings with PoC snippets, Context7 lookups, codebase reads | Sequential after 1 + 2 + 1b |
+| #   | Role                  | Receives                                | Produces                                                                              | Runs                          |
+| --- | --------------------- | --------------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------- |
+| 1   | **Architect**         | Design document + AGENTS.md             | Architecture review: layered boundaries, DI patterns, separation of concerns          | Parallel with Agents 2 and 1b |
+| 2   | **Engineer**          | Design document + relevant source files | Engineering review: API signatures, implementation feasibility, code patterns         | Parallel with Agents 1 and 1b |
+| 1b  | **Security Reviewer** | Design document + relevant source files | Security review: attack surfaces, trust boundaries, security gotchas, recommendations | Parallel with Agents 1 and 2  |
+| 3   | **Tech Validator**    | Combined output from Agents 1 + 2 + 1b  | Validated findings with PoC snippets, Context7 lookups, codebase reads                | Sequential after 1 + 2 + 1b   |
 
 ### Validation loop
 
 Agent 3 produces a satisfaction verdict:
+
 - **Satisfied** → proceed to Phase B
 - **Not satisfied** → loop back with specific feedback (max 3 iterations)
 - **Exhausted** (3 loops, still unsatisfied) → escalate to user
@@ -256,11 +257,11 @@ Decompose the validated design into actionable, dependency-ordered tickets with 
 
 ### Agents
 
-| # | Role | Receives | Produces | Runs |
-|---|------|----------|----------|------|
-| 4 | **Test Planner** | Validated design document | Test strategy: what to test, test types, coverage expectations | Parallel with Agent 5 |
-| 5 | **Docs Planner** | Validated design document | Documentation plan: what to document, **which standards need updating**, which files to create/update | Parallel with Agent 4 |
-| 6 | **PM** | Outputs from Agents 3, 4, 5 + security flags | Ordered tickets with dependencies, acceptance criteria, file lists + standards tickets | Sequential after 4 + 5 |
+| #   | Role             | Receives                                     | Produces                                                                                              | Runs                   |
+| --- | ---------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ---------------------- |
+| 4   | **Test Planner** | Validated design document                    | Test strategy: what to test, test types, coverage expectations                                        | Parallel with Agent 5  |
+| 5   | **Docs Planner** | Validated design document                    | Documentation plan: what to document, **which standards need updating**, which files to create/update | Parallel with Agent 4  |
+| 6   | **PM**           | Outputs from Agents 3, 4, 5 + security flags | Ordered tickets with dependencies, acceptance criteria, file lists + standards tickets                | Sequential after 4 + 5 |
 
 ### Standards documentation
 
@@ -268,15 +269,15 @@ Every feature implementation must be accompanied by **standards documentation** 
 
 **Core standards docs to review/update for every feature:**
 
-| Standard | Purpose | Minimum content |
-|----------|---------|-----------------|
-| Code quality | What "good code" means for this project | Patterns, anti-patterns, naming rules, function size limits |
-| Directory structure / architecture | Where files live and why | Layered boundaries, allowed imports per layer, file placement rules |
-| Test coverage | How tests are written and what must be covered | Minimum coverage, test structure, mocking patterns, edge-case expectations |
-| Logging / observability | What must be logged and how | Log levels, structured logging fields, what not to log |
-| Naming conventions | Consistent naming across all agents' output | File naming, variable naming, exported symbol naming |
-| Code review checklist | What the Challenger checks (definitive reference) | Explicit list of rejection criteria, not ad-hoc judgment |
-| Security | What security patterns and mitigations are required | Input validation, auth patterns, secret handling, vulnerability categories |
+| Standard                           | Purpose                                             | Minimum content                                                            |
+| ---------------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------- |
+| Code quality                       | What "good code" means for this project             | Patterns, anti-patterns, naming rules, function size limits                |
+| Directory structure / architecture | Where files live and why                            | Layered boundaries, allowed imports per layer, file placement rules        |
+| Test coverage                      | How tests are written and what must be covered      | Minimum coverage, test structure, mocking patterns, edge-case expectations |
+| Logging / observability            | What must be logged and how                         | Log levels, structured logging fields, what not to log                     |
+| Naming conventions                 | Consistent naming across all agents' output         | File naming, variable naming, exported symbol naming                       |
+| Code review checklist              | What the Challenger checks (definitive reference)   | Explicit list of rejection criteria, not ad-hoc judgment                   |
+| Security                           | What security patterns and mitigations are required | Input validation, auth patterns, secret handling, vulnerability categories |
 
 The Docs Planner must evaluate each feature against these standards and produce a plan item for any that need updating. If the project doesn't yet have a standards doc in one of these categories, the Docs Planner flags it for creation.
 
@@ -323,6 +324,7 @@ docs/project-management/
 > ```
 >
 > Output is JSON for easy parsing:
+>
 > ```json
 > { "kind": "ticket", "ids": ["isb-0001", "isb-0002"], "dryRun": false }
 > ```
@@ -332,13 +334,13 @@ docs/project-management/
 ```markdown
 # isb-epic-NNN: Epic title
 
-| Field | Value |
-|-------|-------|
-| Priority | `critical` / `high` / `medium` / `low` |
-| Status | `not-started` / `in-progress` / `done` |
-| Created | YYYY-MM-DD |
-| Design doc | Link to the design document section |
-| Tickets | isb-NNNN, isb-NNNN, ... |
+| Field      | Value                                  |
+| ---------- | -------------------------------------- |
+| Priority   | `critical` / `high` / `medium` / `low` |
+| Status     | `not-started` / `in-progress` / `done` |
+| Created    | YYYY-MM-DD                             |
+| Design doc | Link to the design document section    |
+| Tickets    | isb-NNNN, isb-NNNN, ...                |
 
 ## Summary
 
@@ -376,27 +378,27 @@ docs/project-management/closed/isb-NNNN-short-name.md    # completed / discarded
 
 Every ticket has a `type` field in its metadata. The type determines how the pipeline processes it:
 
-| Type | Meaning | Assignee | Typical flow |
-|------|---------|----------|-------------|
-| `feature` | New functionality or enhancement | Engineer → Tester → Docs Writer → Challenger | Full Phase C |
-| `bug` | Fix for existing broken behaviour | Engineer → Tester → Challenger | Phase C (Docs Writer optional) |
+| Type       | Meaning                            | Assignee                                                     | Typical flow                            |
+| ---------- | ---------------------------------- | ------------------------------------------------------------ | --------------------------------------- |
+| `feature`  | New functionality or enhancement   | Engineer → Tester → Docs Writer → Challenger                 | Full Phase C                            |
+| `bug`      | Fix for existing broken behaviour  | Engineer → Tester → Challenger                               | Phase C (Docs Writer optional)          |
 | `security` | Proven vulnerability requiring fix | Engineer → Tester → Security Reviewer (re-scan) → Challenger | Phase C with mandatory security re-scan |
 
 ### Ticket template
 
-```markdown
+````markdown
 # isb-NNNN: Short descriptive title
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-NNN |
-| Type | `feature` / `bug` / `security` |
-| Status | `backlog` / `open` / `closed` |
-| Assignee | Agent role (e.g. "Engineer", "Tester") |
-| Priority | `critical` / `high` / `medium` / `low` |
-| Created | YYYY-MM-DD |
-| Completed | — |
-| Dependencies | isb-NNNN, isb-NNNN (or "none") |
+| Field        | Value                                  |
+| ------------ | -------------------------------------- |
+| Epic         | isb-epic-NNN                           |
+| Type         | `feature` / `bug` / `security`         |
+| Status       | `backlog` / `open` / `closed`          |
+| Assignee     | Agent role (e.g. "Engineer", "Tester") |
+| Priority     | `critical` / `high` / `medium` / `low` |
+| Created      | YYYY-MM-DD                             |
+| Completed    | —                                      |
+| Dependencies | isb-NNNN, isb-NNNN (or "none")         |
 
 ## Description
 
@@ -416,16 +418,17 @@ What this ticket implements and why.
 ```typescript
 // Proof-of-concept code from validation phase
 ```
+````
 
 ## Security PoC (for type: security tickets only)
 
-| Field | Value |
-|-------|-------|
+| Field                  | Value                                                                                   |
+| ---------------------- | --------------------------------------------------------------------------------------- |
 | Vulnerability category | `injection` / `auth-bypass` / `data-exposure` / `crypto` / `input-validation` / `other` |
-| Confidence | 1–10 (7+ required for filing) |
-| Exploit scenario | Step-by-step description of how this vulnerability could be exploited |
-| Impact | What happens if exploited (data breach, RCE, etc.) |
-| Fix recommendation | Specific fix approach |
+| Confidence             | 1–10 (7+ required for filing)                                                           |
+| Exploit scenario       | Step-by-step description of how this vulnerability could be exploited                   |
+| Impact                 | What happens if exploited (data breach, RCE, etc.)                                      |
+| Fix recommendation     | Specific fix approach                                                                   |
 
 ```bash
 # Proof-of-concept exploit script or code snippet
@@ -435,6 +438,7 @@ What this ticket implements and why.
 ## Comments
 
 Agent notes, revision history, challenger feedback.
+
 ```
 
 ### Ticket lifecycle
@@ -475,23 +479,25 @@ Implement each ticket with production code, tests, documentation, **and security
 ### Per-ticket execution order
 
 ```
-Step 1:  7a: Engineer writes production code
-         └── pnpm check (must pass before proceeding)
-         └── Incremental: implement one logical unit → validate → next unit
 
-Step 2:  7b: Tester writes tests        ┐
-         7c: Docs Writer writes docs     ┤ parallel (both depend on 7a)
-         7d: Security Reviewer scans     ┘ (also depends on 7a)
-         └── pnpm check (7b + 7c must pass before proceeding)
-         └── Security Reviewer produces:
-             (a) security assessment → feeds into Challenger
-             (b) vulnerability flags → queued for PM (non-blocking)
+Step 1: 7a: Engineer writes production code
+└── pnpm check (must pass before proceeding)
+└── Incremental: implement one logical unit → validate → next unit
 
-Step 3:  8: Challenger validates the ticket
-         └── Receives ALL outputs including security assessment
-         └── satisfied? → commit
-         └── not satisfied? → route feedback (includes security target)
-```
+Step 2: 7b: Tester writes tests ┐
+7c: Docs Writer writes docs ┤ parallel (both depend on 7a)
+7d: Security Reviewer scans ┘ (also depends on 7a)
+└── pnpm check (7b + 7c must pass before proceeding)
+└── Security Reviewer produces:
+(a) security assessment → feeds into Challenger
+(b) vulnerability flags → queued for PM (non-blocking)
+
+Step 3: 8: Challenger validates the ticket
+└── Receives ALL outputs including security assessment
+└── satisfied? → commit
+└── not satisfied? → route feedback (includes security target)
+
+````
 
 ### Incremental execution
 
@@ -559,11 +565,14 @@ The Security Reviewer operates differently in Phase C compared to Phase A:
 - **PoC Snippet**:
 ```bash
 # Proof-of-concept demonstrating the vulnerability
-```
+````
+
 - **Recommended acceptance criteria**: [what the fix ticket should verify]
 
 ### Summary
+
 One paragraph on overall security posture of this ticket's changes.
+
 ```
 
 #### Confidence scoring
@@ -632,11 +641,13 @@ After ALL tickets in Phase C are complete:
 ### Commit grouping per ticket
 
 ```
+
 feat(config): add agentLogFilePath to config schema [isb-0001]
 feat(interfaces): add agentLogger to AppContext [isb-0001]
 feat(logging): create separate agent pino instance [isb-0001]
 test(logging): verify agent and system log separation [isb-0001]
 docs(logging): update agent observability design doc [isb-0001]
+
 ```
 
 After all commits for a ticket land and the Challenger approves, move the
@@ -646,14 +657,17 @@ fields.
 ### Conventional commit format
 
 ```
+
 type(scope): concise description [isb-NNNN]
 
 What: one-line summary of the change
 Why: motivation or design decision reference
 
 Affected files:
+
 - path/to/file.ts
 - path/to/other-file.ts
+
 ```
 
 Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`
@@ -693,13 +707,15 @@ affected area until the user resolves them. Unaffected tickets may continue.
 ### Clarification lifecycle
 
 ```
+
 Agent identifies ambiguity → raises FLAG to PM
-  → PM creates clarification in clarifications/
-  → user reads and decides
-  → PM records decision as ADR in adrs/
-  → PM updates clarification file with a link to the ADR
-  → implementation proceeds
-```
+→ PM creates clarification in clarifications/
+→ user reads and decides
+→ PM records decision as ADR in adrs/
+→ PM updates clarification file with a link to the ADR
+→ implementation proceeds
+
+````
 
 **Note:** Agents do not create clarification files directly. They raise a flag (see Flag Protocol) and the PM creates the artifact.
 
@@ -731,7 +747,7 @@ Relevant code snippets, file paths, and current signatures.
 
 ```typescript
 // Current state of the code
-```
+````
 
 ## Options
 
@@ -740,6 +756,7 @@ Relevant code snippets, file paths, and current signatures.
 **Description**: What this option does.
 
 **Example**:
+
 ```typescript
 // How the code would look
 ```
@@ -756,6 +773,7 @@ Relevant code snippets, file paths, and current signatures.
 **Description**: What this option does.
 
 **Example**:
+
 ```typescript
 // How the code would look
 ```
@@ -769,18 +787,19 @@ Relevant code snippets, file paths, and current signatures.
 
 ## Comparison
 
-| Dimension | Option A | Option B |
-|-----------|----------|----------|
-| Complexity | | |
-| Risk | | |
-| Short-term benefit | | |
-| Long-term benefit | | |
-| Migration effort | | |
+| Dimension          | Option A | Option B |
+| ------------------ | -------- | -------- |
+| Complexity         |          |          |
+| Risk               |          |          |
+| Short-term benefit |          |          |
+| Long-term benefit  |          |          |
+| Migration effort   |          |          |
 
 ## Recommendation
 
 Agent's recommendation and reasoning (if any). The user makes the final call.
-```
+
+````
 
 ### When to create an ADR
 
@@ -827,16 +846,16 @@ Why this option was chosen over the alternatives. Include the user's reasoning.
 
 Tickets affected: isb-NNNN, isb-NNNN
 Files affected: list of files that will change as a result
-```
+````
 
 ### Integration with the pipeline
 
-| Phase | How clarifications/ADRs interact |
-|-------|----------------------------------|
-| **Phase A** | Architect, Engineer, or Security Reviewer raises a flag when they disagree or spot ambiguity. Tech Validator may also raise one if PoC reveals multiple valid paths. PM creates the clarification file. |
-| **Phase B** | PM checks for open clarifications before creating tickets. Blocked areas are not ticketed until resolved. |
-| **Phase C** | Engineer, Tester, Security Reviewer, or Challenger may raise a flag if implementation reveals an unforeseen choice. Work on the affected ticket pauses. PM creates the clarification. |
-| **Any phase** | User resolves clarification → PM records ADR → blocked work resumes. |
+| Phase         | How clarifications/ADRs interact                                                                                                                                                                        |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Phase A**   | Architect, Engineer, or Security Reviewer raises a flag when they disagree or spot ambiguity. Tech Validator may also raise one if PoC reveals multiple valid paths. PM creates the clarification file. |
+| **Phase B**   | PM checks for open clarifications before creating tickets. Blocked areas are not ticketed until resolved.                                                                                               |
+| **Phase C**   | Engineer, Tester, Security Reviewer, or Challenger may raise a flag if implementation reveals an unforeseen choice. Work on the affected ticket pauses. PM creates the clarification.                   |
+| **Any phase** | User resolves clarification → PM records ADR → blocked work resumes.                                                                                                                                    |
 
 ---
 
@@ -847,29 +866,30 @@ To apply this pipeline to a new design document or feature request:
 1. **Prepare**: Write or receive a design document with clear problem statement, decisions, and acceptance criteria
 2. **Phase A**: Run Architect + Engineer + Security Reviewer → Tech Validator against the design doc and codebase
 3. **Phase B**: Run Test Planner + Docs Planner (including standards review) → PM to produce epics and tickets
-   - PM creates epics in `epics/` for each design phase or priority tier
-   - PM creates tickets in `backlog/` linked to their parent epic
+    - PM creates epics in `epics/` for each design phase or priority tier
+    - PM creates tickets in `backlog/` linked to their parent epic
 4. **Phase C**: For each ticket in dependency order:
-   - Move ticket from `backlog/` to `open/`
-   - Execute: Engineer (incremental) → Tester/Docs Writer/Security Reviewer → Challenger loop
-   - On approval: move ticket from `open/` to `closed/`
+    - Move ticket from `backlog/` to `open/`
+    - Execute: Engineer (incremental) → Tester/Docs Writer/Security Reviewer → Challenger loop
+    - On approval: move ticket from `open/` to `closed/`
 5. **Full review**: Return to Phase A for final validation of implemented code
 
 ### Configuration checklist
 
 The pipeline is designed to be framework-agnostic. When adapting it to a new project, configure these parameters:
 
-| Parameter | Default in this doc | Replace with |
-|-----------|-------------------|--------------|
-| Quality command | `pnpm check` | Project's lint/format/typecheck command |
-| Project prefix | `isb-` | Project's ticket/ID prefix |
-| Commit scopes | `config`, `interfaces`, `logging`, `agent`, `workflow`, `tui`, `services` | Project's module/layer names |
-| Domain skills | `backend-engineering`, `frontend-engineering`, `isb-backend`, `isb-frontend` | Project-specific skill pairs |
-| Agent file location | `.github/agents/` | Project's agent configuration directory |
-| PM artifact location | `docs/project-management/` | Project's project management directory |
-| Security vulnerability confidence threshold | 7 (out of 10) | Adjust based on project's risk tolerance |
+| Parameter                                   | Default in this doc                                                          | Replace with                             |
+| ------------------------------------------- | ---------------------------------------------------------------------------- | ---------------------------------------- |
+| Quality command                             | `pnpm check`                                                                 | Project's lint/format/typecheck command  |
+| Project prefix                              | `isb-`                                                                       | Project's ticket/ID prefix               |
+| Commit scopes                               | `config`, `interfaces`, `logging`, `agent`, `workflow`, `tui`, `services`    | Project's module/layer names             |
+| Domain skills                               | `backend-engineering`, `frontend-engineering`, `isb-backend`, `isb-frontend` | Project-specific skill pairs             |
+| Agent file location                         | `.github/agents/`                                                            | Project's agent configuration directory  |
+| PM artifact location                        | `docs/project-management/`                                                   | Project's project management directory   |
+| Security vulnerability confidence threshold | 7 (out of 10)                                                                | Adjust based on project's risk tolerance |
 
 The pipeline works for any codebase that has:
+
 - A lint/format/typecheck command (replaces `pnpm check`)
 - A layered or modular architecture (for Architect review)
 - Conventional commit conventions (for commit grouping)

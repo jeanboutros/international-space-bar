@@ -1,14 +1,14 @@
 # isb-0003: OpenResponses schemas + ping-pong runtime
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-001 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `critical` |
-| Created | 2026-04-28 |
-| Completed | — |
-| Dependencies | isb-0001 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-001 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `critical`   |
+| Created      | 2026-04-28   |
+| Completed    | —            |
+| Dependencies | isb-0001     |
 
 ## Description
 
@@ -36,40 +36,40 @@ Define the OpenResponses Zod schemas using `z.looseObject()` for forward-compati
 
 ```typescript
 // responses.schemas.ts
-import { z } from 'zod';
+import { z } from "zod";
 
 export const CreateResponseSchema = z.looseObject({
-  input: z.union([z.string(), z.array(z.unknown())]),
-  model: z.string(),
+    input: z.union([z.string(), z.array(z.unknown())]),
+    model: z.string(),
 });
 ```
 
 ```typescript
 // agent-runtime.port.ts
 export interface AgentRuntimePort {
-  run(input: CreateResponseInput): Promise<ResponseOutput>;
+    run(input: CreateResponseInput): Promise<ResponseOutput>;
 }
 
-export const AGENT_RUNTIME_PORT = Symbol('AgentRuntimePort');
+export const AGENT_RUNTIME_PORT = Symbol("AgentRuntimePort");
 ```
 
 ```typescript
 // ping-pong-runtime.service.ts
-import { Injectable } from '@nestjs/common';
-import type { AgentRuntimePort } from './agent-runtime.port.js';
+import { Injectable } from "@nestjs/common";
+import type { AgentRuntimePort } from "./agent-runtime.port.js";
 
 @Injectable()
 export class PingPongRuntimeService implements AgentRuntimePort {
-  async run(_input: CreateResponseInput): Promise<ResponseOutput> {
-    return {
-      output: [
-        {
-          type: 'message',
-          content: [{ type: 'output_text', text: 'pong' }],
-        },
-      ],
-    };
-  }
+    async run(_input: CreateResponseInput): Promise<ResponseOutput> {
+        return {
+            output: [
+                {
+                    type: "message",
+                    content: [{ type: "output_text", text: "pong" }],
+                },
+            ],
+        };
+    }
 }
 ```
 

@@ -35,15 +35,15 @@ not yet the final backend-service architecture.
 
 ## Decision Summary
 
-| Decision | Outcome |
-| --- | --- |
-| MVP focus | Backend service first, not a rebuilt TUI |
-| Backend framework | NestJS on Node.js 22, TypeScript strict mode, ESM |
-| External protocol | OpenResponses through `/v1/responses` |
-| Current client | OpenCode configured as a custom provider |
-| First proof | OpenCode sends a request to the local backend and receives `pong` |
-| Existing UI | Archive the Ink TUI out of active `src/` and default scripts |
-| OpenCode internals | Future recommendation only, not phase-zero implementation |
+| Decision           | Outcome                                                           |
+| ------------------ | ----------------------------------------------------------------- |
+| MVP focus          | Backend service first, not a rebuilt TUI                          |
+| Backend framework  | NestJS on Node.js 22, TypeScript strict mode, ESM                 |
+| External protocol  | OpenResponses through `/v1/responses`                             |
+| Current client     | OpenCode configured as a custom provider                          |
+| First proof        | OpenCode sends a request to the local backend and receives `pong` |
+| Existing UI        | Archive the Ink TUI out of active `src/` and default scripts      |
+| OpenCode internals | Future recommendation only, not phase-zero implementation         |
 
 ## Scope
 
@@ -140,11 +140,11 @@ OpenResponses repository exposes the full OpenAPI document at
 `public/openapi/openapi.json` and compliance tests through
 `bin/compliance-test.ts`. When served under `/v1`, the primary endpoints are:
 
-| Endpoint | Phase | Purpose |
-| --- | --- | --- |
-| `POST /v1/responses` | Phase 0 | Non-streaming ping-pong |
-| `POST /v1/responses` with `stream: true` | Phase 1 | Streaming ping-pong |
-| `POST /v1/responses/compact` | Phase 2+ | Add when required by compliance scope |
+| Endpoint                                 | Phase    | Purpose                               |
+| ---------------------------------------- | -------- | ------------------------------------- |
+| `POST /v1/responses`                     | Phase 0  | Non-streaming ping-pong               |
+| `POST /v1/responses` with `stream: true` | Phase 1  | Streaming ping-pong                   |
+| `POST /v1/responses/compact`             | Phase 2+ | Add when required by compliance scope |
 
 The initial DTO should accept the OpenResponses fields needed by OpenCode and
 the compliance baseline, while preserving unknown future fields so the adapter
@@ -187,31 +187,31 @@ OpenResponses OpenAPI during Phase A. The target response shape is:
 
 ```json
 {
-  "id": "resp_<uuid>",
-  "object": "response",
-  "created_at": 1730000000,
-  "model": "isb-ping",
-  "status": "completed",
-  "output": [
-    {
-      "id": "msg_<uuid>",
-      "type": "message",
-      "status": "completed",
-      "role": "assistant",
-      "content": [
+    "id": "resp_<uuid>",
+    "object": "response",
+    "created_at": 1730000000,
+    "model": "isb-ping",
+    "status": "completed",
+    "output": [
         {
-          "type": "output_text",
-          "text": "pong",
-          "annotations": []
+            "id": "msg_<uuid>",
+            "type": "message",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "output_text",
+                    "text": "pong",
+                    "annotations": []
+                }
+            ]
         }
-      ]
+    ],
+    "usage": {
+        "input_tokens": 0,
+        "output_tokens": 1,
+        "total_tokens": 1
     }
-  ],
-  "usage": {
-    "input_tokens": 0,
-    "output_tokens": 1,
-    "total_tokens": 1
-  }
 }
 ```
 
@@ -236,35 +236,35 @@ Recommended content:
 
 ```jsonc
 {
-  "$schema": "https://opencode.ai/config.json",
-  "model": "international-space-bar/isb-ping",
-  "small_model": "international-space-bar/isb-ping",
-  "share": "disabled",
-  "autoupdate": false,
-  "tools": {
-    "bash": false,
-    "edit": false,
-    "write": false
-  },
-  "provider": {
-    "international-space-bar": {
-      "npm": "@ai-sdk/openai",
-      "name": "International Space Bar",
-      "options": {
-        "baseURL": "http://127.0.0.1:3000/v1",
-        "apiKey": "{env:ISB_OPENRESPONSES_API_KEY}"
-      },
-      "models": {
-        "isb-ping": {
-          "name": "ISB Ping",
-          "limit": {
-            "context": 8000,
-            "output": 1024
-          }
-        }
-      }
-    }
-  }
+    "$schema": "https://opencode.ai/config.json",
+    "model": "international-space-bar/isb-ping",
+    "small_model": "international-space-bar/isb-ping",
+    "share": "disabled",
+    "autoupdate": false,
+    "tools": {
+        "bash": false,
+        "edit": false,
+        "write": false,
+    },
+    "provider": {
+        "international-space-bar": {
+            "npm": "@ai-sdk/openai",
+            "name": "International Space Bar",
+            "options": {
+                "baseURL": "http://127.0.0.1:3000/v1",
+                "apiKey": "{env:ISB_OPENRESPONSES_API_KEY}",
+            },
+            "models": {
+                "isb-ping": {
+                    "name": "ISB Ping",
+                    "limit": {
+                        "context": 8000,
+                        "output": 1024,
+                    },
+                },
+            },
+        },
+    },
 }
 ```
 
@@ -302,15 +302,15 @@ runtime:
 
 ```json
 {
-  "scripts": {
-    "dev": "pnpm dev:server",
-    "dev:server": "tsx --env-file=.env src/international-space-bar-server/main.ts",
-    "build": "pnpm build:server",
-    "build:server": "tsup src/international-space-bar-server/main.ts --format esm --outDir dist",
-    "start": "pnpm start:server",
-    "start:server": "node --env-file=.env dist/international-space-bar-server/main.js",
-    "check": "biome check --write src/ && eslint --fix"
-  }
+    "scripts": {
+        "dev": "pnpm dev:server",
+        "dev:server": "tsx --env-file=.env src/international-space-bar-server/main.ts",
+        "build": "pnpm build:server",
+        "build:server": "tsup src/international-space-bar-server/main.ts --format esm --outDir dist",
+        "start": "pnpm start:server",
+        "start:server": "node --env-file=.env dist/international-space-bar-server/main.js",
+        "check": "biome check --write src/ && eslint --fix"
+    }
 }
 ```
 
@@ -669,11 +669,11 @@ Required archive behavior:
 - Move active Ink UI files out of `src/` so they are not part of the default
   service build, lint surface, or runtime path.
 - Preserve the source under `archive/legacy-ink-tui/` with a README that states:
-  - archive date,
-  - original source path,
-  - reason for archive,
-  - how to inspect it,
-  - that it is not expected to build unless restored intentionally.
+    - archive date,
+    - original source path,
+    - reason for archive,
+    - how to inspect it,
+    - that it is not expected to build unless restored intentionally.
 - Remove default imports and script paths that launch `renderTui`.
 - Remove active UI dependencies only after no active source file imports them.
 
@@ -688,15 +688,15 @@ phases only when dependencies are trivial. It must use
 
 Recommended epic grouping:
 
-| Epic | Scope | Priority |
-| --- | --- | --- |
+| Epic    | Scope                                                                        | Priority |
+| ------- | ---------------------------------------------------------------------------- | -------- |
 | Phase 0 | NestJS scaffold, OpenResponses non-streaming, OpenCode ping-pong, UI archive | critical |
-| Phase 1 | Streaming OpenResponses ping-pong | high |
-| Phase 2 | Compliance baseline and tests | high |
-| Phase 3 | LangGraph/DeepAgents runtime integration | high |
-| Phase 4 | Tools, tool messages, approvals | medium |
-| Phase 5 | Durability, observability, docs | medium |
-| Phase 6 | Future client/UI strategy | low |
+| Phase 1 | Streaming OpenResponses ping-pong                                            | high     |
+| Phase 2 | Compliance baseline and tests                                                | high     |
+| Phase 3 | LangGraph/DeepAgents runtime integration                                     | high     |
+| Phase 4 | Tools, tool messages, approvals                                              | medium   |
+| Phase 5 | Durability, observability, docs                                              | medium   |
+| Phase 6 | Future client/UI strategy                                                    | low      |
 
 Phase A validators must check:
 
@@ -711,14 +711,14 @@ Phase A validators must check:
 
 ## Risks And Clarification Candidates
 
-| Topic | Risk | Likely resolution path |
-| --- | --- | --- |
-| OpenCode provider behavior | OpenCode may call `/v1/responses` with details not covered by the phase-zero subset | Tech Validator must run a real OpenCode ping before phase-zero completion |
-| OpenResponses schema drift | Required fields or event names may change | Pin the spec commit used by compliance tests |
-| NestJS POST streaming | `@Sse()` is GET-oriented and does not directly match OpenResponses POST streaming | Use manual SSE writing on the `@Post()` route |
-| Tool approvals | Backend-owned interrupts may not map cleanly to OpenCode's permission model | Create an ADR in phase 4 before implementation |
-| Archive depth | Moving only `tui/` may leave old TUI assumptions in `main.ts` or dependencies | Phase-zero archive ticket must remove default TUI launch path too |
-| Test runner | The repo currently has no test script | Test Planner should choose minimal tests that fit Node.js 22 and the existing tooling |
+| Topic                      | Risk                                                                                | Likely resolution path                                                                |
+| -------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| OpenCode provider behavior | OpenCode may call `/v1/responses` with details not covered by the phase-zero subset | Tech Validator must run a real OpenCode ping before phase-zero completion             |
+| OpenResponses schema drift | Required fields or event names may change                                           | Pin the spec commit used by compliance tests                                          |
+| NestJS POST streaming      | `@Sse()` is GET-oriented and does not directly match OpenResponses POST streaming   | Use manual SSE writing on the `@Post()` route                                         |
+| Tool approvals             | Backend-owned interrupts may not map cleanly to OpenCode's permission model         | Create an ADR in phase 4 before implementation                                        |
+| Archive depth              | Moving only `tui/` may leave old TUI assumptions in `main.ts` or dependencies       | Phase-zero archive ticket must remove default TUI launch path too                     |
+| Test runner                | The repo currently has no test script                                               | Test Planner should choose minimal tests that fit Node.js 22 and the existing tooling |
 
 ## Definition Of MVP Done
 

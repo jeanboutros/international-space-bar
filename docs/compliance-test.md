@@ -4,12 +4,12 @@ Run the official [OpenResponses](https://github.com/openresponses/openresponses)
 
 ## Prerequisites
 
-| Requirement | Why | Install |
-|-------------|-----|---------|
-| **Bun** ≥ 1.0 | Upstream tests use Bun's WebSocket client with header support | [bun.sh/docs/installation](https://bun.sh/docs/installation) |
-| **pnpm** | Start the ISB dev server | Already required by ISB |
-| **ISB_OPENRESPONSES_API_KEY** | Authentication | Set in `.env` or pass as flag |
-| **websocat** (optional) | Manual WebSocket testing | `brew install websocat` |
+| Requirement                   | Why                                                           | Install                                                      |
+| ----------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------ |
+| **Bun** ≥ 1.0                 | Upstream tests use Bun's WebSocket client with header support | [bun.sh/docs/installation](https://bun.sh/docs/installation) |
+| **pnpm**                      | Start the ISB dev server                                      | Already required by ISB                                      |
+| **ISB_OPENRESPONSES_API_KEY** | Authentication                                                | Set in `.env` or pass as flag                                |
+| **websocat** (optional)       | Manual WebSocket testing                                      | `brew install websocat`                                      |
 
 ## Quick start
 
@@ -105,25 +105,25 @@ rm -rf .tmp/compliance/
 
 These are defined in the upstream `openresponses/openresponses` repo. Run with `--verbose` or check [upstream source](https://github.com/openresponses/openresponses/blob/main/src/lib/compliance-tests.ts) for the current list.
 
-| Test ID | What it validates | ISB Status |
-|---------|-------------------|------------|
-| `basic-response` | Simple text response, validates ResponseResource schema | ✅ Passing |
-| `assistant-phase` | Assistant history with phase labels | ✅ Passing |
-| `response-output-phase-schema` | ResponseResource schema for assistant output phase labels (mock, no HTTP) | ✅ Passing |
-| `streaming-response` | SSE streaming events and final response | ✅ Passing |
-| `websocket-response` | WebSocket response creation and streaming events | ❌ Failing |
-| `websocket-sequential-responses` | Multiple response.create on one WebSocket connection | ❌ Failing |
-| `websocket-continuation` | store:false continuation with previous_response_id | ❌ Failing |
-| `websocket-reconnect-store-false-recovery` | Reconnect recovery after store:false chain | ❌ Failing |
-| `websocket-previous-response-not-found` | Missing previous_response_id error handling | ✅ Passing |
-| `websocket-failed-continuation-evicts-cache` | Failed continuation cache eviction | ❌ Failing |
-| `websocket-compact-new-chain` | Compact output as base input for new WebSocket response | ❌ Blocked (missing /v1/responses/compact) |
-| `system-prompt` | System role message in input | ✅ Passing |
-| `tool-calling` | Function tool definition and function_call output | ❌ Runtime issue |
-| `image-input` | Image URL in user content | ✅ Passing |
-| `multi-turn` | Multi-turn conversation with assistant + user history | ✅ Passing |
-| `compact-response` | /responses/compact endpoint with prompt_cache_key | ❌ Blocked (missing endpoint) |
-| `compact-missing-model` | /responses/compact rejects missing model field | ❌ Blocked (missing endpoint) |
+| Test ID                                      | What it validates                                                         | ISB Status                                 |
+| -------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------ |
+| `basic-response`                             | Simple text response, validates ResponseResource schema                   | ✅ Passing                                 |
+| `assistant-phase`                            | Assistant history with phase labels                                       | ✅ Passing                                 |
+| `response-output-phase-schema`               | ResponseResource schema for assistant output phase labels (mock, no HTTP) | ✅ Passing                                 |
+| `streaming-response`                         | SSE streaming events and final response                                   | ✅ Passing                                 |
+| `websocket-response`                         | WebSocket response creation and streaming events                          | ❌ Failing                                 |
+| `websocket-sequential-responses`             | Multiple response.create on one WebSocket connection                      | ❌ Failing                                 |
+| `websocket-continuation`                     | store:false continuation with previous_response_id                        | ❌ Failing                                 |
+| `websocket-reconnect-store-false-recovery`   | Reconnect recovery after store:false chain                                | ❌ Failing                                 |
+| `websocket-previous-response-not-found`      | Missing previous_response_id error handling                               | ✅ Passing                                 |
+| `websocket-failed-continuation-evicts-cache` | Failed continuation cache eviction                                        | ❌ Failing                                 |
+| `websocket-compact-new-chain`                | Compact output as base input for new WebSocket response                   | ❌ Blocked (missing /v1/responses/compact) |
+| `system-prompt`                              | System role message in input                                              | ✅ Passing                                 |
+| `tool-calling`                               | Function tool definition and function_call output                         | ❌ Runtime issue                           |
+| `image-input`                                | Image URL in user content                                                 | ✅ Passing                                 |
+| `multi-turn`                                 | Multi-turn conversation with assistant + user history                     | ✅ Passing                                 |
+| `compact-response`                           | /responses/compact endpoint with prompt_cache_key                         | ❌ Blocked (missing endpoint)              |
+| `compact-missing-model`                      | /responses/compact rejects missing model field                            | ❌ Blocked (missing endpoint)              |
 
 > **Note**: WebSocket tests require Bun's native WebSocket client which supports custom headers. Node.js does not support this natively, so running without Bun will fail on WebSocket tests.
 
@@ -158,6 +158,7 @@ Expected: a stream of JSON frames (response.created, output_item.added, output_t
 ```
 
 Expected output (event types, one per line):
+
 ```
 response.created
 response.output_item.added
@@ -201,10 +202,11 @@ websocat "ws://127.0.0.1:3000/v1/responses" -H "Authorization: Bearer local-dev-
 Then send each message and wait for `response.completed` before the next:
 
 ```json
-{"type":"response.create","model":"isb-ping","input":"first message"}
+{ "type": "response.create", "model": "isb-ping", "input": "first message" }
 ```
+
 ```json
-{"type":"response.create","model":"isb-ping","input":"second message"}
+{ "type": "response.create", "model": "isb-ping", "input": "second message" }
 ```
 
 ### store:false continuation (interactive)
@@ -252,12 +254,12 @@ Or use `--no-server-wait` with your own server readiness check.
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---------|---------|
-| `bun is required` | Install Bun — the upstream tests need Bun's WebSocket client |
-| `server did not become ready` | Increase timeout, check port 3000 is free, check `.env` |
-| WebSocket tests fail with `Connection failed` | Ensure Bun is installed; Node.js WebSocket client doesn't support headers |
-| `git clone` fails | Check network access to github.com, or manually clone into `.tmp/compliance/openresponses/` |
-| Stale clone / pull fails | Delete `.tmp/compliance/` and re-run |
+| Problem                                               | Solution                                                                                                                                           |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bun is required`                                     | Install Bun — the upstream tests need Bun's WebSocket client                                                                                       |
+| `server did not become ready`                         | Increase timeout, check port 3000 is free, check `.env`                                                                                            |
+| WebSocket tests fail with `Connection failed`         | Ensure Bun is installed; Node.js WebSocket client doesn't support headers                                                                          |
+| `git clone` fails                                     | Check network access to github.com, or manually clone into `.tmp/compliance/openresponses/`                                                        |
+| Stale clone / pull fails                              | Delete `.tmp/compliance/` and re-run                                                                                                               |
 | WebSocket events received but `finalResponse` is null | Likely a schema mismatch between ping-pong runtime output and compliance test expectations; try running with Ollama stopped to use simple fallback |
-| Reasoning events appear in WebSocket stream | The ChatOllama-backed runtime produces reasoning blocks; these are valid per spec but may not match the compliance test's expected event sequence |
+| Reasoning events appear in WebSocket stream           | The ChatOllama-backed runtime produces reasoning blocks; these are valid per spec but may not match the compliance test's expected event sequence  |

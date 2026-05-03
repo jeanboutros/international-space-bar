@@ -1,15 +1,15 @@
 # isb-0059: Harden CORS — explicit origin list and ConfigSchema declaration
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-010 |
-| Type | `security` |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `medium` |
-| Created | 2026-04-30 |
-| Completed | — |
-| Dependencies | none |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-010 |
+| Type         | `security`   |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `medium`     |
+| Created      | 2026-04-30   |
+| Completed    | —            |
+| Dependencies | none         |
 
 ## Description
 
@@ -32,6 +32,7 @@ the API.
 The `BearerAuthGuard` and `timingSafeEqual` token comparison in
 `ResponsesGateway` provide API-key protection at the request level. However,
 wildcard CORS creates additional risk:
+
 - If a browser ever includes credentials (cookies, storage) alongside the API
   key in a same-site scenario, the wildcard ACAO header would expose the
   response to attacker-controlled pages.
@@ -46,11 +47,13 @@ The fix: pass an explicit `origin` list to `app.enableCors()` and declare both
 ## Technical Context
 
 **Current state (`main.ts` ~line 33):**
+
 ```typescript
 config.get("server.enableCors") && app.enableCors();
 ```
 
 **Expected state:**
+
 ```typescript
 if (config.get("server.enableCors")) {
     const origins = config.get<string[]>("server.corsOrigins") ?? [];
@@ -59,6 +62,7 @@ if (config.get("server.enableCors")) {
 ```
 
 **Current `ConfigSchema` `server` block (`config.schema.ts`):**
+
 ```typescript
 server: z
     .looseObject({
@@ -69,6 +73,7 @@ server: z
 ```
 
 **Expected `server` block:**
+
 ```typescript
 server: z
     .looseObject({
@@ -90,13 +95,13 @@ It accepts `string` keys and traverses the config object. The `config.get<string
 
 ## Security PoC
 
-| Field | Value |
-|-------|-------|
-| Vulnerability category | `data-exposure` |
-| Confidence | 7 |
-| Exploit scenario | An attacker hosts a page at `https://attacker.example`. A victim user visits the page while logged into a browser session that also holds an ISB API key (e.g. via a browser extension or stored credential). The attacker's page makes a `fetch("http://localhost:3000/v1/responses", { credentials: "include" })` request. Because `Access-Control-Allow-Origin: *` is set, the browser sends the request; the response body is readable by the attacker's page JS. The `*` header is set regardless of whether credentials are actually included — no preflight blocks it. |
-| Impact | Exposure of API response content to attacker-controlled cross-origin pages when wildcard CORS is active. |
-| Fix recommendation | Pass `origin: config.get<string[]>("server.corsOrigins") ?? []` to `app.enableCors()`. An empty array means no origin is allowed, which is the safe default. Dev environments explicitly opt in with a localhost entry. |
+| Field                  | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Vulnerability category | `data-exposure`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Confidence             | 7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Exploit scenario       | An attacker hosts a page at `https://attacker.example`. A victim user visits the page while logged into a browser session that also holds an ISB API key (e.g. via a browser extension or stored credential). The attacker's page makes a `fetch("http://localhost:3000/v1/responses", { credentials: "include" })` request. Because `Access-Control-Allow-Origin: *` is set, the browser sends the request; the response body is readable by the attacker's page JS. The `*` header is set regardless of whether credentials are actually included — no preflight blocks it. |
+| Impact                 | Exposure of API response content to attacker-controlled cross-origin pages when wildcard CORS is active.                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Fix recommendation     | Pass `origin: config.get<string[]>("server.corsOrigins") ?? []` to `app.enableCors()`. An empty array means no origin is allowed, which is the safe default. Dev environments explicitly opt in with a localhost entry.                                                                                                                                                                                                                                                                                                                                                       |
 
 ## Acceptance Criteria
 
@@ -117,15 +122,15 @@ It accepts `string` keys and traverses the config object. The `config.get<string
 
 ## Test Expectations
 
-| ID | Scenario | Type | Key assertion |
-|----|----------|------|--------------|
-| T-14 | `ConfigSchema` accepts a config with `server.corsOrigins: ["http://localhost:3000"]` | Unit | `safeParse` succeeds, `corsOrigins` field is present |
-| T-15 | `ConfigSchema` accepts a config without `server.corsOrigins` | Unit | `safeParse` succeeds, `corsOrigins` is `undefined` |
-| T-16 | `ConfigSchema` accepts `server.enableCors: false` | Unit | `safeParse` succeeds |
-| T-17 | `ConfigSchema` accepts `server.enableCors: true` | Unit | `safeParse` succeeds |
-| T-18 | `ConfigSchema` rejects `server.corsOrigins: "not-an-array"` | Unit | `safeParse` fails with a validation error |
-| S-01 | `app.enableCors` is called with `{ origin: [...] }` when `server.enableCors: true` | Integration / smoke | Mock `config.get` to return `true` and `["http://localhost:3000"]`; verify `enableCors` receives correct args |
-| S-02 | `app.enableCors` is NOT called when `server.enableCors` is absent | Integration / smoke | Mock `config.get` to return `undefined`; verify `enableCors` is never called |
+| ID   | Scenario                                                                             | Type                | Key assertion                                                                                                 |
+| ---- | ------------------------------------------------------------------------------------ | ------------------- | ------------------------------------------------------------------------------------------------------------- |
+| T-14 | `ConfigSchema` accepts a config with `server.corsOrigins: ["http://localhost:3000"]` | Unit                | `safeParse` succeeds, `corsOrigins` field is present                                                          |
+| T-15 | `ConfigSchema` accepts a config without `server.corsOrigins`                         | Unit                | `safeParse` succeeds, `corsOrigins` is `undefined`                                                            |
+| T-16 | `ConfigSchema` accepts `server.enableCors: false`                                    | Unit                | `safeParse` succeeds                                                                                          |
+| T-17 | `ConfigSchema` accepts `server.enableCors: true`                                     | Unit                | `safeParse` succeeds                                                                                          |
+| T-18 | `ConfigSchema` rejects `server.corsOrigins: "not-an-array"`                          | Unit                | `safeParse` fails with a validation error                                                                     |
+| S-01 | `app.enableCors` is called with `{ origin: [...] }` when `server.enableCors: true`   | Integration / smoke | Mock `config.get` to return `true` and `["http://localhost:3000"]`; verify `enableCors` receives correct args |
+| S-02 | `app.enableCors` is NOT called when `server.enableCors` is absent                    | Integration / smoke | Mock `config.get` to return `undefined`; verify `enableCors` is never called                                  |
 
 ## Definition of Done
 

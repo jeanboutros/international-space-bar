@@ -1,33 +1,33 @@
 // OpenCode custom provider config — targets local ISB ping-pong endpoint.
 // Usage: copy to ~/.config/opencode/config.json and run `opencode`.
 {
-  "$schema": "https://opencode.ai/config.json",
-  "model": "international-space-bar/isb-ping",
-  "small_model": "international-space-bar/isb-ping",
-  "share": "disabled",
-  "autoupdate": false,
-  "tools": {
-    "bash": false,
-    "edit": false,
-    "write": false
-  },
-  "provider": {
-    "international-space-bar": {
-      "npm": "@ai-sdk/openai",
-      "name": "International Space Bar",
-      "options": {
-        "baseURL": "http://127.0.0.1:3000/v1",
-        "apiKey": "{env:ISB_OPENRESPONSES_API_KEY}"
-      },
-      "models": {
-        "isb-ping": {
-          "name": "ISB Ping",
-          "limit": {
-            "context": 8000,
-            "output": 1024
-          }
-        }
-      }
-    }
-  }
+    "$schema": "https://opencode.ai/config.json",
+    "model": "international-space-bar/isb-ping",
+    "small_model": "international-space-bar/isb-ping",
+    "share": "disabled",
+    "autoupdate": false,
+    "tools": {
+        "bash": false,
+        "edit": false,
+        "write": false,
+    },
+    "provider": {
+        "international-space-bar": {
+            "npm": "@ai-sdk/openai",
+            "name": "International Space Bar",
+            "options": {
+                "baseURL": "http://127.0.0.1:3000/v1",
+                "apiKey": "{env:ISB_OPENRESPONSES_API_KEY}",
+            },
+            "models": {
+                "isb-ping": {
+                    "name": "ISB Ping",
+                    "limit": {
+                        "context": 8000,
+                        "output": 1024,
+                    },
+                },
+            },
+        },
+    },
 }

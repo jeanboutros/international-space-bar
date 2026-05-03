@@ -37,16 +37,21 @@ Before implementing the feature work items, two structural issues must be fixed:
 #### 0a. Change constructor type from concrete to interface
 
 The `ApplicationConfigService` constructor is typed to the concrete `SecretsStoreService`:
+
 ```typescript
 constructor(@Inject(SECRETS_STORE) private readonly secretsStore: SecretsStoreService)
 ```
+
 This must change to:
+
 ```typescript
 constructor(@Inject(SECRETS_STORE) private readonly secretsStore: ISecretsStore)
 ```
+
 This enforces the DI abstraction and is a prerequisite for Work Item 2 (swappable stores).
 
 **Changes**:
+
 - `application-config.service.ts`: Change the import and constructor parameter type from `SecretsStoreService` to `ISecretsStore`.
 
 #### 0b. Extract `resolveSecrets` into a standalone utility
@@ -82,6 +87,7 @@ export function resolveConfigSecrets(
 **Known limitation**: Arrays are not traversed — `SECRET[xxx]` inside array elements will not be resolved. Current config files do not use arrays with secrets. This is documented as a known limitation; array support can be added when needed.
 
 **Changes**:
+
 - New file: `application-config/resolve-config-secrets.ts`
 - `application-config.service.ts`: Import `resolveConfigSecrets` and call `resolveConfigSecrets(parsed, this.secretsStore)` instead of `this.secretsStore.resolveSecrets(parsed)`.
 - `secrets-store.service.ts`: Remove `resolveSecrets()` method and `SECRET_PATTERN` constant. The service now only implements `getSecret()`.
@@ -134,6 +140,7 @@ export function parseCliArgs(): CliArgs {
 The `CLI_ARGS` Symbol is registered as a DI token in the module. Both the `SECRETS_STORE` factory and `ApplicationConfigService` inject it.
 
 **Changes**:
+
 - New file: `application-config/cli-args.ts`
 - `application-config.module.ts`: Register `{ provide: CLI_ARGS, useFactory: () => parseCliArgs() }`.
 - `application-config.service.ts`: Inject `CLI_ARGS` instead of parsing CLI args internally. Remove `parseCliEnvironment()`.
@@ -141,10 +148,12 @@ The `CLI_ARGS` Symbol is registered as a DI token in the module. Both the `SECRE
 #### 1b. Explicit config file path
 
 Allow the config file path to be specified explicitly via:
+
 - CLI arg: `--config <path>` or `-c <path>` (from the `CliArgs` utility above)
 - Env var: `ISB_CONFIG_PATH`
 
 **Precedence order** (highest to lowest):
+
 1. `--config` / `-c` CLI arg
 2. `ISB_CONFIG_PATH` env var
 3. Default: `join(process.cwd(), \`config.\${env}.yaml\`)`
@@ -152,6 +161,7 @@ Allow the config file path to be specified explicitly via:
 **NOT in scope**: Searching upward for config files. The existing TODO is updated to reflect that explicit path override is implemented and search strategy is deferred.
 
 **Changes**:
+
 - `application-config.service.ts`: Update `loadConfig()` to check `cliArgs.config` → `ISB_CONFIG_PATH` → default. Remove the old TODO and add a note that search strategy is deferred.
 - Update `.env.example` with `ISB_CONFIG_PATH` documentation.
 
@@ -162,15 +172,18 @@ Allow the config file path to be specified explicitly via:
 > "The SecretStore should be an interface injected into this class... add a CLI arg for secret store type like --secret-store=env|file|vault"
 
 **Scope**: Make the secrets store implementation swappable at startup via:
+
 - CLI arg: `--secret-store=env` (only `env` is implemented now; `file` and `vault` are future)
 
 **Approach**:
+
 - `ApplicationConfigModule` uses a factory provider for `SECRETS_STORE` that reads `secretStore` from the injected `CLI_ARGS` token and selects the implementation.
 - The factory is synchronous — no async provider needed.
 - Only `env` (current `SecretsStoreService`) is implemented. Requesting `file` or `vault` throws a `ConfigurationException` with a clear message that the backend is not yet implemented.
 - Remove the large TODO comment block from `secrets-store.service.ts`.
 
 **Module wiring**:
+
 ```typescript
 // application-config.module.ts
 @Global()
@@ -195,6 +208,7 @@ Allow the config file path to be specified explicitly via:
 ```
 
 **Changes**:
+
 - `application-config.module.ts`: Replace `useClass` with `useFactory` as shown above.
 - `secrets-store.service.ts`: Remove TODO block, clean up JSDoc. Service now only implements `getSecret()`.
 
@@ -205,43 +219,57 @@ Allow the config file path to be specified explicitly via:
 **Scope**: Define a Zod schema for the **known** config sections and validate the parsed YAML against it at startup. Unknown keys at every nesting level pass through without error.
 
 **Approach**:
+
 - Create a `config.schema.ts` file in `application-config/` that defines a Zod schema.
 - All object levels use `z.looseObject()` (Zod 4) — not `z.object()` — so unknown keys pass through at every nesting level.
 - Known sections based on `config.dev.yaml`:
-  ```typescript
-  export const ConfigSchema = z.looseObject({
-      version: z.number(),
-      app: z.looseObject({
-          appVersion: z.string().optional(),
-      }),
-      server: z.looseObject({
-          port: z.number(),
-          host: z.string(),
-      }).optional(),
-      logger: z.looseObject({
-          type: z.string(),
-          logFilePath: z.string(),
-          level: z.string(),
-      }).optional(),
-      ollama: z.looseObject({
-          baseUrl: z.string(),
-          apiKey: z.string(),
-      }).optional(),
-      tavily: z.looseObject({
-          apiKey: z.string(),
-      }).optional(),
-      models: z.looseObject({
-          default: z.string(),
-          aliases: z.record(z.string(), z.string()),
-      }).optional(),
-      paths: z.looseObject({
-          skillsRoot: z.string(),
-          agentsConfigDir: z.string(),
-      }).optional(),
-  });
 
-  export type AppConfig = z.infer<typeof ConfigSchema>;
-  ```
+    ```typescript
+    export const ConfigSchema = z.looseObject({
+        version: z.number(),
+        app: z.looseObject({
+            appVersion: z.string().optional(),
+        }),
+        server: z
+            .looseObject({
+                port: z.number(),
+                host: z.string(),
+            })
+            .optional(),
+        logger: z
+            .looseObject({
+                type: z.string(),
+                logFilePath: z.string(),
+                level: z.string(),
+            })
+            .optional(),
+        ollama: z
+            .looseObject({
+                baseUrl: z.string(),
+                apiKey: z.string(),
+            })
+            .optional(),
+        tavily: z
+            .looseObject({
+                apiKey: z.string(),
+            })
+            .optional(),
+        models: z
+            .looseObject({
+                default: z.string(),
+                aliases: z.record(z.string(), z.string()),
+            })
+            .optional(),
+        paths: z
+            .looseObject({
+                skillsRoot: z.string(),
+                agentsConfigDir: z.string(),
+            })
+            .optional(),
+    });
+
+    export type AppConfig = z.infer<typeof ConfigSchema>;
+    ```
 
 #### Config loading pipeline
 
@@ -262,6 +290,7 @@ parse YAML (raw string → object)
 - `getConfig()` return type changes from `Record<string, unknown>` to `AppConfig` (the Zod-inferred type). No current consumers exist outside the service, so this is not a breaking change.
 
 **Changes**:
+
 - New file: `application-config/config.schema.ts`
 - `application-config.service.ts`: Import schema, validate in `loadConfig()`, use `result.data` as the frozen config.
 - `getConfig()` return type → `AppConfig`.
@@ -269,6 +298,7 @@ parse YAML (raw string → object)
 ### 4. Documentation — running the server
 
 **Current problem**: No documentation exists for how to:
+
 - Start the server in different environments
 - Choose which environment to use (CLI vs env var)
 - Where config files are located
@@ -276,6 +306,7 @@ parse YAML (raw string → object)
 - What `SECRET[xxx]` patterns do
 
 **Scope**: Create/update documentation that clearly explains:
+
 1. Application entry points (`main.ts`, `pnpm dev:server`, `pnpm start:server`)
 2. Environment selection: `--environment dev` or `-e dev` or `ISB_PROJECT_ENVIRONMENT=dev`
 3. Config file location: defaults to `<cwd>/config.<env>.yaml`, overridable via `--config` / `ISB_CONFIG_PATH`
@@ -288,6 +319,7 @@ parse YAML (raw string → object)
 **Target file**: `docs/running-the-server.md` (new)
 
 Also update:
+
 - `AGENTS.md` commands table if needed
 - `.env.example` with all new env vars
 
@@ -300,6 +332,7 @@ Also update:
 ### Layered boundaries
 
 All changes stay within the `international-space-bar-server/` layer:
+
 - `common/interfaces/` — pure types (innermost)
 - `common/exceptions/` — exception classes
 - `application-config/` — config service, secrets service, module, schema, CLI args, secret resolution utility
@@ -325,6 +358,7 @@ The existing `@Inject(SECRETS_STORE)` pattern with explicit Symbol tokens is pre
 ## Acceptance criteria
 
 ### Functional
+
 - [ ] Config file path can be overridden via `--config`/`-c` CLI arg or `ISB_CONFIG_PATH` env var
 - [ ] CLI arg takes precedence over env var, which takes precedence over default path
 - [ ] The TODO in `loadConfig()` is updated to reflect the implemented override and deferred search
@@ -342,17 +376,19 @@ The existing `@Inject(SECRETS_STORE)` pattern with explicit Symbol tokens is pre
 - [ ] The frozen config object is Zod's `result.data`, not the original parsed object
 
 ### Documentation
+
 - [ ] `docs/running-the-server.md` documents all entry points, environment selection, config path, secret store, and config structure
 - [ ] `.env.example` includes `ISB_CONFIG_PATH` and any new env vars
 - [ ] `AGENTS.md` commands table is updated if new run options are added
 - [ ] Array limitation in secret resolution is documented
 
 ### Quality
+
 - [ ] All existing tests (13) continue to pass
 - [ ] `pnpm check` exits 0
 - [ ] New unit tests cover:
-  - CLI arg parsing (environment, config, secret-store) with various argv scenarios
-  - Secret store factory selection (valid `env`, invalid values)
-  - Zod schema validation (valid config, missing required fields, unknown keys preserved)
-  - `resolveConfigSecrets` standalone utility (nested secrets, missing secrets, no arrays)
-  - Config file path precedence (CLI > env var > default)
+    - CLI arg parsing (environment, config, secret-store) with various argv scenarios
+    - Secret store factory selection (valid `env`, invalid values)
+    - Zod schema validation (valid config, missing required fields, unknown keys preserved)
+    - `resolveConfigSecrets` standalone utility (nested secrets, missing secrets, no arrays)
+    - Config file path precedence (CLI > env var > default)

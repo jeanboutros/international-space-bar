@@ -1,11 +1,11 @@
 # isb-epic-002: Phase 1 — Streaming Ping-Pong
 
-| Field | Value |
-|-------|-------|
-| Phase | 1 |
-| Status | `backlog` |
-| Priority | `high` |
-| Created | 2026-04-28 |
+| Field      | Value                  |
+| ---------- | ---------------------- |
+| Phase      | 1                      |
+| Status     | `backlog`              |
+| Priority   | `high`                 |
+| Created    | 2026-04-28             |
 | Depends on | isb-epic-001 (Phase 0) |
 
 ## Objective
@@ -14,12 +14,12 @@ Prove OpenResponses streaming over `POST /v1/responses` with `stream: true`. Emi
 
 ## Tickets
 
-| Ticket | Title | Priority |
-|--------|-------|----------|
-| isb-0009 | SSE frame writer utility | high |
-| isb-0010 | Streaming route in ResponsesController | high |
-| isb-0011 | Connection cancellation handling | medium |
-| isb-0012 | Streaming tests and OpenCode validation | high |
+| Ticket   | Title                                   | Priority |
+| -------- | --------------------------------------- | -------- |
+| isb-0009 | SSE frame writer utility                | high     |
+| isb-0010 | Streaming route in ResponsesController  | high     |
+| isb-0011 | Connection cancellation handling        | medium   |
+| isb-0012 | Streaming tests and OpenCode validation | high     |
 
 ## Acceptance Criteria
 

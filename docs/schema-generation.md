@@ -83,11 +83,11 @@ before the Kubb config object is exported.
 A property is removed when its schema value satisfies **all three** of the
 following simultaneously:
 
-| Condition | Required value |
-|-----------|----------------|
-| `minLength` | `1` |
-| `maxLength` | `0` |
-| `x-openresponses-disallowed` | `true` |
+| Condition                    | Required value |
+| ---------------------------- | -------------- |
+| `minLength`                  | `1`            |
+| `maxLength`                  | `0`            |
+| `x-openresponses-disallowed` | `true`         |
 
 All three must be present — removing any one disqualifies the property from
 detection.
@@ -157,13 +157,13 @@ export default defineConfig({
 
 ### Key options explained
 
-| Option | Value | Why |
-|--------|-------|-----|
+| Option             | Value              | Why                                                                                                                                                                |
+| ------------------ | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `output.extension` | `{ ".ts": ".js" }` | Required for NodeNext ESM — TypeScript resolves `.js` imports to `.ts` at build time; without this, generated imports break under `"moduleResolution": "NodeNext"` |
-| `version` | `"4"` | Targets Zod v4 API (this project uses Zod 4) |
-| `unknownType` | `"unknown"` | Unknown/additional fields are typed as `unknown` rather than `any` — safe by default |
-| `typed` | `true` | Generates `z.ZodType<T>` wrappers — enables full TypeScript inference from Zod schemas |
-| `inferred` | `true` | Generates `z.infer<...>` type aliases alongside schemas |
+| `version`          | `"4"`              | Targets Zod v4 API (this project uses Zod 4)                                                                                                                       |
+| `unknownType`      | `"unknown"`        | Unknown/additional fields are typed as `unknown` rather than `any` — safe by default                                                                               |
+| `typed`            | `true`             | Generates `z.ZodType<T>` wrappers — enables full TypeScript inference from Zod schemas                                                                             |
+| `inferred`         | `true`             | Generates `z.infer<...>` type aliases alongside schemas                                                                                                            |
 
 ---
 
@@ -241,8 +241,8 @@ linting.
 ignores: [
     "dist/**",
     "src/**/openresponses/openresponses.generated.d.ts",
-    "src/**/openresponses/generated/**"
-]
+    "src/**/openresponses/generated/**",
+];
 ```
 
 Do not add `// biome-ignore` or `// eslint-disable` comments inside generated

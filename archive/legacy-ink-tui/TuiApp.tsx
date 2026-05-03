@@ -103,7 +103,10 @@ async function processWithStreaming(
 
 export default function TuiApp({ agent, ctx, threadId, workflow }: TuiAppProps) {
     const { columns, rows } = useWindowSize();
-    const sidebarWidth = Math.max(layout.sidebarMinWidth, Math.floor(columns * layout.sidebarPercent));
+    const sidebarWidth = Math.max(
+        layout.sidebarMinWidth,
+        Math.floor(columns * layout.sidebarPercent),
+    );
     const mainWidth = columns - sidebarWidth;
 
     // ── Selectors (subscribe to individual slices) ──────────────────
@@ -116,8 +119,7 @@ export default function TuiApp({ agent, ctx, threadId, workflow }: TuiAppProps) 
     const messageCount = messages.length;
 
     // ── Actions (stable references — no stale closures) ───────────────
-    const { addMessage, accumulateTokens, setProcessing, setCurrentInterrupt } =
-        useAppStore();
+    const { addMessage, accumulateTokens, setProcessing, setCurrentInterrupt } = useAppStore();
 
     const handleSubmit = useCallback(
         async (query: string) => {

@@ -1,14 +1,14 @@
 # isb-0005: Archive TUI + update scripts
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-001 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-28 |
-| Completed | — |
-| Dependencies | isb-0001 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-001 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-28   |
+| Completed    | —            |
+| Dependencies | isb-0001     |
 
 ## Description
 
@@ -20,10 +20,10 @@ Archive the legacy Ink TUI by moving it out of the source tree into `archive/leg
 - [ ] `renderTui` import removed from `src/international-space-bar/main.ts` (or main.ts updated to not reference TUI)
 - [ ] TUI dependencies removed from `package.json`: `ink`, `ink-text-input`, `react`, `zustand`, `@types/react` (and any other TUI-only deps)
 - [ ] `package.json` scripts updated:
-  - `dev` → `dev:server` (starts NestJS in dev mode)
-  - `build` → `build:server` (builds the server)
-  - `start` → `start:server` (runs the built server)
-  - `test` script added: `node --import tsx --test 'src/**/*.test.ts'`
+    - `dev` → `dev:server` (starts NestJS in dev mode)
+    - `build` → `build:server` (builds the server)
+    - `start` → `start:server` (runs the built server)
+    - `test` script added: `node --import tsx --test 'src/**/*.test.ts'`
 - [ ] Archived TUI files are not imported by any source under `src/`
 - [ ] `pnpm check` exits 0
 
@@ -39,15 +39,15 @@ Archive the legacy Ink TUI by moving it out of the source tree into `archive/leg
 ```jsonc
 // package.json scripts (after)
 {
-  "scripts": {
-    "dev:server": "tsx watch src/international-space-bar-server/main.ts",
-    "build:server": "tsup src/international-space-bar-server/main.ts --format esm --dts",
-    "start:server": "node dist/main.js",
-    "test": "node --import tsx --test 'src/**/*.test.ts'",
-    "lint": "biome check --write . && eslint --fix .",
-    "format": "biome format --write .",
-    "check": "biome check --write . && eslint --fix ."
-  }
+    "scripts": {
+        "dev:server": "tsx watch src/international-space-bar-server/main.ts",
+        "build:server": "tsup src/international-space-bar-server/main.ts --format esm --dts",
+        "start:server": "node dist/main.js",
+        "test": "node --import tsx --test 'src/**/*.test.ts'",
+        "lint": "biome check --write . && eslint --fix .",
+        "format": "biome format --write .",
+        "check": "biome check --write . && eslint --fix .",
+    },
 }
 ```
 

@@ -14,10 +14,10 @@ Follow-up clarification:
 
 The system has two categories of log events that are currently indistinguishable:
 
-| Category | Examples | Current destination |
-|----------|----------|---------------------|
-| **System/infrastructure events** | App startup, config load, HTTP errors | `app.log` via `ctx.logger` |
-| **Agent observability events** | Intent classified, satisfaction score, message chain, tokens used | `app.log` (same, no way to filter) |
+| Category                         | Examples                                                          | Current destination                |
+| -------------------------------- | ----------------------------------------------------------------- | ---------------------------------- |
+| **System/infrastructure events** | App startup, config load, HTTP errors                             | `app.log` via `ctx.logger`         |
+| **Agent observability events**   | Intent classified, satisfaction score, message chain, tokens used | `app.log` (same, no way to filter) |
 
 Several agents (`intent-classifier`, `council-gate-classifier`) emit **zero** logs. Others (`deep-agent-wrapper`, workflow nodes) log minimal data — no message types, no token counts, no thread traceability.
 
@@ -33,10 +33,10 @@ The goal is a machine-readable `agents.log` file usable as a **behavioural audit
 
 System logging and agent observability are fundamentally different concerns:
 
-| Concern | Purpose | Destination | Audience |
-|---------|---------|-------------|----------|
-| **System logging** | Infrastructure diagnostics — startup, config, errors, retries | `app.log` + TUI ring buffer | DevOps, developers |
-| **Agent observability** | Behavioural audit trail — intent, tokens, routing, tool calls | `agents.log` only | Agent tuners, analysts |
+| Concern                 | Purpose                                                       | Destination                 | Audience               |
+| ----------------------- | ------------------------------------------------------------- | --------------------------- | ---------------------- |
+| **System logging**      | Infrastructure diagnostics — startup, config, errors, retries | `app.log` + TUI ring buffer | DevOps, developers     |
+| **Agent observability** | Behavioural audit trail — intent, tokens, routing, tool calls | `agents.log` only           | Agent tuners, analysts |
 
 Agent messages are **not** system logs. System diagnostics are **not** agent tuning data. Mixing them pollutes both: `app.log` becomes noisy with verbose agent traces, and agent audit trails become cluttered with infrastructure noise.
 
@@ -81,6 +81,7 @@ LangGraph passes a `thread_id` into every graph invocation and subgraph call. Ev
 ### Decision 5: rich message chain logging in DeepAgentWrapper
 
 The `DeepAgentWrapper` receives a full LangGraph message array after each invocation. Rather than discarding this, the agent logger should emit a structured entry with:
+
 - Per-message: `type` (ai / human / tool / system), `contentLength`, `toolName` (for tool messages and AI tool calls)
 - Aggregate token usage (`inputTokens`, `outputTokens`, `totalTokens`) from `extractTokenUsage`
 
@@ -109,6 +110,7 @@ This means: every `agentLogger` call must include `threadId`. System `logger` ca
 The system logger (`ctx.logger`) writes to three destinations: stdout/pretty-print, `app.log` file, and the TUI `LogRingBuffer`.
 
 The agent logger is a **completely separate pino instance** that writes to:
+
 - `agents.log` — via direct `pino.destination()` (the primary audit trail)
 - stdout/pretty-print — in development only, for developer visibility during local runs
 
@@ -118,7 +120,7 @@ It does **not** write to `app.log` or the TUI ring buffer. This is a consequence
 
 ### Decision 10: message chain includes tool names
 
-Tool name extraction is included in the initial implementation — not deferred. For a behavioural audit trail, knowing *which tools* were called is critical. Without it, the `messageChain` would show `{ type: "tool", contentLength: 312 }` without indicating whether that was `web_fetch` or `write_file`.
+Tool name extraction is included in the initial implementation — not deferred. For a behavioural audit trail, knowing _which tools_ were called is critical. Without it, the `messageChain` would show `{ type: "tool", contentLength: 312 }` without indicating whether that was `web_fetch` or `write_file`.
 
 The `normaliseMessage()` utility already provides `additional_kwargs`, which contains `name` for `ToolMessage` and `tool_calls` for `AIMessage`. The `summariseMessages` helper extracts these.
 
@@ -129,22 +131,27 @@ The `normaliseMessage()` utility already provides `additional_kwargs`, which con
 ### 1. Infrastructure changes
 
 #### `config.yaml`
+
 ```yaml
 logger:
-  type: pino
-  logFilePath: ./logs/app.log
-  agentLogFilePath: ./logs/agents.log  # NEW
+    type: pino
+    logFilePath: ./logs/app.log
+    agentLogFilePath: ./logs/agents.log # NEW
 ```
 
 #### `interfaces/config.interface.ts`
+
 Add:
+
 ```typescript
 /** Path to the agent observability log file. Separate from the app log. */
 readonly agentLogFilePath?: string;
 ```
 
 #### `interfaces/app-context.interface.ts`
+
 Add:
+
 ```typescript
 /** Agent observability logger. Writes to agents.log only (not app.log, not the TUI ring buffer). */
 readonly agentLogger: ILogger;
@@ -153,6 +160,7 @@ readonly agentLogger: ILogger;
 This is the key architectural decision — inner layers receive the agent logger via dependency injection through `AppContext`, never importing `Logging` directly (see Decision 6).
 
 #### `config.ts`
+
 - Add `agentLogFilePath: z.string().optional()` to `ConfigSchema`
 - Add `agentLogFilePath: raw.logger?.agentLogFilePath` to `flattenYaml`
 
@@ -164,8 +172,8 @@ This is the most complex change. The key insight: the agent logger is a **comple
 
 ```typescript
 class Logging {
-    private logger: ILogger;        // system logger (existing) → app.log + ring buffer + stdout
-    private agentLogger: ILogger;    // agent observability logger (NEW) → agents.log + stdout (dev)
+    private logger: ILogger; // system logger (existing) → app.log + ring buffer + stdout
+    private agentLogger: ILogger; // agent observability logger (NEW) → agents.log + stdout (dev)
     private pinoAgentLogger: Logger; // raw pino instance for agent logger (NEW)
     // ...
 }
@@ -248,7 +256,9 @@ public getAgentLogger(name?: string): ILogger {
 **`PinoLoggerAdapter` changes**: No changes to `PinoLoggerAdapter` itself. The agent logger creates pino children directly on the stored `pinoAgentLogger` instance, then wraps them.
 
 #### `app.ts`
+
 Wire `agentLogger` into AppContext creation:
+
 ```typescript
 agentLogger: Logging.getAgentLogger("app"),
 ```
@@ -269,18 +279,21 @@ The factory function signature changes to accept `agentLogger`. The returned fun
 import type { ILogger } from "../interfaces/logger.interface.js";
 
 export function createIntentClassifier(config: IConfig, agentLogger: ILogger) {
-  const model = config.defaultModel;
-  const llm = createOllamaLLMFromConfig(config, model);
-  const structured = llm.withStructuredOutput(IntentSchema);
+    const model = config.defaultModel;
+    const llm = createOllamaLLMFromConfig(config, model);
+    const structured = llm.withStructuredOutput(IntentSchema);
 
-  return async (query: string, threadId: string): Promise<Intent> => {
-    const result = await structured.invoke([
-      { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: query },
-    ]);
-    agentLogger.info({ threadId, intent: result.intent, queryLength: query.length }, "Intent classified");
-    return result;
-  };
+    return async (query: string, threadId: string): Promise<Intent> => {
+        const result = await structured.invoke([
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: query },
+        ]);
+        agentLogger.info(
+            { threadId, intent: result.intent, queryLength: query.length },
+            "Intent classified",
+        );
+        return result;
+    };
 }
 ```
 
@@ -292,18 +305,26 @@ Same pattern — `agentLogger` as factory parameter, `threadId` as call paramete
 import type { ILogger } from "../interfaces/logger.interface.js";
 
 export function createCouncilGateClassifier(config: IConfig, agentLogger: ILogger) {
-  const llm = createOllamaLLMFromConfig(config, config.defaultModel);
-  const structured = llm.withStructuredOutput(CouncilGateSchema);
+    const llm = createOllamaLLMFromConfig(config, config.defaultModel);
+    const structured = llm.withStructuredOutput(CouncilGateSchema);
 
-  return async (query: string, outcome: string, threadId: string): Promise<CouncilGateResult> => {
-    const userMessage = `## Original Query\n${query}\n\n## Outcome to Evaluate\n${outcome}`;
-    const result = await structured.invoke([
-      { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: userMessage },
-    ]);
-    agentLogger.info({ threadId, shouldTrigger: result.shouldTrigger, queryLength: query.length, outcomeLength: outcome.length }, "Council gate evaluated");
-    return result;
-  };
+    return async (query: string, outcome: string, threadId: string): Promise<CouncilGateResult> => {
+        const userMessage = `## Original Query\n${query}\n\n## Outcome to Evaluate\n${outcome}`;
+        const result = await structured.invoke([
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: userMessage },
+        ]);
+        agentLogger.info(
+            {
+                threadId,
+                shouldTrigger: result.shouldTrigger,
+                queryLength: query.length,
+                outcomeLength: outcome.length,
+            },
+            "Council gate evaluated",
+        );
+        return result;
+    };
 }
 ```
 
@@ -314,39 +335,56 @@ The evaluator currently receives `config: IConfig` and uses `Logging.getLogger()
 ```typescript
 import type { ILogger } from "../interfaces/logger.interface.js";
 
-export function createSatisfactionEvaluator(config: IConfig, agentLogger: ILogger, modelOverride?: string) {
-  const model = modelOverride ?? config.defaultModel;
-  const llm = createOllamaLLMFromConfig(config, model);
-  const structured = llm.withStructuredOutput(SatisfactionSchema);
-  const logger = Logging.getLogger("agent.satisfaction-evaluator"); // pre-existing system logger — kept
+export function createSatisfactionEvaluator(
+    config: IConfig,
+    agentLogger: ILogger,
+    modelOverride?: string,
+) {
+    const model = modelOverride ?? config.defaultModel;
+    const llm = createOllamaLLMFromConfig(config, model);
+    const structured = llm.withStructuredOutput(SatisfactionSchema);
+    const logger = Logging.getLogger("agent.satisfaction-evaluator"); // pre-existing system logger — kept
 
-  return async (
-    query: string,
-    outcome: string,
-    iteration: number,
-    previousFeedback: string,
-    threadId: string,
-  ): Promise<SatisfactionResult> => {
-    logger.info({ iteration, queryLength: query.length, outcomeLength: outcome.length }, "Evaluating satisfaction");
+    return async (
+        query: string,
+        outcome: string,
+        iteration: number,
+        previousFeedback: string,
+        threadId: string,
+    ): Promise<SatisfactionResult> => {
+        logger.info(
+            { iteration, queryLength: query.length, outcomeLength: outcome.length },
+            "Evaluating satisfaction",
+        );
 
-    // ... existing evaluation logic ...
+        // ... existing evaluation logic ...
 
-    try {
-      const result = await structured.invoke([/* ... */]);
-      agentLogger.info(
-        { threadId, score: result.score, iteration, feedback: result.feedback.slice(0, 200) },
-        "Satisfaction evaluated",
-      );
-      return result;
-    } catch (error) {
-      logger.error({ err: error, iteration }, "Satisfaction evaluation failed, defaulting to satisfied");
-      agentLogger.info(
-        { threadId, score: 1.0, iteration, fallback: true },
-        "Satisfaction evaluation failed — accepting result",
-      );
-      return { score: 1.0, feedback: "Evaluation failed — accepting result" };
-    }
-  };
+        try {
+            const result = await structured.invoke([
+                /* ... */
+            ]);
+            agentLogger.info(
+                {
+                    threadId,
+                    score: result.score,
+                    iteration,
+                    feedback: result.feedback.slice(0, 200),
+                },
+                "Satisfaction evaluated",
+            );
+            return result;
+        } catch (error) {
+            logger.error(
+                { err: error, iteration },
+                "Satisfaction evaluation failed, defaulting to satisfied",
+            );
+            agentLogger.info(
+                { threadId, score: 1.0, iteration, fallback: true },
+                "Satisfaction evaluation failed — accepting result",
+            );
+            return { score: 1.0, feedback: "Evaluation failed — accepting result" };
+        }
+    };
 }
 ```
 
@@ -356,42 +394,48 @@ Already receives `AppContext` — use `ctx.agentLogger`. `threadId` is already a
 
 ```typescript
 // In invoke() — after extractResult:
-ctx.agentLogger.info({
-  threadId,
-  agentId: this.id,
-  messageCount: result.messages.length,
-  tokenUsage: result.tokenUsage,
-  messageChain: summariseMessages(result.messages),
-}, "Agent invocation complete");
+ctx.agentLogger.info(
+    {
+        threadId,
+        agentId: this.id,
+        messageCount: result.messages.length,
+        tokenUsage: result.tokenUsage,
+        messageChain: summariseMessages(result.messages),
+    },
+    "Agent invocation complete",
+);
 
 // New local helper (includes tool name extraction — see Decision 10):
 function summariseMessages(messages: unknown[]): Array<{
-  type: string;
-  contentLength: number;
-  toolName?: string;
+    type: string;
+    contentLength: number;
+    toolName?: string;
 }> {
-  return messages.map((msg) => {
-    const normalised = normaliseMessage(msg);
-    const len = typeof normalised.content === "string"
-      ? normalised.content.length
-      : JSON.stringify(normalised.content).length;
+    return messages.map((msg) => {
+        const normalised = normaliseMessage(msg);
+        const len =
+            typeof normalised.content === "string"
+                ? normalised.content.length
+                : JSON.stringify(normalised.content).length;
 
-    let toolName: string | undefined;
-    if (normalised.messageType === "tool" && normalised.additional_kwargs) {
-      toolName = (normalised.additional_kwargs as Record<string, unknown>).name as string | undefined;
-    } else if (normalised.messageType === "ai" && normalised.additional_kwargs) {
-      const toolCalls = (normalised.additional_kwargs as Record<string, unknown>).tool_calls;
-      if (Array.isArray(toolCalls) && toolCalls.length > 0) {
-        toolName = (toolCalls[0] as Record<string, unknown>)?.name as string | undefined;
-      }
-    }
+        let toolName: string | undefined;
+        if (normalised.messageType === "tool" && normalised.additional_kwargs) {
+            toolName = (normalised.additional_kwargs as Record<string, unknown>).name as
+                | string
+                | undefined;
+        } else if (normalised.messageType === "ai" && normalised.additional_kwargs) {
+            const toolCalls = (normalised.additional_kwargs as Record<string, unknown>).tool_calls;
+            if (Array.isArray(toolCalls) && toolCalls.length > 0) {
+                toolName = (toolCalls[0] as Record<string, unknown>)?.name as string | undefined;
+            }
+        }
 
-    return {
-      type: normalised.messageType ?? "unknown",
-      contentLength: len,
-      ...(toolName ? { toolName } : {}),
-    };
-  });
+        return {
+            type: normalised.messageType ?? "unknown",
+            contentLength: len,
+            ...(toolName ? { toolName } : {}),
+        };
+    });
 }
 ```
 
@@ -421,14 +465,24 @@ export function buildDirectorWorkflow(config: IConfig, agentLogger: ILogger) {
 function createNodes(config: IConfig, agentLogger: ILogger) {
     // Pass agentLogger to classifier factories:
     const classify = createIntentClassifier(config, agentLogger.child("intent-classifier"));
-    const classifyCouncilGate = createCouncilGateClassifier(config, agentLogger.child("council-gate"));
-    const evaluateSatisfaction = createSatisfactionEvaluator(config, agentLogger.child("satisfaction"), config.defaultModel);
+    const classifyCouncilGate = createCouncilGateClassifier(
+        config,
+        agentLogger.child("council-gate"),
+    );
+    const evaluateSatisfaction = createSatisfactionEvaluator(
+        config,
+        agentLogger.child("satisfaction"),
+        config.defaultModel,
+    );
 
     const classifyIntent: DirectorNode = async (state, runnableConfig) => {
         const { ctx, thread_id } = getContext(runnableConfig);
         logger.info({ query: state.query }, "Classifying user intent");
         const { intent } = await classify(state.query, thread_id);
-        ctx.agentLogger.info({ threadId: thread_id, intent, query: state.query.slice(0, 100) }, "Intent classified");
+        ctx.agentLogger.info(
+            { threadId: thread_id, intent, query: state.query.slice(0, 100) },
+            "Intent classified",
+        );
         return { intent };
     };
 
@@ -436,9 +490,15 @@ function createNodes(config: IConfig, agentLogger: ILogger) {
     const orchestrator: DirectorNode = async (state, runnableConfig) => {
         const { ctx, thread_id } = getContext(runnableConfig);
         // ... existing logic ...
-        ctx.agentLogger.info({ threadId: thread_id, agentId: "orchestrator", iteration: state.iteration }, "Orchestrator invoked");
+        ctx.agentLogger.info(
+            { threadId: thread_id, agentId: "orchestrator", iteration: state.iteration },
+            "Orchestrator invoked",
+        );
         const result = await getAgent("orchestrator").invoke(enhancedQuery, ctx, thread_id);
-        ctx.agentLogger.info({ threadId: thread_id, agentId: "orchestrator", length: result.lastContent.length }, "Orchestrator completed");
+        ctx.agentLogger.info(
+            { threadId: thread_id, agentId: "orchestrator", length: result.lastContent.length },
+            "Orchestrator completed",
+        );
         return { outcome: result.lastContent, messages: result.messages };
     };
 
@@ -449,7 +509,10 @@ function createNodes(config: IConfig, agentLogger: ILogger) {
         const { ctx, thread_id } = getContext(runnableConfig);
         // ... existing logic ...
         const { shouldTrigger } = await classifyCouncilGate(state.query, outcome, thread_id);
-        ctx.agentLogger.info({ threadId: thread_id, shouldTrigger, query: state.query.slice(0, 100) }, "Council gate decision");
+        ctx.agentLogger.info(
+            { threadId: thread_id, shouldTrigger, query: state.query.slice(0, 100) },
+            "Council gate decision",
+        );
         return { councilTriggered: shouldTrigger };
     };
 
@@ -457,11 +520,26 @@ function createNodes(config: IConfig, agentLogger: ILogger) {
     const evaluate: DirectorNode = async (state, runnableConfig) => {
         const { ctx, thread_id } = getContext(runnableConfig);
         // ... existing evaluation logic ...
-        const routing = score >= SATISFACTION_THRESHOLD ? "present" :
-            state.iteration >= state.maxIterations ? "present (max)" :
-            state.intent === "council" ? "council" :
-            state.intent === "reasoning" ? "reasoning" : "orchestrator";
-        ctx.agentLogger.info({ threadId: thread_id, score, iteration: state.iteration + 1, routing, feedback: feedback.slice(0, 200) }, "Satisfaction evaluated");
+        const routing =
+            score >= SATISFACTION_THRESHOLD
+                ? "present"
+                : state.iteration >= state.maxIterations
+                  ? "present (max)"
+                  : state.intent === "council"
+                    ? "council"
+                    : state.intent === "reasoning"
+                      ? "reasoning"
+                      : "orchestrator";
+        ctx.agentLogger.info(
+            {
+                threadId: thread_id,
+                score,
+                iteration: state.iteration + 1,
+                routing,
+                feedback: feedback.slice(0, 200),
+            },
+            "Satisfaction evaluated",
+        );
         return { satisfactionScore: score, feedback, iteration: state.iteration + 1 };
     };
 }
@@ -476,13 +554,22 @@ function createNodes(config: IConfig, agentLogger: ILogger) {
 const { ctx, thread_id } = getContext(runnableConfig);
 
 // After frameQuestion:
-ctx.agentLogger.info({ threadId: thread_id, questionLength: result.lastContent.length }, "Question framed");
+ctx.agentLogger.info(
+    { threadId: thread_id, questionLength: result.lastContent.length },
+    "Question framed",
+);
 
 // After chairman:
-ctx.agentLogger.info({ threadId: thread_id, verdictLength: result.lastContent.length }, "Chairman verdict produced");
+ctx.agentLogger.info(
+    { threadId: thread_id, verdictLength: result.lastContent.length },
+    "Chairman verdict produced",
+);
 
 // In generateReport — after writes:
-ctx.agentLogger.info({ threadId: thread_id, verdictPath, transcriptPath }, "Council reports written");
+ctx.agentLogger.info(
+    { threadId: thread_id, verdictPath, transcriptPath },
+    "Council reports written",
+);
 ```
 
 **Note**: This file currently imports `Logging` directly (pre-existing violation). The observability logging uses `ctx.agentLogger`. A follow-up task should migrate the system-level `logger` calls to `ctx.logger`.
@@ -507,34 +594,34 @@ The `orchestrator`, `reasoning`, `council`, and `present` nodes already accept `
 
 ```json
 {
-  "observability": "agent",
-  "module": "workflow.director",
-  "level": "info",
-  "time": "2026-04-28T10:00:00.000Z",
-  "threadId": "thread-abc123",
-  "intent": "reasoning",
-  "query": "analyse the trade-offs...",
-  "msg": "Intent classified"
+    "observability": "agent",
+    "module": "workflow.director",
+    "level": "info",
+    "time": "2026-04-28T10:00:00.000Z",
+    "threadId": "thread-abc123",
+    "intent": "reasoning",
+    "query": "analyse the trade-offs...",
+    "msg": "Intent classified"
 }
 ```
 
 ```json
 {
-  "observability": "agent",
-  "module": "agent.deep-agent-wrapper/orchestrator",
-  "level": "info",
-  "time": "2026-04-28T10:00:01.123Z",
-  "threadId": "thread-abc123",
-  "agentId": "orchestrator",
-  "messageCount": 4,
-  "tokenUsage": { "inputTokens": 512, "outputTokens": 128, "totalTokens": 640 },
-  "messageChain": [
-    { "type": "human", "contentLength": 43 },
-    { "type": "ai", "contentLength": 0, "toolName": "web_fetch" },
-    { "type": "tool", "contentLength": 312, "toolName": "web_fetch" },
-    { "type": "ai", "contentLength": 187 }
-  ],
-  "msg": "Agent invocation complete"
+    "observability": "agent",
+    "module": "agent.deep-agent-wrapper/orchestrator",
+    "level": "info",
+    "time": "2026-04-28T10:00:01.123Z",
+    "threadId": "thread-abc123",
+    "agentId": "orchestrator",
+    "messageCount": 4,
+    "tokenUsage": { "inputTokens": 512, "outputTokens": 128, "totalTokens": 640 },
+    "messageChain": [
+        { "type": "human", "contentLength": 43 },
+        { "type": "ai", "contentLength": 0, "toolName": "web_fetch" },
+        { "type": "tool", "contentLength": 312, "toolName": "web_fetch" },
+        { "type": "ai", "contentLength": 187 }
+    ],
+    "msg": "Agent invocation complete"
 }
 ```
 
@@ -542,21 +629,21 @@ The `orchestrator`, `reasoning`, `council`, and `present` nodes already accept `
 
 ## Acceptance Criteria
 
-| # | Criterion |
-|---|-----------|
-| 1 | `./logs/agents.log` is created and contains ONLY agent observability lines |
-| 2 | `./logs/app.log` receives system/infrastructure logs only — no agent observability lines |
-| 3 | Every agent observability log line carries `threadId` (camelCase) |
-| 4 | `intent-classifier` and `council-gate-classifier` emit at least one observability log per invocation |
-| 5 | `deep-agent-wrapper` emits a message chain summary with token counts and tool names after every invocation |
-| 6 | `pnpm check` exits 0 |
-| 7 | No existing log call is removed — only additions |
-| 8 | No new direct `Logging` imports in `agent/` or `workflow/` layers — agent logger accessed via `AppContext` or factory parameter |
-| 9 | `classifyIntent`, `councilGate`, `evaluate` nodes accept `(state, runnableConfig)` |
-| 10 | Agent observability logs do NOT appear in `app.log` or the TUI ring buffer |
-| 11 | `buildDirectorWorkflow` accepts `agentLogger: ILogger` as a second parameter and passes it through to classifier factories |
-| 12 | `satisfaction-evaluator` receives `agentLogger` as a factory parameter (not via `AppContext`) — its returned function gains a `threadId` parameter |
-| 13 | `routeAfterEvaluate` does NOT log directly — the routing decision is logged inside the `evaluate` node where `ctx` is available |
+| #   | Criterion                                                                                                                                          |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `./logs/agents.log` is created and contains ONLY agent observability lines                                                                         |
+| 2   | `./logs/app.log` receives system/infrastructure logs only — no agent observability lines                                                           |
+| 3   | Every agent observability log line carries `threadId` (camelCase)                                                                                  |
+| 4   | `intent-classifier` and `council-gate-classifier` emit at least one observability log per invocation                                               |
+| 5   | `deep-agent-wrapper` emits a message chain summary with token counts and tool names after every invocation                                         |
+| 6   | `pnpm check` exits 0                                                                                                                               |
+| 7   | No existing log call is removed — only additions                                                                                                   |
+| 8   | No new direct `Logging` imports in `agent/` or `workflow/` layers — agent logger accessed via `AppContext` or factory parameter                    |
+| 9   | `classifyIntent`, `councilGate`, `evaluate` nodes accept `(state, runnableConfig)`                                                                 |
+| 10  | Agent observability logs do NOT appear in `app.log` or the TUI ring buffer                                                                         |
+| 11  | `buildDirectorWorkflow` accepts `agentLogger: ILogger` as a second parameter and passes it through to classifier factories                         |
+| 12  | `satisfaction-evaluator` receives `agentLogger` as a factory parameter (not via `AppContext`) — its returned function gains a `threadId` parameter |
+| 13  | `routeAfterEvaluate` does NOT log directly — the routing decision is logged inside the `evaluate` node where `ctx` is available                    |
 
 ---
 
@@ -565,12 +652,14 @@ The `orchestrator`, `reasoning`, `council`, and `present` nodes already accept `
 ### 1. Classifier DI pattern
 
 Classifiers are created via factory functions (`createIntentClassifier(config)`). To pass `agentLogger` cleanly, two options exist:
+
 - **(a) Factory parameter** — `createIntentClassifier(config, agentLogger)`. Cleaner since the logger doesn't change per call. **Recommended and adopted.**
 - **(b) Per-call parameter** — `classify(query, threadId, agentLogger)`. More flexible but adds unnecessary boilerplate.
 
 ### 2. Pre-existing architecture violations
 
 Three files already import `Logging` directly from the composition root:
+
 - `satisfaction-evaluator.ts`
 - `director.workflow.ts`
 - `council.workflow.ts`

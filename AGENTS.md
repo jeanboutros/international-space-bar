@@ -64,16 +64,16 @@ adapter. It depends on the agent core only through port interfaces
 
 ### Allowed imports per layer
 
-| Layer | May import from |
-|-------|----------------|
-| `interfaces/` | Nothing (pure types only) |
-| `services/` | `interfaces/` |
-| `agent/` | `interfaces/`, `services/`, `llm/`, `tool/`, `agent/` (siblings) |
-| `llm/` | `interfaces/`, `services/` |
-| `tool/` | `interfaces/`, `services/` |
-| `workflow/` | `interfaces/`, `services/`, `agent/` |
-| `server/` (`international-space-bar-server/`) | `interfaces/` (via port contracts); NestJS framework only |
-| Composition root | Everything (wires layers together) |
+| Layer                                         | May import from                                                  |
+| --------------------------------------------- | ---------------------------------------------------------------- |
+| `interfaces/`                                 | Nothing (pure types only)                                        |
+| `services/`                                   | `interfaces/`                                                    |
+| `agent/`                                      | `interfaces/`, `services/`, `llm/`, `tool/`, `agent/` (siblings) |
+| `llm/`                                        | `interfaces/`, `services/`                                       |
+| `tool/`                                       | `interfaces/`, `services/`                                       |
+| `workflow/`                                   | `interfaces/`, `services/`, `agent/`                             |
+| `server/` (`international-space-bar-server/`) | `interfaces/` (via port contracts); NestJS framework only        |
+| Composition root                              | Everything (wires layers together)                               |
 
 ### Rules
 
@@ -97,16 +97,17 @@ System logging (`app.log`) and agent observability logging (`agents.log`) are
 fundamentally separate concerns with separate infrastructure. They must never
 share pino instances or stream configurations.
 
-| Concern | Destination | Purpose | Examples |
-|---------|-------------|---------|----------|
-| System logging | `app.log` + TUI ring buffer | Infrastructure diagnostics | Startup, config load, HTTP errors, retries |
-| Agent observability | `agents.log` only | Behavioural audit trail | Intent classified, token usage, routing decisions |
-| Future: API observability | `api.log` | API request tracing | Request/response pairs, latency |
+| Concern                   | Destination                 | Purpose                    | Examples                                          |
+| ------------------------- | --------------------------- | -------------------------- | ------------------------------------------------- |
+| System logging            | `app.log` + TUI ring buffer | Infrastructure diagnostics | Startup, config load, HTTP errors, retries        |
+| Agent observability       | `agents.log` only           | Behavioural audit trail    | Intent classified, token usage, routing decisions |
+| Future: API observability | `api.log`                   | API request tracing        | Request/response pairs, latency                   |
 
 **Agent messages are not system logs. System diagnostics are not agent tuning data.**
 
 Each observability domain gets its own pino instance and log file. They do not
 share streams. The composition root wires each logger via `AppContext`:
+
 - `ctx.logger` → system events → `app.log` + TUI ring buffer + stdout
 - `ctx.agentLogger` → agent observability → `agents.log` + stdout (dev only)
 
@@ -163,16 +164,16 @@ the bridge pattern, startup sequence, config reference, and future HTTP logging.
 
 ## Commands
 
-| Task | Command |
-|------|---------|
-| Run (dev) | `pnpm dev:server` |
-| Build | `pnpm build:server` |
-| Run (built) | `pnpm start:server` |
-| Test | `pnpm test` |
-| Lint | `pnpm lint` |
-| Lint + auto-fix | `pnpm lint:fix` |
-| Format | `pnpm format` |
-| Lint + format + fix (all) | `pnpm check` |
+| Task                      | Command             |
+| ------------------------- | ------------------- |
+| Run (dev)                 | `pnpm dev:server`   |
+| Build                     | `pnpm build:server` |
+| Run (built)               | `pnpm start:server` |
+| Test                      | `pnpm test`         |
+| Lint                      | `pnpm lint`         |
+| Lint + auto-fix           | `pnpm lint:fix`     |
+| Format                    | `pnpm format`       |
+| Lint + format + fix (all) | `pnpm check`        |
 
 ## Code quality — mandatory after every change
 
@@ -182,10 +183,10 @@ After **every** code change, run the following and ensure both exit with code 0 
 pnpm check
 ```
 
-`pnpm check` runs Biome (formatting + non-type-aware linting, auto-fix) followed by ESLint (type-aware rules, auto-fix). If either reports errors that cannot be auto-fixed, resolve them manually before proceeding.
+`pnpm check` runs Prettier (formatting, auto-fix) followed by ESLint (all lint rules including type-aware, auto-fix). If either reports errors that cannot be auto-fixed, resolve them manually before proceeding.
 
-- Biome owns: formatting, import organisation, and all non-type-aware lint rules.
-- ESLint owns: type-aware rules only (`no-floating-promises`, `no-misused-promises`, `await-thenable`, `no-unsafe-*`).
+- Prettier owns: formatting and import organisation.
+- ESLint owns: all lint rules — type-aware (`no-floating-promises`, `no-misused-promises`, `await-thenable`, `no-unsafe-*`) and non-type-aware (`no-unused-vars`, `no-console`, `prefer-const`).
 - Never suppress a lint rule without a comment explaining why.
 
 ## LangGraph reference
@@ -217,5 +218,7 @@ get-library-docs: context7CompatibleLibraryID="/websites/langchain-ai_github_io_
 - `ContextSchema` in the type bag takes the Zod schema (`typeof MySchema`), not the inferred type (`z.infer<typeof MySchema>`)
 - Source lives in `src/`, never in `node_modules/`
 - `"type": "module"` is set — use ESM imports throughout
-- Files under `src/**/openresponses/generated/` are auto-generated by Kubb and excluded from Biome and ESLint. Do not add `// biome-ignore` or `// eslint-disable` comments inside generated files. To fix generated code, update `docs/openapi/openresponses.json` and re-run `pnpm generate:schemas`.
+- Files under `src/**/openresponses/generated/` are auto-generated by Kubb and excluded from ESLint and Prettier. Do not add `// eslint-disable` comments inside generated files. To fix generated code, update `docs/openapi/openresponses.json` and re-run `pnpm generate:schemas`.
+- **Never hand-roll types that duplicate generated schemas.** If Kubb generates a type for an OpenResponses concept (e.g. `ItemParam`, `UserMessageItemParam`, `SystemMessageItemParam`, `MessageRole`, `InputTextContentParam`), use the generated type directly — do not create a parallel interface in `interfaces/` or `common/`. When a generated type is too narrow or missing a variant, either fix the OpenAPI spec and re-generate, or use `readonly unknown[]` at the boundary with runtime type guards in the consumer. This prevents stale duplicates that silently diverge from the spec.
 - The OpenAPI spec uses an `x-openresponses-disallowed` sentinel to mark fields that must not appear in generated schemas. Fields carrying this sentinel (identified by `minLength:1`, `maxLength:0`, and `x-openresponses-disallowed:true` all present) are stripped by a preprocessing step before Kubb processes the spec — **do not "fix"** the intentionally impossible `minLength:1, maxLength:0` constraint. See [`docs/schema-generation.md`](docs/schema-generation.md#preprocessing) for the full reference.
+- **Never commit unsigned.** All commits in this repository must be signed. If `git commit` prompts for an SSH key passphrase and the agent is not loaded, ask the user whether they want to run `ssh-add ~/.ssh/<their_key> --apple-load-keychain` before retrying (use `--apple-load-keychain` on macOS to persist across reboots). Never bypass signing with `commit.gpgsign=false` or `--no-verify`.

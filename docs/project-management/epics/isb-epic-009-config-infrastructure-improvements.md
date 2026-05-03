@@ -1,12 +1,12 @@
 # isb-epic-009: Config Infrastructure Improvements
 
-| Field | Value |
-|-------|-------|
-| Priority | `high` |
-| Status | `not-started` |
-| Created | 2026-04-29 |
+| Field      | Value                                                                                     |
+| ---------- | ----------------------------------------------------------------------------------------- |
+| Priority   | `high`                                                                                    |
+| Status     | `not-started`                                                                             |
+| Created    | 2026-04-29                                                                                |
 | Design doc | [docs/config-infrastructure-improvements.md](../../config-infrastructure-improvements.md) |
-| Tickets | isb-0039, isb-0040, isb-0041, isb-0042, isb-0043, isb-0044, isb-0045 |
+| Tickets    | isb-0039, isb-0040, isb-0041, isb-0042, isb-0043, isb-0044, isb-0045                      |
 
 ## Summary
 

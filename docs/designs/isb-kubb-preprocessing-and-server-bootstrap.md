@@ -39,6 +39,7 @@ The `minLength: 1, maxLength: 0` constraint is intentionally impossible — it s
 ### Solution
 
 Preprocess the parsed OpenAPI spec in `kubb.config.ts` before passing it to Kubb. Recursively walk the spec object tree; delete any property whose value matches all three conditions simultaneously:
+
 - `minLength === 1`
 - `maxLength === 0`
 - `x-openresponses-disallowed === true`
@@ -79,11 +80,11 @@ writeFileSync(cleanedSpecPath, JSON.stringify(rawSpec));
 ### What still needs to happen
 
 - **Tests**: A unit test for `removeDisallowedFields` (or an equivalent test by extracting it to a testable helper) verifying:
-  - Properties matching all three conditions are removed
-  - Properties matching only one or two conditions are retained
-  - Nested objects are recursed into
-  - Arrays are recursed into
-  - The source spec is never modified (output is written to tmp; read the tmp file to verify)
+    - Properties matching all three conditions are removed
+    - Properties matching only one or two conditions are retained
+    - Nested objects are recursed into
+    - Arrays are recursed into
+    - The source spec is never modified (output is written to tmp; read the tmp file to verify)
 - **Documentation**: `docs/technical-stack.md` should document the `x-openresponses-disallowed` convention and the preprocessing step. A short note in `AGENTS.md` under the schema generation section is also warranted.
 
 ---
@@ -97,10 +98,11 @@ The following changes were made to `src/international-space-bar-server/main.ts`:
 1. **WebSocket adapter registration**: `app.useWebSocketAdapter(new OpenResponsesWsAdapter(app))` — wires the custom WS adapter for the `/v1/responses` endpoint. Required for the WebSocket gateway to function.
 
 2. **Flexible host/port resolution**: Port and host are now resolved from the config service first, then env vars, then hardcoded defaults:
-   ```typescript
-   const port = Number(config.get("server.port") ?? process.env.PORT ?? DEFAULT_PORT);
-   const host = String(config.get("server.host") ?? process.env.HOST ?? DEFAULT_HOST);
-   ```
+
+    ```typescript
+    const port = Number(config.get("server.port") ?? process.env.PORT ?? DEFAULT_PORT);
+    const host = String(config.get("server.host") ?? process.env.HOST ?? DEFAULT_HOST);
+    ```
 
 3. **Debug diagnostics**: Several `logger.debug()` calls log whether config keys and env vars are set at startup — useful for diagnosing misconfiguration.
 
@@ -131,11 +133,13 @@ This uses NestJS's built-in `Logger` class instantiated inline (`new Logger()`),
 ### Why this is a concern
 
 The `LoggingModule` (isb-0055) established the pattern: services that need logging should inject `@Inject(LOGGER) private readonly logger: ILogger`. This:
+
 - Allows the logger implementation to be swapped in tests without module bootstrap
 - Keeps all structured log output routed through `PinoLoggerService`
 - Enforces the Dependency Inversion Principle — services depend on the `ILogger` abstraction, not on the NestJS `Logger` class
 
 Using `new Logger(ResponsesGateway.name)` works at runtime because NestJS's internal `Logger` delegates to the registered logger service (`PinoLoggerService` via `useLogger()`). But it:
+
 - Bypasses the interface contract in tests
 - Creates a hidden coupling to NestJS's internal wiring
 - Is inconsistent with the pattern used in `PingPongRuntimeService`
@@ -155,11 +159,11 @@ The inline `private readonly logger = new Logger(...)` field must be removed.
 
 **Call-site migration required (TypeScript compile error if omitted)**: `ILogger` has no `log()` method. The three existing `this.logger.log()` calls must each be renamed to `this.logger.info()`:
 
-| Line | Current | Required change |
-|------|---------|----------------|
-| handleConnection | `this.logger.log("WebSocket client connected")` | `this.logger.info("WebSocket client connected")` |
-| handleDisconnect | `this.logger.log("WebSocket client disconnected")` | `this.logger.info("WebSocket client disconnected")` |
-| cache eviction | `this.logger.log(\`Evicted previous_response_id=...\`)` | `this.logger.info(\`Evicted previous_response_id=...\`)` |
+| Line             | Current                                                 | Required change                                          |
+| ---------------- | ------------------------------------------------------- | -------------------------------------------------------- |
+| handleConnection | `this.logger.log("WebSocket client connected")`         | `this.logger.info("WebSocket client connected")`         |
+| handleDisconnect | `this.logger.log("WebSocket client disconnected")`      | `this.logger.info("WebSocket client disconnected")`      |
+| cache eviction   | `this.logger.log(\`Evicted previous_response_id=...\`)` | `this.logger.info(\`Evicted previous_response_id=...\`)` |
 
 **Import cleanup required**: The `Logger` symbol in `import { Inject, Injectable, Logger } from "@nestjs/common"` must be removed once `new Logger(...)` is gone. Additionally, `LOGGER` and `ILogger` must be imported:
 
@@ -180,11 +184,11 @@ import type { ILogger } from "../common/interfaces/index.js";
 
 ## 6. Architectural compliance checklist
 
-| Concern | Status |
-|---------|--------|
-| Layered boundary compliance | ✅ `kubb.config.ts` is the composition root — may import anything |
-| DI via interface token | ⚠️ `responses.gateway.ts` uses `new Logger()` — violates the pattern |
-| Source spec immutability | ✅ temp file pattern preserves `docs/openapi/openresponses.json` |
-| No generated file edits | ✅ changes are upstream (config), not in `generated/` |
-| `pnpm check` exits 0 | ✅ verified |
-| `pnpm generate:schemas` produces no `z.string().min(1).max(0)` | ✅ verified |
+| Concern                                                        | Status                                                               |
+| -------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Layered boundary compliance                                    | ✅ `kubb.config.ts` is the composition root — may import anything    |
+| DI via interface token                                         | ⚠️ `responses.gateway.ts` uses `new Logger()` — violates the pattern |
+| Source spec immutability                                       | ✅ temp file pattern preserves `docs/openapi/openresponses.json`     |
+| No generated file edits                                        | ✅ changes are upstream (config), not in `generated/`                |
+| `pnpm check` exits 0                                           | ✅ verified                                                          |
+| `pnpm generate:schemas` produces no `z.string().min(1).max(0)` | ✅ verified                                                          |

@@ -1,14 +1,14 @@
 # isb-0046: Replace hand-written Zod schemas with Kubb-generated schemas from OpenAPI spec
 
-| Field | Value |
-|---|---|
-| ID | isb-0046 |
-| Type | backend |
-| Status | closed |
-| Priority | high |
-| Epic | isb-epic-002 |
-| Dependencies | none |
-| Completed | 2026-04-29 |
+| Field        | Value        |
+| ------------ | ------------ |
+| ID           | isb-0046     |
+| Type         | backend      |
+| Status       | closed       |
+| Priority     | high         |
+| Epic         | isb-epic-002 |
+| Dependencies | none         |
+| Completed    | 2026-04-29   |
 
 ## Background
 
@@ -23,13 +23,13 @@ The official `openresponses/openresponses` repository already uses **Kubb** (`@k
 
 ## Problem
 
-| Issue | Impact |
-|---|---|
-| `input` is `z.union([z.string(), z.array(z.unknown())])` | Tool call items, message arrays, all unvalidated |
-| `tools` is `z.array(z.unknown())` | Any garbage accepted — no function schema validation |
-| `tool_choice` is `z.unknown()` | Completely opaque |
-| No Zod schemas for response types | Can't validate outbound responses in tests |
-| No Zod schemas for streaming events | SSE event payloads completely unvalidated |
+| Issue                                                     | Impact                                                           |
+| --------------------------------------------------------- | ---------------------------------------------------------------- |
+| `input` is `z.union([z.string(), z.array(z.unknown())])`  | Tool call items, message arrays, all unvalidated                 |
+| `tools` is `z.array(z.unknown())`                         | Any garbage accepted — no function schema validation             |
+| `tool_choice` is `z.unknown()`                            | Completely opaque                                                |
+| No Zod schemas for response types                         | Can't validate outbound responses in tests                       |
+| No Zod schemas for streaming events                       | SSE event payloads completely unvalidated                        |
 | `responses.types.ts` derives types from generated `.d.ts` | Works, but `z.infer<>` would be more ergonomic and single-source |
 
 ## Proposed Solution
@@ -38,12 +38,12 @@ Use **Kubb** with `@kubb/plugin-zod` (`version: '4'`) to code-generate Zod schem
 
 ### Why Kubb over alternatives
 
-| Approach | Verdict |
-|---|---|
-| **openapi-typescript** (current) | Types only — no runtime validation |
-| **Hand-written Zod** (current) | Drifts, incomplete, maintenance burden |
-| **zod-openapi / openapi-zod-client** | Less ergonomic, no tree-shaking, less active |
-| **Kubb `@kubb/plugin-zod`** ✓ | Zod v4 support, per-schema files, `z.lazy()` for circular refs, officially used by openresponses upstream, active maintenance |
+| Approach                             | Verdict                                                                                                                       |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| **openapi-typescript** (current)     | Types only — no runtime validation                                                                                            |
+| **Hand-written Zod** (current)       | Drifts, incomplete, maintenance burden                                                                                        |
+| **zod-openapi / openapi-zod-client** | Less ergonomic, no tree-shaking, less active                                                                                  |
+| **Kubb `@kubb/plugin-zod`** ✓        | Zod v4 support, per-schema files, `z.lazy()` for circular refs, officially used by openresponses upstream, active maintenance |
 
 ## Acceptance Criteria
 
@@ -53,8 +53,8 @@ Use **Kubb** with `@kubb/plugin-zod` (`version: '4'`) to code-generate Zod schem
 - [ ] `"src/**/openresponses/generated/**"` added to `biome.json`'s `"files"."ignore"` array
 - [ ] `"src/**/openresponses/generated/**"` added to `eslint.config.js`'s top-level `ignores` array
 - [ ] `responses.schemas.ts` is updated: `CreateResponseSchema` wraps the kubb-generated `createResponseBodySchema` with:
-  - `.passthrough()` applied to the exported schema (preserves unknown fields; matches existing `z.looseObject()` semantics — internal schemas remain strict)
-  - `model: z.string().min(1)` explicitly overridden (the spec declares `model` as optional/nullable; ISB business rule requires a non-empty string)
+    - `.passthrough()` applied to the exported schema (preserves unknown fields; matches existing `z.looseObject()` semantics — internal schemas remain strict)
+    - `model: z.string().min(1)` explicitly overridden (the spec declares `model` as optional/nullable; ISB business rule requires a non-empty string)
 - [ ] `responses.types.ts` is updated: types that were derived from `openresponses.generated.d.ts` are progressively replaced with `z.infer<typeof xSchema>` from generated schemas, starting with `CreateResponseBody`, `ResponseResource`, and `ResponseStreamEvent`
 - [ ] `openresponses.generated.d.ts` is kept for now but marked as `@deprecated — migrate to z.infer<> from generated schemas`
 - [ ] `pnpm check` exits 0
@@ -72,24 +72,24 @@ import { pluginTs } from "@kubb/plugin-ts";
 import { pluginZod } from "@kubb/plugin-zod";
 
 export default defineConfig({
-  input: {
-    path: "./docs/openapi/openresponses.json", // canonical spec — same file used by generate:types
-  },
-  output: {
-    path: "./src/international-space-bar-server/openresponses/generated",
-    extension: { ".ts": ".js" }, // NodeNext ESM: generated inter-file imports must use .js
-  },
-  plugins: [
-    pluginOas(),
-    pluginTs(),
-    pluginZod({
-      output: { path: "./zod" },
-      version: "4",
-      unknownType: "unknown",
-      typed: true,       // adds TS type annotations
-      inferred: true,    // exports z.infer<> types alongside schemas
-    }),
-  ],
+    input: {
+        path: "./docs/openapi/openresponses.json", // canonical spec — same file used by generate:types
+    },
+    output: {
+        path: "./src/international-space-bar-server/openresponses/generated",
+        extension: { ".ts": ".js" }, // NodeNext ESM: generated inter-file imports must use .js
+    },
+    plugins: [
+        pluginOas(),
+        pluginTs(),
+        pluginZod({
+            output: { path: "./zod" },
+            version: "4",
+            unknownType: "unknown",
+            typed: true, // adds TS type annotations
+            inferred: true, // exports z.infer<> types alongside schemas
+        }),
+    ],
 });
 ```
 
@@ -118,10 +118,10 @@ The spec is already committed at `docs/openapi/openresponses.json`. No download 
 ```ts
 // The generated schema is strict (z.object). Apply passthrough and model override at the entry point.
 export const CreateResponseSchema = createResponseBodySchema
-  .extend({
-    model: z.string().min(1), // ISB business rule: model is required and non-empty (spec has it optional/nullable)
-  })
-  .passthrough(); // preserve unknown fields — matches existing z.looseObject() contract
+    .extend({
+        model: z.string().min(1), // ISB business rule: model is required and non-empty (spec has it optional/nullable)
+    })
+    .passthrough(); // preserve unknown fields — matches existing z.looseObject() contract
 ```
 
 Internal schemas (used only for type derivation) remain strict as generated — do not add `.passthrough()` globally via `wrapOutput`.
@@ -135,16 +135,16 @@ Internal schemas (used only for type derivation) remain strict as generated — 
 
 ### Changes made
 
-| Change | Blocker / Flag | Reason |
-|--------|---------------|--------|
-| `input.path` corrected to `./docs/openapi/openresponses.json` | Spec path (all agents) | Canonical spec is already committed there; both `generate:types` and `generate:schemas` must use the same single file |
-| `output.extension: { '.ts': '.js' }` added to kubb config skeleton | Blocker 3 | `tsconfig.json` uses `"moduleResolution": "NodeNext"` — generated inter-file imports must use `.js` or they are unresolvable at build time |
-| AC items added: add `"src/**/openresponses/generated/**"` to `biome.json` ignore and `eslint.config.js` ignores | Blocker 2 | 80+ generated files would cause `pnpm check` to fail without explicit excludes |
-| AC updated: `.passthrough()` mandated on exported `CreateResponseSchema` | Blocker 1 | Kubb generates strict `z.object()` by default; existing schema uses `z.looseObject()` (passthrough). Only the entry-point schema needs passthrough — internal schemas remain strict (Option B) |
-| AC updated: `model: z.string().min(1)` override mandated explicitly | Blocker 4 | OpenAPI spec declares `model` as optional/nullable (`required: []`, `anyOf[string, null]`); ISB business rule requires a non-empty string — must survive every regeneration |
-| Generated files changed from gitignored to **committed** | Flag: commit vs gitignore | Mirrors openresponses upstream; preserves full audit trail in PRs; eliminates pre-build generation step in CI |
-| `responses.schemas.ts` wrapper pattern section added | Blockers 1 + 4 | Concrete code pattern for the engineer implementing the override |
-| Migration order updated to include commit step | Flag: commit vs gitignore | Makes the commit step explicit in the delivery sequence |
+| Change                                                                                                          | Blocker / Flag            | Reason                                                                                                                                                                                         |
+| --------------------------------------------------------------------------------------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `input.path` corrected to `./docs/openapi/openresponses.json`                                                   | Spec path (all agents)    | Canonical spec is already committed there; both `generate:types` and `generate:schemas` must use the same single file                                                                          |
+| `output.extension: { '.ts': '.js' }` added to kubb config skeleton                                              | Blocker 3                 | `tsconfig.json` uses `"moduleResolution": "NodeNext"` — generated inter-file imports must use `.js` or they are unresolvable at build time                                                     |
+| AC items added: add `"src/**/openresponses/generated/**"` to `biome.json` ignore and `eslint.config.js` ignores | Blocker 2                 | 80+ generated files would cause `pnpm check` to fail without explicit excludes                                                                                                                 |
+| AC updated: `.passthrough()` mandated on exported `CreateResponseSchema`                                        | Blocker 1                 | Kubb generates strict `z.object()` by default; existing schema uses `z.looseObject()` (passthrough). Only the entry-point schema needs passthrough — internal schemas remain strict (Option B) |
+| AC updated: `model: z.string().min(1)` override mandated explicitly                                             | Blocker 4                 | OpenAPI spec declares `model` as optional/nullable (`required: []`, `anyOf[string, null]`); ISB business rule requires a non-empty string — must survive every regeneration                    |
+| Generated files changed from gitignored to **committed**                                                        | Flag: commit vs gitignore | Mirrors openresponses upstream; preserves full audit trail in PRs; eliminates pre-build generation step in CI                                                                                  |
+| `responses.schemas.ts` wrapper pattern section added                                                            | Blockers 1 + 4            | Concrete code pattern for the engineer implementing the override                                                                                                                               |
+| Migration order updated to include commit step                                                                  | Flag: commit vs gitignore | Makes the commit step explicit in the delivery sequence                                                                                                                                        |
 
 ### CI note (non-AC)
 
@@ -159,13 +159,13 @@ Once files are committed, the `generate:schemas` script should be re-run wheneve
 
 ### Sub-tickets closed
 
-| Ticket | Title | Status |
-|--------|-------|--------|
-| isb-0048 | Install Kubb and generate schemas | closed |
+| Ticket   | Title                                       | Status |
+| -------- | ------------------------------------------- | ------ |
+| isb-0048 | Install Kubb and generate schemas           | closed |
 | isb-0049 | Wire generated schemas into responses layer | closed |
-| isb-0050 | Update tooling ignores and types | closed |
-| isb-0051 | Schema validation tests | closed |
-| isb-0052 | Schema generation docs | closed |
+| isb-0050 | Update tooling ignores and types            | closed |
+| isb-0051 | Schema validation tests                     | closed |
+| isb-0052 | Schema generation docs                      | closed |
 
 All 5 implementation sub-tickets delivered. All acceptance criteria met. `pnpm check` exits 0, 69 tests pass.
 

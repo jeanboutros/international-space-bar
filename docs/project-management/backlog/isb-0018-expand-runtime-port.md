@@ -1,13 +1,13 @@
 # isb-0018: Expand AgentRuntimePort with stream() and session support
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-004 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-28 |
-| Dependencies | isb-0017 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-004 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-28   |
+| Dependencies | isb-0017     |
 
 ## Description
 

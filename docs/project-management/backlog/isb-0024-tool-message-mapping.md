@@ -1,13 +1,13 @@
 # isb-0024: Map ToolMessage results to OpenResponses function_call_output
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-005 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-28 |
-| Dependencies | isb-0023 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-005 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-28   |
+| Dependencies | isb-0023     |
 
 ## Description
 

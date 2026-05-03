@@ -1,13 +1,13 @@
 # isb-0010: Streaming route in ResponsesController
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-002 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-28 |
-| Dependencies | isb-0009 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-002 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-28   |
+| Dependencies | isb-0009     |
 
 ## Description
 

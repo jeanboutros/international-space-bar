@@ -1,14 +1,14 @@
 # isb-0040: Centralized CLI args utility
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-009 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-29 |
-| Completed | — |
-| Dependencies | isb-0039 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-009 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-29   |
+| Completed    | —            |
+| Dependencies | isb-0039     |
 
 ## Description
 

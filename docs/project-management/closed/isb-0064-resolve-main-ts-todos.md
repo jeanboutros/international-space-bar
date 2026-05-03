@@ -1,15 +1,15 @@
 # isb-0064: Resolve `main.ts` TODOs and extract DRY magic values to `constants.ts`
 
-| Field | Value |
-|-------|-------|
-| ID | isb-0064 |
-| Epic | [isb-epic-010](../epics/isb-epic-010-kubb-preprocessing-server-bootstrap-hardening.md) |
-| Type | `feature` |
-| Assignee | Engineer |
-| Priority | `low` |
-| Status | `closed` |
-| Created | 2026-04-30 |
-| Dependencies | none (isb-0059 and isb-0063 are closed) |
+| Field        | Value                                                                                  |
+| ------------ | -------------------------------------------------------------------------------------- |
+| ID           | isb-0064                                                                               |
+| Epic         | [isb-epic-010](../epics/isb-epic-010-kubb-preprocessing-server-bootstrap-hardening.md) |
+| Type         | `feature`                                                                              |
+| Assignee     | Engineer                                                                               |
+| Priority     | `low`                                                                                  |
+| Status       | `closed`                                                                               |
+| Created      | 2026-04-30                                                                             |
+| Dependencies | none (isb-0059 and isb-0063 are closed)                                                |
 
 ---
 
@@ -151,10 +151,10 @@ export const RESPONSES_WS_PATH = `/${RESPONSES_ROUTE}`;
 
 - Add `import { DEFAULT_PORT, DEFAULT_HOST } from "../constants.js";` at the top.
 - Apply field-level defaults inside the `server` sub-object:
-  - `port: z.number()` → `z.number().default(DEFAULT_PORT)`
-  - `host: z.string()` → `z.string().default(DEFAULT_HOST)`
-  - `enableCors: z.boolean().optional()` → `z.boolean().default(false)`
-  - `corsOrigins: z.array(z.string()).optional()` → `z.array(z.string()).default([])`
+    - `port: z.number()` → `z.number().default(DEFAULT_PORT)`
+    - `host: z.string()` → `z.string().default(DEFAULT_HOST)`
+    - `enableCors: z.boolean().optional()` → `z.boolean().default(false)`
+    - `corsOrigins: z.array(z.string()).optional()` → `z.array(z.string()).default([])`
 - Change `.optional()` on the `server` object to `.default({})` so that when `server:` is absent from a YAML file, the schema substitutes `{}` and the field-level defaults populate a complete `server` object.
 
 The resulting `server` sub-schema:
@@ -212,14 +212,14 @@ Add tests for the new default-injection behaviour (see Test Expectations below).
 
 Tests live in `config.schema.test.ts` and must follow the Tester standards (Arrange / Act / Assert with comment headers).
 
-| # | Scenario | Kind | Assertion |
-|---|----------|------|-----------|
-| T-1 | `server:` block absent from config | unit | `result.data.server.port === 3000` and `result.data.server.host === "127.0.0.1"` |
-| T-2 | `server:` block present, `port` absent | unit | `result.data.server.port === 3000` |
-| T-3 | `server:` block present, `host` absent | unit | `result.data.server.host === "127.0.0.1"` |
-| T-4 | `server:` block present, `enableCors` absent | unit | `result.data.server.enableCors === false` |
-| T-5 | `server:` block present, `corsOrigins` absent | unit | `result.data.server.corsOrigins` deep-equals `[]` |
-| T-6 | `server:` block present with explicit values | unit | explicit values are preserved (not overridden by defaults) |
+| #   | Scenario                                      | Kind | Assertion                                                                        |
+| --- | --------------------------------------------- | ---- | -------------------------------------------------------------------------------- |
+| T-1 | `server:` block absent from config            | unit | `result.data.server.port === 3000` and `result.data.server.host === "127.0.0.1"` |
+| T-2 | `server:` block present, `port` absent        | unit | `result.data.server.port === 3000`                                               |
+| T-3 | `server:` block present, `host` absent        | unit | `result.data.server.host === "127.0.0.1"`                                        |
+| T-4 | `server:` block present, `enableCors` absent  | unit | `result.data.server.enableCors === false`                                        |
+| T-5 | `server:` block present, `corsOrigins` absent | unit | `result.data.server.corsOrigins` deep-equals `[]`                                |
+| T-6 | `server:` block present with explicit values  | unit | explicit values are preserved (not overridden by defaults)                       |
 
 Note: `BEARER_PREFIX`, `API_KEY_ENV_VAR`, `RESPONSES_ROUTE`, and `RESPONSES_WS_PATH` are pure constant extractions. Existing tests for `bearer-auth.guard.ts`, `responses.gateway.ts`, and `responses.controller.ts` cover the runtime behaviour and must continue to pass unchanged after the refactor.
 

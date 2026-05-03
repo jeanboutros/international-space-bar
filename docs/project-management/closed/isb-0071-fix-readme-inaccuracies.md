@@ -1,15 +1,15 @@
 # isb-0071: Fix README inaccuracies and add migration note
 
-| Field | Value |
-|-------|-------|
-| Epic | — (standalone documentation ticket) |
-| Type | `feature` |
-| Status | `closed` |
-| Assignee | Docs Writer |
-| Priority | `high` |
-| Created | 2026-05-01 |
-| Completed | 2026-05-01 |
-| Dependencies | none |
+| Field        | Value                               |
+| ------------ | ----------------------------------- |
+| Epic         | — (standalone documentation ticket) |
+| Type         | `feature`                           |
+| Status       | `closed`                            |
+| Assignee     | Docs Writer                         |
+| Priority     | `high`                              |
+| Created      | 2026-05-01                          |
+| Completed    | 2026-05-01                          |
+| Dependencies | none                                |
 
 ## Background
 
@@ -23,13 +23,13 @@ Fix all validated inaccuracies in `README.md` discovered during the Phase A docu
 
 - **Current file**: `README.md` (root of repository)
 - **Current behaviour**: Several sections contain information that no longer matches the implementation:
-  - Quick start section shows `opencode --model isb/pong` but the correct model string in the provider config is `international-space-bar/isb-ping`
-  - "What it does" section lists event types without the `response.` prefix (e.g. `output_item.added` instead of `response.output_item.added`)
-  - Auth guard section claims both `401` and `403` but the guard only returns `401 Unauthorized`
-  - Logging table lists `PinoLoggerService` as a destination for "HTTP server logging" — `PinoLoggerService` is the bridge, not the destination; actual output goes to `stdout + app.log`
-  - Config YAML example is missing `version: 1` as the first key
-  - `enableCors: true` has no annotation that it is dev-only
-  - Composition root file list shows `main.ts / app.ts / config.ts` but omits `logging.ts`
+    - Quick start section shows `opencode --model isb/pong` but the correct model string in the provider config is `international-space-bar/isb-ping`
+    - "What it does" section lists event types without the `response.` prefix (e.g. `output_item.added` instead of `response.output_item.added`)
+    - Auth guard section claims both `401` and `403` but the guard only returns `401 Unauthorized`
+    - Logging table lists `PinoLoggerService` as a destination for "HTTP server logging" — `PinoLoggerService` is the bridge, not the destination; actual output goes to `stdout + app.log`
+    - Config YAML example is missing `version: 1` as the first key
+    - `enableCors: true` has no annotation that it is dev-only
+    - Composition root file list shows `main.ts / app.ts / config.ts` but omits `logging.ts`
 - **Expected behaviour**: All sections match the actual implementation; a migration note explains the `src/international-space-bar/` → server absorption plan
 
 ## Acceptance Criteria

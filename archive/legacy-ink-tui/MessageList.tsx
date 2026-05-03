@@ -28,7 +28,10 @@ export default function MessageList({ messages }: MessageListProps) {
     const { columns } = useWindowSize();
 
     // Usable width inside the box (subtract padding on both sides + scrollbar column)
-    const usableWidth = Math.max(1, columns - 2 * layout.messagePaddingX - layout.scrollbarWidth - 10);
+    const usableWidth = Math.max(
+        1,
+        columns - 2 * layout.messagePaddingX - layout.scrollbarWidth - 10,
+    );
 
     // Sum estimated lines per message to get a line-based viewport
     const totalLines = messages.reduce(
@@ -107,11 +110,7 @@ export default function MessageList({ messages }: MessageListProps) {
     );
 
     const scrollIndicator =
-        scrollOffset > 0
-            ? ` ↑${scrollOffset}`
-            : totalLines > visibleLines
-              ? " ●"
-              : "";
+        scrollOffset > 0 ? ` ↑${scrollOffset}` : totalLines > visibleLines ? " ●" : "";
 
     // Don't render content until layout is measured — avoids 0-height flash.
     if (!hasMeasured) {
@@ -148,7 +147,11 @@ export default function MessageList({ messages }: MessageListProps) {
                 {/* Message content column */}
                 <Box flexDirection="column" flexGrow={1} overflow="hidden">
                     {visible.map((msg, i) => (
-                        <Box key={startIdx + i} flexDirection="column" marginBottom={layout.messageGap}>
+                        <Box
+                            key={startIdx + i}
+                            flexDirection="column"
+                            marginBottom={layout.messageGap}
+                        >
                             {msg.role === "reasoning" ? (
                                 <Box>
                                     <Text color={roleColors.reasoning} dimColor italic>

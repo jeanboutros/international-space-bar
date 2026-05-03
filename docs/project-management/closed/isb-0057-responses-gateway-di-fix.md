@@ -1,15 +1,15 @@
 # isb-0057: Fix ResponsesGateway to inject ILogger via LOGGER token
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-010 |
-| Type | `bug` |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `critical` |
-| Created | 2026-04-30 |
-| Completed | — |
-| Dependencies | none |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-010 |
+| Type         | `bug`        |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `critical`   |
+| Created      | 2026-04-30   |
+| Completed    | —            |
+| Dependencies | none         |
 
 ## Description
 
@@ -27,6 +27,7 @@ the DI contract established in isb-0055.
 `LoggingModule` (isb-0055) defined the canonical pattern for all services that
 need logging: inject `@Inject(LOGGER) private readonly logger: ILogger`. This
 ensures:
+
 - Logger implementations are swappable in tests without NestJS bootstrap
 - All structured output routes through `PinoLoggerService`
 - Services depend on the `ILogger` abstraction, not on a concrete NestJS class
@@ -34,6 +35,7 @@ ensures:
 `ResponsesGateway` was written using `private readonly logger = new Logger(ResponsesGateway.name)`.
 While this works at runtime — NestJS internally delegates `Logger` to the
 registered logger service — it:
+
 - Bypasses the interface contract in unit tests
 - Creates a hidden coupling to NestJS's internal wiring
 - Is inconsistent with `PingPongRuntimeService` and every other service in the module
@@ -49,6 +51,7 @@ it actively undermines the DI pattern that isb-0055 hardened.
 **File:** `src/international-space-bar-server/openresponses/responses.gateway.ts`
 
 **Current state (line 104):**
+
 ```typescript
 import { Inject, Injectable, Logger } from "@nestjs/common";
 // ...
@@ -62,6 +65,7 @@ export class ResponsesGateway
 ```
 
 **Expected state after fix:**
+
 ```typescript
 import { Inject, Injectable } from "@nestjs/common";
 import { LOGGER } from "../common/interfaces/logger.port.js";
@@ -82,17 +86,19 @@ export class ResponsesGateway
 `log()` method. Three existing `this.logger.log(...)` calls must each be renamed
 to `this.logger.info(...)`:
 
-| Location | Current | Required |
-|----------|---------|---------|
-| `handleConnection` (~line 132) | `this.logger.log("WebSocket client connected")` | `this.logger.info("WebSocket client connected")` |
-| `handleDisconnect` (~line 142) | `this.logger.log("WebSocket client disconnected")` | `this.logger.info("WebSocket client disconnected")` |
-| error handler (~line 267) | `this.logger.log(\`Evicted previous_response_id=...\`)` | `this.logger.info(\`Evicted previous_response_id=...\`)` |
+| Location                       | Current                                                 | Required                                                 |
+| ------------------------------ | ------------------------------------------------------- | -------------------------------------------------------- |
+| `handleConnection` (~line 132) | `this.logger.log("WebSocket client connected")`         | `this.logger.info("WebSocket client connected")`         |
+| `handleDisconnect` (~line 142) | `this.logger.log("WebSocket client disconnected")`      | `this.logger.info("WebSocket client disconnected")`      |
+| error handler (~line 267)      | `this.logger.log(\`Evicted previous_response_id=...\`)` | `this.logger.info(\`Evicted previous_response_id=...\`)` |
 
 **`ILogger` interface** is re-exported from:
+
 - `src/international-space-bar-server/common/interfaces/index.ts` → re-exports from `common/interfaces/logger.port.ts`
 - `src/international-space-bar-server/common/interfaces/logger.port.ts` → re-exports `ILogger` from `src/international-space-bar/interfaces/logger.interface.ts`
 
 **`LOGGER` symbol** is defined in:
+
 - `src/international-space-bar-server/common/interfaces/logger.port.ts` (line 11: `export const LOGGER = Symbol("LOGGER")`)
 
 **`PingPongRuntimeService`** uses the correct pattern and serves as the

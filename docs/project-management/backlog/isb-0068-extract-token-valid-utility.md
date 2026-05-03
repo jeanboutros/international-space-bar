@@ -1,15 +1,15 @@
 # isb-0068: Extract `isTokenValid` into shared `common/auth/` utility
 
-| Field | Value |
-|-------|-------|
-| Epic | [isb-epic-010](../epics/isb-epic-010-kubb-preprocessing-server-bootstrap-hardening.md) |
-| Type | `feature` |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `low` |
-| Created | 2026-04-30 |
-| Completed | — |
-| Dependencies | none |
+| Field        | Value                                                                                  |
+| ------------ | -------------------------------------------------------------------------------------- |
+| Epic         | [isb-epic-010](../epics/isb-epic-010-kubb-preprocessing-server-bootstrap-hardening.md) |
+| Type         | `feature`                                                                              |
+| Status       | `backlog`                                                                              |
+| Assignee     | Engineer                                                                               |
+| Priority     | `low`                                                                                  |
+| Created      | 2026-04-30                                                                             |
+| Completed    | —                                                                                      |
+| Dependencies | none                                                                                   |
 
 ---
 
@@ -33,6 +33,7 @@ The gateway even carries a comment acknowledging the duplication: _"Reuses the s
 **Current state**:
 
 `bearer-auth.guard.ts` (private class method):
+
 ```typescript
 private isTokenValid(token: string, expected: string): boolean {
     const tokenBuffer = Buffer.from(token);
@@ -45,6 +46,7 @@ private isTokenValid(token: string, expected: string): boolean {
 ```
 
 `responses.gateway.ts` (module-level function, identical logic):
+
 ```typescript
 function isTokenValid(token: string, expected: string): boolean {
     const tokenBuffer = Buffer.from(token);
@@ -63,6 +65,7 @@ A new file `src/international-space-bar-server/common/auth/token-validation.ts` 
 `common/auth/` should be re-exported from `src/international-space-bar-server/common/index.ts` (or a new barrel if one doesn't exist yet) — check existing barrel structure before adding.
 
 **Key design decisions**:
+
 - The function signature stays unchanged: `(token: string, expected: string): boolean`
 - The implementation stays unchanged: length check first, then `timingSafeEqual`
 - Do NOT change `BearerAuthGuard` or `ResponsesGateway` behaviour — this is a pure extraction refactor

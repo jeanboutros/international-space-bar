@@ -1,13 +1,13 @@
 # isb-0025: Approvals module (approve-once, reject, reject-with-feedback)
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-005 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `medium` |
-| Created | 2026-04-28 |
-| Dependencies | isb-0024 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-005 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `medium`     |
+| Created      | 2026-04-28   |
+| Dependencies | isb-0024     |
 
 ## Description
 

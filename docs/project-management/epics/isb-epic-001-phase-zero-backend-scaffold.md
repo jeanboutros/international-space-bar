@@ -1,12 +1,12 @@
 # isb-epic-001: Phase 0 — Backend Scaffold (NestJS + OpenResponses Ping-Pong)
 
-| Field | Value |
-|-------|-------|
-| Priority | `critical` |
-| Status | `not-started` |
-| Created | 2026-04-28 |
-| Design doc | `docs/openresponses-backend-phased-design.md` — Phase 0 |
-| Tickets | isb-0001, isb-0002, isb-0003, isb-0004, isb-0005, isb-0006, isb-0007 |
+| Field      | Value                                                                |
+| ---------- | -------------------------------------------------------------------- |
+| Priority   | `critical`                                                           |
+| Status     | `not-started`                                                        |
+| Created    | 2026-04-28                                                           |
+| Design doc | `docs/openresponses-backend-phased-design.md` — Phase 0              |
+| Tickets    | isb-0001, isb-0002, isb-0003, isb-0004, isb-0005, isb-0006, isb-0007 |
 
 ## Summary
 

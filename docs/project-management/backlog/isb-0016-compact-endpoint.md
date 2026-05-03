@@ -1,13 +1,13 @@
 # isb-0016: Add /v1/responses/compact stub or implementation
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-003 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `medium` |
-| Created | 2026-04-28 |
-| Dependencies | isb-0013 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-003 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `medium`     |
+| Created      | 2026-04-28   |
+| Dependencies | isb-0013     |
 
 ## Description
 

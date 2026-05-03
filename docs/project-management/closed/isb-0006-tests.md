@@ -1,13 +1,13 @@
 # isb-0006: Tests — integration, unit, and smoke
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-001 |
-| Status | `backlog` |
-| Assignee | Tester |
-| Priority | `high` |
-| Created | 2026-04-28 |
-| Completed | — |
+| Field        | Value              |
+| ------------ | ------------------ |
+| Epic         | isb-epic-001       |
+| Status       | `backlog`          |
+| Assignee     | Tester             |
+| Priority     | `high`             |
+| Created      | 2026-04-28         |
+| Completed    | —                  |
 | Dependencies | isb-0004, isb-0005 |
 
 ## Description
@@ -42,27 +42,27 @@ Write the test suite for Phase 0 using `node:test` as the runner and `supertest`
 
 ```typescript
 // health.controller.test.ts
-import { describe, it } from 'node:test';
-import assert from 'node:assert/strict';
-import request from 'supertest';
-import { Test } from '@nestjs/testing';
-import { AppModule } from '../app.module.js';
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import request from "supertest";
+import { Test } from "@nestjs/testing";
+import { AppModule } from "../app.module.js";
 
-describe('GET /health', () => {
-  it('returns 200 with status ok', async () => {
-    const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+describe("GET /health", () => {
+    it("returns 200 with status ok", async () => {
+        const moduleRef = await Test.createTestingModule({
+            imports: [AppModule],
+        }).compile();
 
-    const app = moduleRef.createNestApplication();
-    await app.init();
+        const app = moduleRef.createNestApplication();
+        await app.init();
 
-    const res = await request(app.getHttpServer()).get('/health');
-    assert.equal(res.status, 200);
-    assert.deepEqual(res.body, { status: 'ok' });
+        const res = await request(app.getHttpServer()).get("/health");
+        assert.equal(res.status, 200);
+        assert.deepEqual(res.body, { status: "ok" });
 
-    await app.close();
-  });
+        await app.close();
+    });
 });
 ```
 

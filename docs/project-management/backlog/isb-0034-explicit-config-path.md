@@ -1,14 +1,14 @@
 # isb-0034: Explicit config file path override
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-008 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-29 |
-| Completed | — |
-| Dependencies | isb-0033 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-008 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-29   |
+| Completed    | —            |
+| Dependencies | isb-0033     |
 
 ## Description
 
@@ -35,9 +35,7 @@ Corresponds to design doc Work Item 1b.
 ```typescript
 // Inside loadConfig() path resolution
 const configPath =
-    this.cliArgs.config ??
-    process.env.ISB_CONFIG_PATH ??
-    join(process.cwd(), `config.${env}.yaml`);
+    this.cliArgs.config ?? process.env.ISB_CONFIG_PATH ?? join(process.cwd(), `config.${env}.yaml`);
 ```
 
 ## Comments

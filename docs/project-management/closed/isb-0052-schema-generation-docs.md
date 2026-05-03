@@ -1,15 +1,15 @@
 # isb-0052: Schema generation documentation
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-002 |
-| Type | feature |
-| Status | `backlog` |
-| Assignee | Docs Writer |
-| Priority | `medium` |
-| Created | 2026-04-29 |
-| Dependencies | isb-0049 |
-| Parent | isb-0046 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-002 |
+| Type         | feature      |
+| Status       | `backlog`    |
+| Assignee     | Docs Writer  |
+| Priority     | `medium`     |
+| Created      | 2026-04-29   |
+| Dependencies | isb-0049     |
+| Parent       | isb-0046     |
 
 ## Description
 

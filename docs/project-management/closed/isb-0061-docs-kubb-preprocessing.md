@@ -1,20 +1,21 @@
 # isb-0061: Document x-openresponses-disallowed sentinel and kubb preprocessing
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-010 |
-| Type | `feature` |
-| Status | `backlog` |
-| Assignee | Docs Writer |
-| Priority | `low` |
-| Created | 2026-04-30 |
-| Completed | — |
+| Field        | Value                                                                           |
+| ------------ | ------------------------------------------------------------------------------- |
+| Epic         | isb-epic-010                                                                    |
+| Type         | `feature`                                                                       |
+| Status       | `backlog`                                                                       |
+| Assignee     | Docs Writer                                                                     |
+| Priority     | `low`                                                                           |
+| Created      | 2026-04-30                                                                      |
+| Completed    | —                                                                               |
 | Dependencies | isb-0058 (extraction must be complete so the correct import path is documented) |
 
 ## Description
 
 Update `docs/technical-stack.md`, `docs/schema-generation.md`, and `AGENTS.md`
 to document:
+
 1. The `x-openresponses-disallowed` sentinel convention used in the OpenAPI spec
 2. The preprocessing step that strips disallowed fields before Kubb processes the spec
 3. The location of the extracted `removeDisallowedFields` function
@@ -26,6 +27,7 @@ invented to mark fields that must not appear in a given protocol context. The
 convention is not documented anywhere outside of comments in `kubb.config.ts`.
 
 Without documentation:
+
 - Engineers editing the OpenAPI spec will not know why `minLength:1, maxLength:0` appears
   and may delete or "fix" the constraint, silently breaking the sentinel detection
 - Agents working on schema generation will not know why the Kubb config reads a temp
@@ -44,6 +46,7 @@ correct import path for `removeDisallowedFields` (which lives in
 ## Technical Context
 
 **`x-openresponses-disallowed` sentinel (from the OpenAPI spec):**
+
 ```json
 "stream": {
     "type": "string",
@@ -52,6 +55,7 @@ correct import path for `removeDisallowedFields` (which lives in
     "x-openresponses-disallowed": true
 }
 ```
+
 The `minLength:1, maxLength:0` pair is intentionally impossible — it signals
 "this field MUST NOT appear in this context." The `x-openresponses-disallowed`
 key is the extension marker. All three must be present simultaneously for the
@@ -61,6 +65,7 @@ sentinel to be detected by `removeDisallowedFields`.
 `scripts/kubb-preprocessing.ts` as a named export.
 
 **Preprocessing flow:**
+
 ```
 docs/openapi/openresponses.json
         │

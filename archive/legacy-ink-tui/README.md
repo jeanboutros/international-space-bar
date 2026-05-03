@@ -1,9 +1,9 @@
 # Legacy Ink TUI — Archive
 
-| Field             | Value                                       |
-|-------------------|---------------------------------------------|
-| Archive date      | 2026-04-28                                  |
-| Original location | `src/international-space-bar/tui/`          |
+| Field             | Value                                                                      |
+| ----------------- | -------------------------------------------------------------------------- |
+| Archive date      | 2026-04-28                                                                 |
+| Original location | `src/international-space-bar/tui/`                                         |
 | Reason            | UI separated from agent runtime; backend-first direction per phased design |
 
 ## What's here

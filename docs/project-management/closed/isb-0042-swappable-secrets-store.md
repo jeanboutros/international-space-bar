@@ -1,14 +1,14 @@
 # isb-0042: Swappable secrets store backend via CLI
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-009 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `medium` |
-| Created | 2026-04-29 |
-| Completed | — |
-| Dependencies | isb-0040 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-009 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `medium`     |
+| Created      | 2026-04-29   |
+| Completed    | —            |
+| Dependencies | isb-0040     |
 
 ## Description
 

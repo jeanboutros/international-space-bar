@@ -1,13 +1,13 @@
 # isb-0007: Documentation — archive README, examples, env, AGENTS.md
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-001 |
-| Status | `backlog` |
-| Assignee | Docs Writer |
-| Priority | `medium` |
-| Created | 2026-04-28 |
-| Completed | — |
+| Field        | Value              |
+| ------------ | ------------------ |
+| Epic         | isb-epic-001       |
+| Status       | `backlog`          |
+| Assignee     | Docs Writer        |
+| Priority     | `medium`           |
+| Created      | 2026-04-28         |
+| Completed    | —                  |
 | Dependencies | isb-0004, isb-0005 |
 
 ## Description
@@ -20,9 +20,9 @@ Create documentation artifacts for Phase 0: an archive README explaining the leg
 - [ ] `docs/examples/opencode-isb-ping.jsonc` created — working OpenCode config example that targets the ISB ping-pong endpoint
 - [ ] `.env.example` created — lists `ISB_OPENRESPONSES_API_KEY` and `PORT` with placeholder values and comments
 - [ ] `AGENTS.md` updated:
-  - Project structure tree includes `src/international-space-bar-server/` and `archive/legacy-ink-tui/`
-  - Commands table reflects new scripts (`dev:server`, `build:server`, `start:server`, `test`)
-  - Architecture layers section updated to include the server layer
+    - Project structure tree includes `src/international-space-bar-server/` and `archive/legacy-ink-tui/`
+    - Commands table reflects new scripts (`dev:server`, `build:server`, `start:server`, `test`)
+    - Architecture layers section updated to include the server layer
 - [ ] All markdown files pass `pnpm check` (Biome formatting)
 - [ ] Deferred docs not touched: `technical-stack.md`, `agent-observability-logging.md`, `workflow.md`
 
@@ -38,13 +38,13 @@ Create documentation artifacts for Phase 0: an archive README explaining the leg
 ```jsonc
 // docs/examples/opencode-isb-ping.jsonc
 {
-  // OpenCode config targeting local ISB ping-pong endpoint
-  "provider": {
-    "name": "openai-compatible",
-    "url": "http://localhost:3007/v1",
-    "apiKey": "$ISB_OPENRESPONSES_API_KEY",
-    "model": "ping-pong"
-  }
+    // OpenCode config targeting local ISB ping-pong endpoint
+    "provider": {
+        "name": "openai-compatible",
+        "url": "http://localhost:3007/v1",
+        "apiKey": "$ISB_OPENRESPONSES_API_KEY",
+        "model": "ping-pong",
+    },
 }
 ```
 

@@ -1,12 +1,12 @@
 # isb-0017: Automated smoke tests for non-streaming and streaming
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-003 |
-| Status | `backlog` |
-| Assignee | Tester |
-| Priority | `high` |
-| Created | 2026-04-28 |
+| Field        | Value              |
+| ------------ | ------------------ |
+| Epic         | isb-epic-003       |
+| Status       | `backlog`          |
+| Assignee     | Tester             |
+| Priority     | `high`             |
+| Created      | 2026-04-28         |
 | Dependencies | isb-0014, isb-0015 |
 
 ## Description

@@ -42,23 +42,23 @@ Add Zod `.parse()` validation to **every** constructed object in
 
 All from `./generated/zod/index.js`:
 
-| Event type emitted | Generated schema |
-|--------------------|-----------------|
-| `response.created` | `responseCreatedStreamingEventSchema` |
-| `response.completed` | `responseCompletedStreamingEventSchema` |
-| `response.output_item.added` | `responseOutputItemAddedStreamingEventSchema` |
-| `response.output_item.done` | `responseOutputItemDoneStreamingEventSchema` |
-| `response.reasoning_summary_part.added` | `responseReasoningSummaryPartAddedStreamingEventSchema` |
-| `response.reasoning_summary_text.delta` | `responseReasoningSummaryDeltaStreamingEventSchema` |
-| `response.reasoning_summary_text.done` | `responseReasoningSummaryDoneStreamingEventSchema` |
-| `response.reasoning_summary_part.done` | `responseReasoningSummaryPartDoneStreamingEventSchema` |
-| `response.content_part.added` | `responseContentPartAddedStreamingEventSchema` |
-| `response.output_text.delta` | `responseOutputTextDeltaStreamingEventSchema` |
-| `response.output_text.done` | `responseOutputTextDoneStreamingEventSchema` |
-| `response.content_part.done` | `responseContentPartDoneStreamingEventSchema` |
+| Event type emitted                       | Generated schema                                         |
+| ---------------------------------------- | -------------------------------------------------------- |
+| `response.created`                       | `responseCreatedStreamingEventSchema`                    |
+| `response.completed`                     | `responseCompletedStreamingEventSchema`                  |
+| `response.output_item.added`             | `responseOutputItemAddedStreamingEventSchema`            |
+| `response.output_item.done`              | `responseOutputItemDoneStreamingEventSchema`             |
+| `response.reasoning_summary_part.added`  | `responseReasoningSummaryPartAddedStreamingEventSchema`  |
+| `response.reasoning_summary_text.delta`  | `responseReasoningSummaryDeltaStreamingEventSchema`      |
+| `response.reasoning_summary_text.done`   | `responseReasoningSummaryDoneStreamingEventSchema`       |
+| `response.reasoning_summary_part.done`   | `responseReasoningSummaryPartDoneStreamingEventSchema`   |
+| `response.content_part.added`            | `responseContentPartAddedStreamingEventSchema`           |
+| `response.output_text.delta`             | `responseOutputTextDeltaStreamingEventSchema`            |
+| `response.output_text.done`              | `responseOutputTextDoneStreamingEventSchema`             |
+| `response.content_part.done`             | `responseContentPartDoneStreamingEventSchema`            |
 | `response.function_call_arguments.delta` | `responseFunctionCallArgumentsDeltaStreamingEventSchema` |
-| `response.function_call_arguments.done` | `responseFunctionCallArgumentsDoneStreamingEventSchema` |
-| `ResponseResource` | `responseResourceSchema` |
+| `response.function_call_arguments.done`  | `responseFunctionCallArgumentsDoneStreamingEventSchema`  |
+| `ResponseResource`                       | `responseResourceSchema`                                 |
 
 ---
 
@@ -92,6 +92,7 @@ import {
 ### Pattern for every yield
 
 Before:
+
 ```typescript
 yield {
     type: "response.output_item.added",
@@ -102,6 +103,7 @@ yield {
 ```
 
 After:
+
 ```typescript
 yield responseOutputItemAddedStreamingEventSchema.parse({
     type: "response.output_item.added",
@@ -111,7 +113,7 @@ yield responseOutputItemAddedStreamingEventSchema.parse({
 });
 ```
 
-The `as unknown as ResponseStreamEvent` casts are removed where `.parse()` 
+The `as unknown as ResponseStreamEvent` casts are removed where `.parse()`
 return type satisfies `ResponseStreamEvent`. Where TypeScript still can't
 narrow the union (because the generated schema is typed as
 `z.ZodType<SpecificEvent>` and `ResponseStreamEvent` is a wide union), the
@@ -145,31 +147,35 @@ runtime `.parse()` is the validation.
 ## Affected events — full inventory
 
 ### `streamReasoningBlock` (6 yields)
+
 1. `response.output_item.added` → `responseOutputItemAddedStreamingEventSchema`
 2. `response.reasoning_summary_part.added` → `responseReasoningSummaryPartAddedStreamingEventSchema`
-3. *(in delta loop)* `response.reasoning_summary_text.delta` → `responseReasoningSummaryDeltaStreamingEventSchema`
+3. _(in delta loop)_ `response.reasoning_summary_text.delta` → `responseReasoningSummaryDeltaStreamingEventSchema`
 4. `response.reasoning_summary_text.done` → `responseReasoningSummaryDoneStreamingEventSchema`
 5. `response.reasoning_summary_part.done` → `responseReasoningSummaryPartDoneStreamingEventSchema`
 6. `response.output_item.done` → `responseOutputItemDoneStreamingEventSchema`
 
 ### `streamMessageBlock` (6 yields)
+
 7. `response.output_item.added` → `responseOutputItemAddedStreamingEventSchema`
 8. `response.content_part.added` → `responseContentPartAddedStreamingEventSchema`
-9. *(in delta loop)* `response.output_text.delta` → `responseOutputTextDeltaStreamingEventSchema`
+9. _(in delta loop)_ `response.output_text.delta` → `responseOutputTextDeltaStreamingEventSchema`
 10. `response.output_text.done` → `responseOutputTextDoneStreamingEventSchema`
 11. `response.content_part.done` → `responseContentPartDoneStreamingEventSchema`
 12. `response.output_item.done` → `responseOutputItemDoneStreamingEventSchema`
 
 ### `stream()` body (6 yields + inProgressResponse)
+
 13. `inProgressResponse` construction → `responseResourceSchema.parse()`
 14. `response.created` → `responseCreatedStreamingEventSchema`
 15. `response.output_item.added` (function_call) → `responseOutputItemAddedStreamingEventSchema`
-16. *(in args loop)* `response.function_call_arguments.delta` → `responseFunctionCallArgumentsDeltaStreamingEventSchema`
+16. _(in args loop)_ `response.function_call_arguments.delta` → `responseFunctionCallArgumentsDeltaStreamingEventSchema`
 17. `response.function_call_arguments.done` → `responseFunctionCallArgumentsDoneStreamingEventSchema`
 18. `response.output_item.done` (function_call) → `responseOutputItemDoneStreamingEventSchema`
 19. `response.completed` → `responseCompletedStreamingEventSchema`
 
 ### `invoke()` (1 return value)
+
 20. Return value → `responseResourceSchema.parse()`
 
 ---

@@ -1,13 +1,13 @@
 # isb-0028: Request tracing IDs across protocol, system, and agent logs
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-006 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-28 |
-| Dependencies | isb-0027 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-006 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-28   |
+| Dependencies | isb-0027     |
 
 ## Description
 

@@ -66,11 +66,11 @@ GET http://127.0.0.1:3000/health
 
 Configuration is loaded from a YAML file chosen by the environment:
 
-| Environment | File |
-|-------------|------|
-| `dev` (default) | `config.dev.yaml` |
-| `test` | `config.test.yaml` |
-| `prod` | `config.prod.yaml` |
+| Environment     | File               |
+| --------------- | ------------------ |
+| `dev` (default) | `config.dev.yaml`  |
+| `test`          | `config.test.yaml` |
+| `prod`          | `config.prod.yaml` |
 
 Set the environment with `--environment <env>` (CLI flag) or `ISB_PROJECT_ENVIRONMENT` (env var).
 
@@ -81,17 +81,17 @@ Values prefixed with `SECRET[VAR_NAME]` are resolved from environment variables 
 version: 1
 
 server:
-  port: 3000
-  host: "127.0.0.1"
-  enableCors: true  # dev only — disable in production
+    port: 3000
+    host: "127.0.0.1"
+    enableCors: true # dev only — disable in production
 
 logger:
-  type: pino
-  logFilePath: ./logs/app.log
-  level: debug
+    type: pino
+    logFilePath: ./logs/app.log
+    level: debug
 
 ollama:
-  apiKey: SECRET[OLLAMA_API_KEY]
+    apiKey: SECRET[OLLAMA_API_KEY]
 ```
 
 See [docs/config-infrastructure-improvements.md](docs/config-infrastructure-improvements.md) for the full design — Zod-validated config schema, swappable secrets store, and typed config key paths.
@@ -143,11 +143,11 @@ All routes are protected by a `BearerAuthGuard`. The expected token is set via t
 
 ### Structured logging — three separate concerns
 
-| Concern | Destination | Purpose |
-|---------|-------------|---------|
-| System logging | `app.log` + stdout | Infrastructure diagnostics: startup, config, errors |
-| HTTP server logging | `app.log` + stdout (via `PinoLoggerService`) | NestJS internals, request lifecycle |
-| Agent observability | `agents.log` | Behavioural audit: intent, tokens, routing decisions |
+| Concern             | Destination                                  | Purpose                                              |
+| ------------------- | -------------------------------------------- | ---------------------------------------------------- |
+| System logging      | `app.log` + stdout                           | Infrastructure diagnostics: startup, config, errors  |
+| HTTP server logging | `app.log` + stdout (via `PinoLoggerService`) | NestJS internals, request lifecycle                  |
+| Agent observability | `agents.log`                                 | Behavioural audit: intent, tokens, routing decisions |
 
 Each concern gets its own pino instance and log file — they never share streams.
 
@@ -179,18 +179,18 @@ See [docs/compliance-test.md](docs/compliance-test.md).
 
 ## Commands
 
-| Task | Command |
-|------|---------|
-| Start (dev) | `pnpm dev:server` |
-| Build | `pnpm build:server` |
-| Start (built) | `pnpm start:server` |
-| Run all tests | `pnpm test` |
-| Lint | `pnpm lint` |
-| Lint + auto-fix | `pnpm lint:fix` |
-| Format | `pnpm format` |
-| **All checks (mandatory after every change)** | `pnpm check` |
-| Regenerate Zod schemas | `pnpm generate:schemas` |
-| Compliance tests | `pnpm test:compliance` |
+| Task                                          | Command                 |
+| --------------------------------------------- | ----------------------- |
+| Start (dev)                                   | `pnpm dev:server`       |
+| Build                                         | `pnpm build:server`     |
+| Start (built)                                 | `pnpm start:server`     |
+| Run all tests                                 | `pnpm test`             |
+| Lint                                          | `pnpm lint`             |
+| Lint + auto-fix                               | `pnpm lint:fix`         |
+| Format                                        | `pnpm format`           |
+| **All checks (mandatory after every change)** | `pnpm check`            |
+| Regenerate Zod schemas                        | `pnpm generate:schemas` |
+| Compliance tests                              | `pnpm test:compliance`  |
 
 `pnpm check` runs Biome (formatting + non-type-aware linting, auto-fix) then ESLint (type-aware rules). Both must exit 0 before any commit.
 
@@ -230,18 +230,18 @@ scripts/                             # Compliance tests, schema tooling
 
 ## Documentation
 
-| Document | Description |
-|----------|-------------|
-| [docs/technical-stack.md](docs/technical-stack.md) | Authoritative reference: runtime, tooling, layered architecture, conventions |
-| [docs/openresponses-backend-phased-design.md](docs/openresponses-backend-phased-design.md) | Phased delivery plan — from ping/pong scaffold to full LangGraph integration |
-| [docs/websocket-transport.md](docs/websocket-transport.md) | WebSocket transport: spec requirements, implementation notes, compliance status |
-| [docs/logging.md](docs/logging.md) | NestJS server logging: PinoLoggerService, bridge pattern, startup sequence |
-| [docs/agent-observability-logging.md](docs/agent-observability-logging.md) | Agent observability: separate pino instance, agents.log, audit trail design |
-| [docs/schema-generation.md](docs/schema-generation.md) | Kubb + OpenAPI schema generation, preprocessing, sentinel convention |
-| [docs/config-infrastructure-improvements.md](docs/config-infrastructure-improvements.md) | Config service, secrets store, Zod validation, swappable backends |
-| [docs/workflow.md](docs/workflow.md) | AI agent workflow: director graph, council sub-graph, satisfaction loop |
-| [docs/compliance-test.md](docs/compliance-test.md) | Compliance test suite: what is covered, how to run, current status |
-| [docs/agent-validation-pipeline.md](docs/agent-validation-pipeline.md) | Multi-agent build pipeline: phases, gates, flag protocol, ticket lifecycle |
+| Document                                                                                   | Description                                                                     |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| [docs/technical-stack.md](docs/technical-stack.md)                                         | Authoritative reference: runtime, tooling, layered architecture, conventions    |
+| [docs/openresponses-backend-phased-design.md](docs/openresponses-backend-phased-design.md) | Phased delivery plan — from ping/pong scaffold to full LangGraph integration    |
+| [docs/websocket-transport.md](docs/websocket-transport.md)                                 | WebSocket transport: spec requirements, implementation notes, compliance status |
+| [docs/logging.md](docs/logging.md)                                                         | NestJS server logging: PinoLoggerService, bridge pattern, startup sequence      |
+| [docs/agent-observability-logging.md](docs/agent-observability-logging.md)                 | Agent observability: separate pino instance, agents.log, audit trail design     |
+| [docs/schema-generation.md](docs/schema-generation.md)                                     | Kubb + OpenAPI schema generation, preprocessing, sentinel convention            |
+| [docs/config-infrastructure-improvements.md](docs/config-infrastructure-improvements.md)   | Config service, secrets store, Zod validation, swappable backends               |
+| [docs/workflow.md](docs/workflow.md)                                                       | AI agent workflow: director graph, council sub-graph, satisfaction loop         |
+| [docs/compliance-test.md](docs/compliance-test.md)                                         | Compliance test suite: what is covered, how to run, current status              |
+| [docs/agent-validation-pipeline.md](docs/agent-validation-pipeline.md)                     | Multi-agent build pipeline: phases, gates, flag protocol, ticket lifecycle      |
 
 ---
 
@@ -267,7 +267,7 @@ Integration tickets tracking the LangGraph connection: `isb-0020` (LangGraph int
 
 ## How this project is built
 
-The project is as deliberate about *how* it is built as it is about what it builds. Every feature goes through a structured **Agent Validation Pipeline** before it reaches `main`.
+The project is as deliberate about _how_ it is built as it is about what it builds. Every feature goes through a structured **Agent Validation Pipeline** before it reaches `main`.
 
 ### The pipeline
 

@@ -1,13 +1,13 @@
 # isb-0009: SSE frame writer utility
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-002 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-28 |
-| Dependencies | isb-0004 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-002 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-28   |
+| Dependencies | isb-0004     |
 
 ## Description
 

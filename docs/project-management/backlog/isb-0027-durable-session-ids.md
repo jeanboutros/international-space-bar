@@ -1,13 +1,13 @@
 # isb-0027: Durable session and run identifiers
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-006 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-28 |
-| Dependencies | isb-0026 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-006 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-28   |
+| Dependencies | isb-0026     |
 
 ## Description
 

@@ -1,11 +1,11 @@
 # isb-epic-005: Phase 4 — Tools, Tool Messages, and Approvals
 
-| Field | Value |
-|-------|-------|
-| Phase | 4 |
-| Status | `backlog` |
-| Priority | `medium` |
-| Created | 2026-04-28 |
+| Field      | Value                  |
+| ---------- | ---------------------- |
+| Phase      | 4                      |
+| Status     | `backlog`              |
+| Priority   | `medium`               |
+| Created    | 2026-04-28             |
 | Depends on | isb-epic-004 (Phase 3) |
 
 ## Objective
@@ -14,12 +14,12 @@ Support tool calls, tool messages, and simple approve/reject approvals. Map Lang
 
 ## Tickets
 
-| Ticket | Title | Priority |
-|--------|-------|----------|
-| isb-0023 | Map LangChain tool calls to internal event envelopes | high |
-| isb-0024 | Map ToolMessage results to OpenResponses function_call_output | high |
-| isb-0025 | Approvals module (approve-once, reject, reject-with-feedback) | medium |
-| isb-0026 | Interrupt handling with Command({ resume }) behind runtime port | medium |
+| Ticket   | Title                                                           | Priority |
+| -------- | --------------------------------------------------------------- | -------- |
+| isb-0023 | Map LangChain tool calls to internal event envelopes            | high     |
+| isb-0024 | Map ToolMessage results to OpenResponses function_call_output   | high     |
+| isb-0025 | Approvals module (approve-once, reject, reject-with-feedback)   | medium   |
+| isb-0026 | Interrupt handling with Command({ resume }) behind runtime port | medium   |
 
 ## Acceptance Criteria
 

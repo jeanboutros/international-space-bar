@@ -120,16 +120,16 @@ optional render hints for richer clients:
 
 ```ts
 interface InterruptInfo {
-  id: string;
-  toolName: string;
-  args: unknown;
-  description: string;
-  allowedDecisions: string[];
-  render?: {
-    kind: "command" | "diff" | "file" | "search" | "task" | "generic";
-    title?: string;
-    summary?: string;
-  };
+    id: string;
+    toolName: string;
+    args: unknown;
+    description: string;
+    allowedDecisions: string[];
+    render?: {
+        kind: "command" | "diff" | "file" | "search" | "task" | "generic";
+        title?: string;
+        summary?: string;
+    };
 }
 ```
 
@@ -144,10 +144,10 @@ reserve an event type now:
 
 ```ts
 type AgentStreamEvent =
-  | { type: "interrupt"; interrupt: InterruptInfo }
-  | { type: "question"; prompt: QuestionPrompt }
-  | { type: "message"; message: MessageEnvelope }
-  | { type: "complete"; result: WorkflowResult };
+    | { type: "interrupt"; interrupt: InterruptInfo }
+    | { type: "question"; prompt: QuestionPrompt }
+    | { type: "message"; message: MessageEnvelope }
+    | { type: "complete"; result: WorkflowResult };
 ```
 
 The MVP can support only `interrupt` and `message`; later clients can implement
@@ -227,16 +227,16 @@ Most agent runtime traffic is server-to-client: tokens, state updates, tool
 calls, tool results, approvals, errors, and completion events. User input and
 approval decisions can be ordinary HTTP POST requests.
 
-| Criterion | Server-sent events | WebSocket |
-| --- | --- | --- |
-| Direction | Server to client | Bidirectional |
-| Client commands | Separate HTTP requests | Same socket |
-| Transport | Standard HTTP response with `text/event-stream` | HTTP upgrade to WebSocket |
-| Reconnection | Native EventSource retry semantics | Application-managed |
-| Proxy support | Generally straightforward HTTP streaming | Requires upgrade support |
-| Multi-client support | Natural: each client opens a stream | Requires explicit socket/session routing |
-| Complexity | Low | Medium |
-| Best fit | Agent output streams and run events | Collaborative editing, realtime games, high-frequency bidirectional control |
+| Criterion            | Server-sent events                              | WebSocket                                                                   |
+| -------------------- | ----------------------------------------------- | --------------------------------------------------------------------------- |
+| Direction            | Server to client                                | Bidirectional                                                               |
+| Client commands      | Separate HTTP requests                          | Same socket                                                                 |
+| Transport            | Standard HTTP response with `text/event-stream` | HTTP upgrade to WebSocket                                                   |
+| Reconnection         | Native EventSource retry semantics              | Application-managed                                                         |
+| Proxy support        | Generally straightforward HTTP streaming        | Requires upgrade support                                                    |
+| Multi-client support | Natural: each client opens a stream             | Requires explicit socket/session routing                                    |
+| Complexity           | Low                                             | Medium                                                                      |
+| Best fit             | Agent output streams and run events             | Collaborative editing, realtime games, high-frequency bidirectional control |
 
 Recommendation: use SSE for the primary run/event stream and REST for commands
 such as invoke, resume, cancel, approve, reject, and session management. Add
@@ -254,13 +254,19 @@ thread ID. [src/international-space-bar/agent/deep-agent-wrapper.ts](../src/inte
 turns that into a LangGraph input:
 
 ```ts
-{ messages: [{ role: "user", content: query }] }
+{
+    messages: [{ role: "user", content: query }];
+}
 ```
 
 and passes:
 
 ```ts
-{ configurable: { thread_id: threadId } }
+{
+    configurable: {
+        thread_id: threadId;
+    }
+}
 ```
 
 That means the future network API should not require the client to resend the
@@ -268,11 +274,11 @@ whole conversation. The client should send only:
 
 ```ts
 interface InvokeRequest {
-  threadId: string;
-  message: {
-    role: "user";
-    content: string;
-  };
+    threadId: string;
+    message: {
+        role: "user";
+        content: string;
+    };
 }
 ```
 
@@ -372,10 +378,10 @@ Core service contract:
 
 ```ts
 interface AgentRunService {
-  invoke(request: InvokeRequest): Promise<RunAccepted>;
-  resume(request: ResumeRequest): Promise<RunAccepted>;
-  getState(threadId: string): Promise<RunState>;
-  cancel(threadId: string, runId: string): Promise<void>;
+    invoke(request: InvokeRequest): Promise<RunAccepted>;
+    resume(request: ResumeRequest): Promise<RunAccepted>;
+    getState(threadId: string): Promise<RunState>;
+    cancel(threadId: string, runId: string): Promise<void>;
 }
 ```
 
@@ -384,9 +390,9 @@ tell the client which stream to subscribe to.
 
 ```ts
 interface RunAccepted {
-  threadId: string;
-  runId: string;
-  streamUrl: string;
+    threadId: string;
+    runId: string;
+    streamUrl: string;
 }
 ```
 
@@ -466,10 +472,10 @@ Request shape:
 
 ```ts
 interface ApprovalDecisionRequest {
-  type: "approve" | "reject";
-  message?: string;
-  scope?: "once" | "always";
-  editedArgs?: unknown;
+    type: "approve" | "reject";
+    message?: string;
+    scope?: "once" | "always";
+    editedArgs?: unknown;
 }
 ```
 
@@ -477,7 +483,7 @@ The module should convert this into the DeepAgents resume shape currently used
 in [src/international-space-bar/agent/deep-agent-wrapper.ts](../src/international-space-bar/agent/deep-agent-wrapper.ts):
 
 ```ts
-new Command({ resume: { decisions: [decision] } })
+new Command({ resume: { decisions: [decision] } });
 ```
 
 ### ObservabilityModule
@@ -506,7 +512,7 @@ Context7 lookups for LangGraph.js confirm the relevant APIs:
 - `streamEvents` supports an `encoding: "text/event-stream"` overload that
   returns bytes suitable for SSE transport.
 - LangGraph SDK examples stream runs with `client.runs.stream(threadId,
-  assistantId, { input, streamMode })`.
+assistantId, { input, streamMode })`.
 - DeepAgents JS supports `agent.stream(..., { streamMode, subgraphs: true })`,
   allowing main-agent and subagent events to be distinguished by namespace.
 
@@ -518,15 +524,15 @@ Internal event union:
 
 ```ts
 type AgentEvent =
-  | { type: "run.started"; threadId: string; runId: string }
-  | { type: "node.started"; threadId: string; runId: string; node: string }
-  | { type: "message.delta"; threadId: string; runId: string; delta: string }
-  | { type: "message.completed"; threadId: string; runId: string; message: MessageEnvelope }
-  | { type: "tool.started"; threadId: string; runId: string; toolCall: ToolCallEnvelope }
-  | { type: "tool.completed"; threadId: string; runId: string; toolResult: ToolResultEnvelope }
-  | { type: "interrupt.created"; threadId: string; runId: string; interrupt: InterruptInfo }
-  | { type: "run.completed"; threadId: string; runId: string; result: WorkflowResult }
-  | { type: "run.failed"; threadId: string; runId: string; error: AgentErrorEnvelope };
+    | { type: "run.started"; threadId: string; runId: string }
+    | { type: "node.started"; threadId: string; runId: string; node: string }
+    | { type: "message.delta"; threadId: string; runId: string; delta: string }
+    | { type: "message.completed"; threadId: string; runId: string; message: MessageEnvelope }
+    | { type: "tool.started"; threadId: string; runId: string; toolCall: ToolCallEnvelope }
+    | { type: "tool.completed"; threadId: string; runId: string; toolResult: ToolResultEnvelope }
+    | { type: "interrupt.created"; threadId: string; runId: string; interrupt: InterruptInfo }
+    | { type: "run.completed"; threadId: string; runId: string; result: WorkflowResult }
+    | { type: "run.failed"; threadId: string; runId: string; error: AgentErrorEnvelope };
 ```
 
 SSE serialization:
@@ -562,21 +568,21 @@ they leave the service:
 
 ```ts
 interface MessageEnvelope {
-  id: string;
-  role: "user" | "assistant" | "system" | "tool";
-  createdAt: string;
-  agentId?: string;
-  runId: string;
-  threadId: string;
-  parts: MessagePart[];
+    id: string;
+    role: "user" | "assistant" | "system" | "tool";
+    createdAt: string;
+    agentId?: string;
+    runId: string;
+    threadId: string;
+    parts: MessagePart[];
 }
 
 type MessagePart =
-  | { type: "text"; text: string }
-  | { type: "reasoning"; text: string; visibility: "hidden" | "summary" | "expanded" }
-  | { type: "tool_call"; toolCall: ToolCallEnvelope }
-  | { type: "tool_result"; toolResult: ToolResultEnvelope }
-  | { type: "interrupt"; interrupt: InterruptInfo };
+    | { type: "text"; text: string }
+    | { type: "reasoning"; text: string; visibility: "hidden" | "summary" | "expanded" }
+    | { type: "tool_call"; toolCall: ToolCallEnvelope }
+    | { type: "tool_result"; toolResult: ToolResultEnvelope }
+    | { type: "interrupt"; interrupt: InterruptInfo };
 ```
 
 This part model keeps the backend useful to multiple clients. A minimal Ink TUI
@@ -660,8 +666,8 @@ Initial scripts:
 
 ```json
 {
-  "dev:server": "tsx --env-file=.env src/international-space-bar-server/main.ts",
-  "dev:tui": "tsx --env-file=.env src/international-space-bar/main.ts"
+    "dev:server": "tsx --env-file=.env src/international-space-bar-server/main.ts",
+    "dev:tui": "tsx --env-file=.env src/international-space-bar/main.ts"
 }
 ```
 

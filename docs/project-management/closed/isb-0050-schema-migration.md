@@ -1,15 +1,15 @@
 # isb-0050: Schema migration — wire generated schemas into responses.schemas.ts and responses.types.ts
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-002 |
-| Type | feature |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-29 |
-| Dependencies | isb-0049 |
-| Parent | isb-0046 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-002 |
+| Type         | feature      |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-29   |
+| Dependencies | isb-0049     |
+| Parent       | isb-0046     |
 
 ## Description
 
@@ -23,12 +23,12 @@ Mark `openresponses.generated.d.ts` as deprecated but do not delete it — downs
 
 - [ ] `responses.schemas.ts` imports `createResponseBodySchema` from the generated zod output
 - [ ] `CreateResponseSchema` is defined as:
-  ```ts
-  export const CreateResponseSchema = createResponseBodySchema
-    .extend({ model: z.string().min(1) })
-    .passthrough();
-  ```
-  (ISB business rule: `model` is required and non-empty; `.passthrough()` preserves unknown fields matching existing `z.looseObject()` contract)
+    ```ts
+    export const CreateResponseSchema = createResponseBodySchema
+        .extend({ model: z.string().min(1) })
+        .passthrough();
+    ```
+    (ISB business rule: `model` is required and non-empty; `.passthrough()` preserves unknown fields matching existing `z.looseObject()` contract)
 - [ ] Internal generated schemas are **not** modified — `.passthrough()` is applied only to `CreateResponseSchema`
 - [ ] `responses.types.ts` derives `CreateResponseBody`, `ResponseResource`, and `ResponseStreamEvent` via `z.infer<typeof xSchema>` from their respective generated schemas
 - [ ] `openresponses.generated.d.ts` has a top-of-file comment: `@deprecated — migrate to z.infer<> from generated schemas`

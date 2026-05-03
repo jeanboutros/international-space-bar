@@ -1,14 +1,14 @@
 # isb-0039: Fix DI abstraction + extract resolveConfigSecrets
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-009 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-29 |
-| Completed | — |
-| Dependencies | none |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-009 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-29   |
+| Completed    | —            |
+| Dependencies | none         |
 
 ## Description
 

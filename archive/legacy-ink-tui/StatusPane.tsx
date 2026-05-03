@@ -76,7 +76,10 @@ export default function StatusPane({
             <StatusRow label="Thread">
                 <Text>{threadId.slice(0, 8)}</Text>
             </StatusRow>
-            <StatusRow label="Iteration" visible={currentIteration !== undefined && currentIteration > 0}>
+            <StatusRow
+                label="Iteration"
+                visible={currentIteration !== undefined && currentIteration > 0}
+            >
                 <Text color={colors.accent}>{currentIteration ?? 0}</Text>
             </StatusRow>
             <StatusRow

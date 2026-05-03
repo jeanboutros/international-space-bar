@@ -1,13 +1,13 @@
 # isb-0015: Fix compliance failures for streaming-response filter
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-003 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-28 |
-| Dependencies | isb-0013 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-003 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-28   |
+| Dependencies | isb-0013     |
 
 ## Description
 

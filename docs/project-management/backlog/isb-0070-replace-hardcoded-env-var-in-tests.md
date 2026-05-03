@@ -1,15 +1,15 @@
 # isb-0070: Replace hardcoded `"ISB_OPENRESPONSES_API_KEY"` string with `API_KEY_ENV_VAR` constant in tests
 
-| Field | Value |
-|-------|-------|
-| Epic | [isb-epic-010](../epics/isb-epic-010-kubb-preprocessing-server-bootstrap-hardening.md) |
-| Type | `bug` |
-| Status | `backlog` |
-| Assignee | Tester |
-| Priority | `low` |
-| Created | 2026-04-30 |
-| Completed | — |
-| Dependencies | none |
+| Field        | Value                                                                                  |
+| ------------ | -------------------------------------------------------------------------------------- |
+| Epic         | [isb-epic-010](../epics/isb-epic-010-kubb-preprocessing-server-bootstrap-hardening.md) |
+| Type         | `bug`                                                                                  |
+| Status       | `backlog`                                                                              |
+| Assignee     | Tester                                                                                 |
+| Priority     | `low`                                                                                  |
+| Created      | 2026-04-30                                                                             |
+| Completed    | —                                                                                      |
+| Dependencies | none                                                                                   |
 
 ---
 
@@ -26,6 +26,7 @@ Four test files set `process.env` using the hardcoded string literal `"ISB_OPENR
 ## Technical Context
 
 **Constant location**: `src/international-space-bar-server/constants.ts` line 19
+
 ```typescript
 export const API_KEY_ENV_VAR = "ISB_OPENRESPONSES_API_KEY";
 ```
@@ -33,11 +34,13 @@ export const API_KEY_ENV_VAR = "ISB_OPENRESPONSES_API_KEY";
 **Current state** (before this ticket):
 
 All four files use the hardcoded string literal pattern:
+
 ```typescript
 process.env.ISB_OPENRESPONSES_API_KEY = "test-key";
 ```
 
 **Expected state** (after this ticket):
+
 ```typescript
 import { API_KEY_ENV_VAR } from "../constants.js"; // (adjust relative path per file)
 // ...
@@ -48,14 +51,15 @@ process.env[API_KEY_ENV_VAR] = "test-key";
 
 **Files containing hardcoded literals** (4 files, multiple occurrences):
 
-| File | Occurrences |
-|------|-------------|
-| `src/international-space-bar-server/health/health.controller.test.ts` | 1 (`= "test-key"`) |
-| `src/international-space-bar-server/openresponses/responses.controller.test.ts` | 2 (`= "test-key"`) |
-| `src/international-space-bar-server/openresponses/responses.controller.stream.test.ts` | 1 (`= "test-key"`) |
-| `src/international-space-bar-server/openresponses/responses.gateway.test.ts` | 5 (set + save + restore + delete references) |
+| File                                                                                   | Occurrences                                  |
+| -------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `src/international-space-bar-server/health/health.controller.test.ts`                  | 1 (`= "test-key"`)                           |
+| `src/international-space-bar-server/openresponses/responses.controller.test.ts`        | 2 (`= "test-key"`)                           |
+| `src/international-space-bar-server/openresponses/responses.controller.stream.test.ts` | 1 (`= "test-key"`)                           |
+| `src/international-space-bar-server/openresponses/responses.gateway.test.ts`           | 5 (set + save + restore + delete references) |
 
 **Relative import path** for `constants.ts` from each file:
+
 - `health/health.controller.test.ts` → `"../constants.js"`
 - `openresponses/responses.controller.test.ts` → `"../constants.js"`
 - `openresponses/responses.controller.stream.test.ts` → `"../constants.js"`
@@ -89,6 +93,7 @@ No production code changes required.
 ## Test Expectations
 
 No new tests needed. This is a pure mechanical substitution. The Tester verifies correctness by confirming:
+
 1. The import is present in each file.
 2. `grep -r "process.env.ISB_OPENRESPONSES_API_KEY" src/` returns zero matches.
 3. `pnpm test` exits 0.

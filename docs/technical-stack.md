@@ -23,38 +23,38 @@ This document is the authoritative reference for the technical stack, architectu
 
 ## Runtime & Language
 
-| Concern | Choice | Rationale |
-|---------|--------|-----------|
-| **Runtime** | Node.js 22 (Active LTS) | Long-term support, native ESM, good TypeScript ecosystem |
-| **Language** | TypeScript 5 — strict mode | Full type safety; strict catches real bugs |
-| **Module system** | ESM (`"type": "module"`) | Native ESM throughout; no CommonJS interop |
-| **Validation** | Zod 4 | Runtime + compile-time type safety; used for state schemas, config, and structured LLM output |
+| Concern           | Choice                     | Rationale                                                                                     |
+| ----------------- | -------------------------- | --------------------------------------------------------------------------------------------- |
+| **Runtime**       | Node.js 22 (Active LTS)    | Long-term support, native ESM, good TypeScript ecosystem                                      |
+| **Language**      | TypeScript 5 — strict mode | Full type safety; strict catches real bugs                                                    |
+| **Module system** | ESM (`"type": "module"`)   | Native ESM throughout; no CommonJS interop                                                    |
+| **Validation**    | Zod 4                      | Runtime + compile-time type safety; used for state schemas, config, and structured LLM output |
 
 ---
 
 ## Package Management & Tooling
 
-| Tool | Version / Notes |
-|------|-----------------|
-| **pnpm** | Workspace-aware, fast, strict isolation |
-| **tsup** | Bundles `src/` → `dist/` (preferred over raw `tsc + tsc-alias`) |
-| **tsx** | Dev runner — preferred over `ts-node` |
-| **Biome** | Formatting + non-type-aware linting (owns import organisation) |
-| **ESLint** | Type-aware rules only: `no-floating-promises`, `no-misused-promises`, `await-thenable`, `no-unsafe-*` |
-| **Kubb** (`@kubb/plugin-zod`) | Zod schema generation from the OpenAPI spec (`docs/openapi/openresponses.json`) |
+| Tool                          | Version / Notes                                                                                       |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------- |
+| **pnpm**                      | Workspace-aware, fast, strict isolation                                                               |
+| **tsup**                      | Bundles `src/` → `dist/` (preferred over raw `tsc + tsc-alias`)                                       |
+| **tsx**                       | Dev runner — preferred over `ts-node`                                                                 |
+| **Biome**                     | Formatting + non-type-aware linting (owns import organisation)                                        |
+| **ESLint**                    | Type-aware rules only: `no-floating-promises`, `no-misused-promises`, `await-thenable`, `no-unsafe-*` |
+| **Kubb** (`@kubb/plugin-zod`) | Zod schema generation from the OpenAPI spec (`docs/openapi/openresponses.json`)                       |
 
 ### Key commands
 
-| Task | Command |
-|------|---------|
-| Run (dev) | `pnpm dev` |
-| Build | `pnpm build` |
-| Run (built) | `pnpm start` |
-| Lint | `pnpm lint` |
-| Lint + auto-fix | `pnpm lint:fix` |
-| Format | `pnpm format` |
-| **All checks (mandatory)** | `pnpm check` |
-| Regenerate Zod schemas | `pnpm generate:schemas` |
+| Task                       | Command                 |
+| -------------------------- | ----------------------- |
+| Run (dev)                  | `pnpm dev`              |
+| Build                      | `pnpm build`            |
+| Run (built)                | `pnpm start`            |
+| Lint                       | `pnpm lint`             |
+| Lint + auto-fix            | `pnpm lint:fix`         |
+| Format                     | `pnpm format`           |
+| **All checks (mandatory)** | `pnpm check`            |
+| Regenerate Zod schemas     | `pnpm generate:schemas` |
 
 > **`pnpm check` must exit with code 0 after every code change.** It runs Biome (format + lint, auto-fix) followed by ESLint (type-aware, auto-fix). If either reports unfixable errors, resolve them manually before proceeding.
 
@@ -97,15 +97,15 @@ The workflow is built on **[LangGraph JS](https://langchain-ai.github.io/langgra
 
 ### Key primitives
 
-| Primitive | Usage |
-|-----------|-------|
-| `StateGraph` | Defines the graph topology (nodes + edges). Always constructed as `new StateGraph(StateSchema, { context: ContextSchema })`. |
-| `StateSchema` | Defines the data flowing through a graph. Import from `@langchain/langgraph`. **Do NOT use `Annotation.Root`**. |
-| `MessagesValue` | Prebuilt reducer for the `messages` field. Handles LangGraph's message deduplication logic. Do NOT use plain Zod arrays for message fields. |
-| `Send` | Fan-out to parallel worker nodes. Used in the council workflow to spawn 5 advisors and 5 reviewers in parallel. |
-| `START` / `END` | Entry and exit sentinels for the graph. |
-| `ConditionalEdgeRouter` | Typed function for conditional routing between nodes. |
-| `GraphNode` | Node implementation type. Use the **type bag pattern** (see [Core Conventions](#core-conventions)). |
+| Primitive               | Usage                                                                                                                                       |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `StateGraph`            | Defines the graph topology (nodes + edges). Always constructed as `new StateGraph(StateSchema, { context: ContextSchema })`.                |
+| `StateSchema`           | Defines the data flowing through a graph. Import from `@langchain/langgraph`. **Do NOT use `Annotation.Root`**.                             |
+| `MessagesValue`         | Prebuilt reducer for the `messages` field. Handles LangGraph's message deduplication logic. Do NOT use plain Zod arrays for message fields. |
+| `Send`                  | Fan-out to parallel worker nodes. Used in the council workflow to spawn 5 advisors and 5 reviewers in parallel.                             |
+| `START` / `END`         | Entry and exit sentinels for the graph.                                                                                                     |
+| `ConditionalEdgeRouter` | Typed function for conditional routing between nodes.                                                                                       |
+| `GraphNode`             | Node implementation type. Use the **type bag pattern** (see [Core Conventions](#core-conventions)).                                         |
 
 ### When to fetch docs
 
@@ -124,12 +124,12 @@ Models are resolved through **Ollama Cloud** (`https://ollama.com`) with aliased
 
 ### Model aliases (from `config.yaml`)
 
-| Alias | Resolved model | Typical use |
-|-------|---------------|-------------|
-| `opus` | `glm-5.1:cloud` | Chairman, conductors, reviewers — highest quality |
-| `sonnet` | `deepseek-v4-pro:cloud` | Advisors, mid-tier tasks |
-| `haiku` | `ollama:gemma4:31b-cloud` | Fast/cheap, classifiers |
-| `default` | `glm-5.1:cloud` | Fallback for unspecified models |
+| Alias     | Resolved model            | Typical use                                       |
+| --------- | ------------------------- | ------------------------------------------------- |
+| `opus`    | `glm-5.1:cloud`           | Chairman, conductors, reviewers — highest quality |
+| `sonnet`  | `deepseek-v4-pro:cloud`   | Advisors, mid-tier tasks                          |
+| `haiku`   | `ollama:gemma4:31b-cloud` | Fast/cheap, classifiers                           |
+| `default` | `glm-5.1:cloud`           | Fallback for unspecified models                   |
 
 ### Authentication
 
@@ -172,16 +172,16 @@ The codebase follows a strict layered architecture. **Dependencies point inward 
 
 ### Allowed imports per layer
 
-| Layer | May import from |
-|-------|----------------|
-| `interfaces/` | Nothing (pure types only) |
-| `services/` | `interfaces/` |
-| `agent/` | `interfaces/`, `services/`, `llm/`, `tool/`, `agent/` (siblings) |
-| `llm/` | `interfaces/`, `services/` |
-| `tool/` | `interfaces/`, `services/` |
-| `workflow/` | `interfaces/`, `services/`, `agent/` |
-| `tui/` | `interfaces/`, `services/`, `tui/` (internal only) |
-| Composition root | Everything (wires layers together) |
+| Layer            | May import from                                                  |
+| ---------------- | ---------------------------------------------------------------- |
+| `interfaces/`    | Nothing (pure types only)                                        |
+| `services/`      | `interfaces/`                                                    |
+| `agent/`         | `interfaces/`, `services/`, `llm/`, `tool/`, `agent/` (siblings) |
+| `llm/`           | `interfaces/`, `services/`                                       |
+| `tool/`          | `interfaces/`, `services/`                                       |
+| `workflow/`      | `interfaces/`, `services/`, `agent/`                             |
+| `tui/`           | `interfaces/`, `services/`, `tui/` (internal only)               |
+| Composition root | Everything (wires layers together)                               |
 
 ### Critical rules
 
@@ -252,31 +252,31 @@ Agents are defined in YAML files under `.agents/agents/`. Skills (reusable instr
 version: 1
 display_name: "Human-readable name"
 short_description: "One-liner used by the orchestrator for routing decisions"
-model: "alias-or-model-id"      # e.g. "opus", "sonnet", "ollama:gemma4:31b-cloud"
-tools:                           # Tool IDs available to this agent
-  - "web_fetch"
-skills:                          # Skill directories or files loaded into context
-  - ".agents/skills/reasoning/"
-subagents:                       # Agent IDs this agent may dispatch to
-  - "orchestrator"
-interrupt_on:                    # Tool calls that require human confirmation before proceeding
-  write_file: true
-  read_file: false
+model: "alias-or-model-id" # e.g. "opus", "sonnet", "ollama:gemma4:31b-cloud"
+tools: # Tool IDs available to this agent
+    - "web_fetch"
+skills: # Skill directories or files loaded into context
+    - ".agents/skills/reasoning/"
+subagents: # Agent IDs this agent may dispatch to
+    - "orchestrator"
+interrupt_on: # Tool calls that require human confirmation before proceeding
+    write_file: true
+    read_file: false
 default_prompt: |
-  # System prompt ...
+    # System prompt ...
 ```
 
 ### Key agents
 
-| File | Display Name | Role |
-|------|-------------|------|
-| `agency-director.yaml` | Agency Director | Top-level orchestrator (dispatch-only) |
-| `orchestrator.yaml` | Orchestrator | Query executor with tools |
-| `reasoner.yaml` | Reasoner | Chain-of-thought analyst |
-| `council.conductor.yaml` | Council Conductor | Frames questions for the council |
-| `council.sub.advisor.yaml` | Council Advisor | Independent perspective analysis (×5) |
-| `council.sub.reviewer.yaml` | Council Reviewer | Peer review of anonymised responses (×5) |
-| `council.sub.chairman.yaml` | Council Chairman | Synthesises all input into a verdict |
+| File                        | Display Name      | Role                                     |
+| --------------------------- | ----------------- | ---------------------------------------- |
+| `agency-director.yaml`      | Agency Director   | Top-level orchestrator (dispatch-only)   |
+| `orchestrator.yaml`         | Orchestrator      | Query executor with tools                |
+| `reasoner.yaml`             | Reasoner          | Chain-of-thought analyst                 |
+| `council.conductor.yaml`    | Council Conductor | Frames questions for the council         |
+| `council.sub.advisor.yaml`  | Council Advisor   | Independent perspective analysis (×5)    |
+| `council.sub.reviewer.yaml` | Council Reviewer  | Peer review of anonymised responses (×5) |
+| `council.sub.chairman.yaml` | Council Chairman  | Synthesises all input into a verdict     |
 
 ---
 
@@ -284,10 +284,10 @@ default_prompt: |
 
 Two tools share responsibility. **Never suppress a lint rule without a comment explaining why.**
 
-| Tool | Owns | Trigger |
-|------|------|---------|
-| **Biome** | Formatting, import organisation, non-type-aware lint | `pnpm format`, `pnpm lint`, `pnpm check` |
-| **ESLint** | Type-aware rules only | `pnpm lint`, `pnpm check` |
+| Tool       | Owns                                                 | Trigger                                  |
+| ---------- | ---------------------------------------------------- | ---------------------------------------- |
+| **Biome**  | Formatting, import organisation, non-type-aware lint | `pnpm format`, `pnpm lint`, `pnpm check` |
+| **ESLint** | Type-aware rules only                                | `pnpm lint`, `pnpm check`                |
 
 The mandatory command after **every** code change:
 
@@ -322,13 +322,13 @@ export const MyState = Annotation.Root({ ... });
 ```typescript
 // Context is a plain Zod object passed to StateGraph constructor
 export const MyContextSchema = z.object({
-  config: z.custom<IConfig>(),
-  thread_id: z.string(),
+    config: z.custom<IConfig>(),
+    thread_id: z.string(),
 });
 export type MyContext = z.infer<typeof MyContextSchema>;
 
 // Pass it to StateGraph
-new StateGraph(MyState, { context: MyContextSchema })
+new StateGraph(MyState, { context: MyContextSchema });
 ```
 
 ### GraphNode type bag
@@ -336,10 +336,10 @@ new StateGraph(MyState, { context: MyContextSchema })
 ```typescript
 // ContextSchema takes the Zod schema type (typeof), NOT z.infer<...>
 type MyNode = GraphNode<{
-  InputSchema: typeof MyState;
-  OutputSchema: typeof MyState;
-  ContextSchema: typeof MyContextSchema;   // ← typeof, not z.infer<>
-  Nodes: "nodeA" | "nodeB";
+    InputSchema: typeof MyState;
+    OutputSchema: typeof MyState;
+    ContextSchema: typeof MyContextSchema; // ← typeof, not z.infer<>
+    Nodes: "nodeA" | "nodeB";
 }>;
 ```
 
@@ -347,13 +347,13 @@ type MyNode = GraphNode<{
 
 ```typescript
 const LLM_RETRY_POLICY = {
-  maxAttempts: 3,
-  initialInterval: 500,
-  backoffFactor: 2,
-  maxInterval: 10_000,
+    maxAttempts: 3,
+    initialInterval: 500,
+    backoffFactor: 2,
+    maxInterval: 10_000,
 };
 
-graph.addNode("myNode", myNodeFn, { retryPolicy: LLM_RETRY_POLICY })
+graph.addNode("myNode", myNodeFn, { retryPolicy: LLM_RETRY_POLICY });
 ```
 
 ### Module imports

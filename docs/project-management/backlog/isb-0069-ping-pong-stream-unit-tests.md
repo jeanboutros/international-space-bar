@@ -1,15 +1,15 @@
 # isb-0069: Unit tests for `PingPongRuntimeService.stream()`
 
-| Field | Value |
-|-------|-------|
-| Epic | [isb-epic-010](../epics/isb-epic-010-kubb-preprocessing-server-bootstrap-hardening.md) |
-| Type | `feature` |
-| Status | `backlog` |
-| Assignee | Tester |
-| Priority | `medium` |
-| Created | 2026-04-30 |
-| Completed | — |
-| Dependencies | none |
+| Field        | Value                                                                                  |
+| ------------ | -------------------------------------------------------------------------------------- |
+| Epic         | [isb-epic-010](../epics/isb-epic-010-kubb-preprocessing-server-bootstrap-hardening.md) |
+| Type         | `feature`                                                                              |
+| Status       | `backlog`                                                                              |
+| Assignee     | Tester                                                                                 |
+| Priority     | `medium`                                                                               |
+| Created      | 2026-04-30                                                                             |
+| Completed    | —                                                                                      |
+| Dependencies | none                                                                                   |
 
 ---
 
@@ -28,12 +28,14 @@
 **Current state**: `ping-pong-runtime.service.test.ts` contains tests for `invoke()` only. `stream()` is uncovered.
 
 **`stream()` method signature** (line 126 of `ping-pong-runtime.service.ts`):
+
 ```typescript
 async *stream(request: AgentInvokeRequest): AsyncIterable<ResponseStreamEvent>
 ```
 
 **Behaviour under test** (fallback path — no Ollama):
 When `OLLAMA_BASE_URL` is unset or Ollama is unreachable, `stream()` delegates to `streamSimplePong()` which yields a deterministic sequence of `ResponseStreamEvent` items:
+
 1. `response.created`
 2. One or more delta events containing "pong" chunks
 3. `response.completed`
@@ -71,9 +73,14 @@ No production code changes required.
 All tests are **unit tests** — no HTTP server, no NestJS bootstrap, no real Ollama connection.
 
 Collect the async iterable into an array using:
+
 ```typescript
 const events: ResponseStreamEvent[] = [];
-for await (const event of service.stream({ model: "test-model", input: "ping", requestId: "req_test-stream" })) {
+for await (const event of service.stream({
+    model: "test-model",
+    input: "ping",
+    requestId: "req_test-stream",
+})) {
     events.push(event);
 }
 ```

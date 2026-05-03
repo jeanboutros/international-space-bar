@@ -1,13 +1,13 @@
 # isb-0013: Run OpenResponses compliance suite and document gaps
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-003 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-28 |
-| Dependencies | isb-0012 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-003 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-28   |
+| Dependencies | isb-0012     |
 
 ## Description
 

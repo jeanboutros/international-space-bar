@@ -1,13 +1,13 @@
 # isb-0012: Streaming tests and OpenCode validation
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-002 |
-| Status | `backlog` |
-| Assignee | Tester |
-| Priority | `high` |
-| Created | 2026-04-28 |
-| Dependencies | isb-0010 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-002 |
+| Status       | `backlog`    |
+| Assignee     | Tester       |
+| Priority     | `high`       |
+| Created      | 2026-04-28   |
+| Dependencies | isb-0010     |
 
 ## Description
 

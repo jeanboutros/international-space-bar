@@ -1,15 +1,15 @@
 # isb-0065: Add `DEFAULT_LOG_LEVEL` to `constants.ts`
 
-| Field | Value |
-|-------|-------|
-| ID | isb-0065 |
-| Epic | [isb-epic-010](../epics/isb-epic-010-kubb-preprocessing-server-bootstrap-hardening.md) |
-| Type | `feature` |
-| Assignee | Engineer |
-| Priority | `low` |
-| Status | `open` |
-| Created | 2026-04-30 |
-| Dependencies | isb-0064 (must be merged first — `constants.ts` must exist) |
+| Field        | Value                                                                                  |
+| ------------ | -------------------------------------------------------------------------------------- |
+| ID           | isb-0065                                                                               |
+| Epic         | [isb-epic-010](../epics/isb-epic-010-kubb-preprocessing-server-bootstrap-hardening.md) |
+| Type         | `feature`                                                                              |
+| Assignee     | Engineer                                                                               |
+| Priority     | `low`                                                                                  |
+| Status       | `open`                                                                                 |
+| Created      | 2026-04-30                                                                             |
+| Dependencies | isb-0064 (must be merged first — `constants.ts` must exist)                            |
 
 ---
 

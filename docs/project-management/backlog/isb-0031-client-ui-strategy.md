@@ -1,13 +1,13 @@
 # isb-0031: Client and UI strategy assessment
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-007 |
-| Status | `backlog` |
-| Assignee | PM |
-| Priority | `low` |
-| Created | 2026-04-28 |
-| Dependencies | isb-0030 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-007 |
+| Status       | `backlog`    |
+| Assignee     | PM           |
+| Priority     | `low`        |
+| Created      | 2026-04-28   |
+| Dependencies | isb-0030     |
 
 ## Description
 

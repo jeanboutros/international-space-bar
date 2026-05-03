@@ -1,15 +1,15 @@
 # isb-0053: Migrate `.passthrough()` to `z.looseObject()` in responses.schemas.ts
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-002 |
-| Type | `feature` |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `low` |
-| Created | 2026-04-29 |
-| Completed | — |
-| Dependencies | none |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-002 |
+| Type         | `feature`    |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `low`        |
+| Created      | 2026-04-29   |
+| Completed    | —            |
+| Dependencies | none         |
 
 ## Description
 
@@ -17,8 +17,8 @@
 
 ```ts
 export const CreateResponseSchema = createResponseBodySchema
-  .extend({ model: z.string().min(1) })
-  .passthrough(); // deprecated Zod 4 API
+    .extend({ model: z.string().min(1) })
+    .passthrough(); // deprecated Zod 4 API
 ```
 
 The preferred Zod 4 replacement is `z.looseObject(shape)`, which accepts an explicit shape and preserves unknown fields — same semantics, cleaner API.

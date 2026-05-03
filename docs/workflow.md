@@ -11,10 +11,10 @@ This document describes the multi-agent AI workflow that powers the Internationa
 - [Satisfaction Evaluation Loop](#satisfaction-evaluation-loop)
 - [Agent Responsibilities](#agent-responsibilities)
 - [Planned Evolution](#planned-evolution)
-  - [Engineering Task Workflow](#1-engineering-task-workflow)
-  - [Human Intervention Register](#2-human-intervention-register)
-  - [Self-Reflection and Self-Improvement](#3-self-reflection-and-self-improvement)
-  - [Build Capability](#4-build-capability)
+    - [Engineering Task Workflow](#1-engineering-task-workflow)
+    - [Human Intervention Register](#2-human-intervention-register)
+    - [Self-Reflection and Self-Improvement](#3-self-reflection-and-self-improvement)
+    - [Build Capability](#4-build-capability)
 
 ---
 
@@ -58,15 +58,15 @@ flowchart TD
 
 ### Node descriptions
 
-| Node | Role |
-|------|------|
-| `classifyIntent` | LLM structured-output classifier → `"query"`, `"reasoning"`, or `"council"` |
-| `orchestrator` | Delegates to the **Orchestrator** agent; uses tools (web search, weather) |
-| `reasoning` | Delegates to the **Reasoner** agent; chain-of-thought decomposition |
-| `councilGate` | LLM binary classifier — decides if outcome warrants full council review |
-| `council` | Runs the Council sub-graph (see below); produces a multi-perspective verdict |
-| `evaluate` | LLM satisfaction scorer (0–1); injects feedback into next iteration if < 0.7 |
-| `present` | Assembles the final response: outcome + optional council verdict |
+| Node             | Role                                                                         |
+| ---------------- | ---------------------------------------------------------------------------- |
+| `classifyIntent` | LLM structured-output classifier → `"query"`, `"reasoning"`, or `"council"`  |
+| `orchestrator`   | Delegates to the **Orchestrator** agent; uses tools (web search, weather)    |
+| `reasoning`      | Delegates to the **Reasoner** agent; chain-of-thought decomposition          |
+| `councilGate`    | LLM binary classifier — decides if outcome warrants full council review      |
+| `council`        | Runs the Council sub-graph (see below); produces a multi-perspective verdict |
+| `evaluate`       | LLM satisfaction scorer (0–1); injects feedback into next iteration if < 0.7 |
+| `present`        | Assembles the final response: outcome + optional council verdict             |
 
 ---
 
@@ -149,12 +149,12 @@ flowchart LR
 
 ### Evaluation dimensions
 
-| Dimension | Description |
-|-----------|-------------|
-| **Completeness** | Did the response address all parts of the query? |
-| **Accuracy** | Are claims verifiable or well-reasoned? |
-| **Clarity** | Is the response clear and well-structured? |
-| **Actionability** | Can the user act on this response? |
+| Dimension         | Description                                      |
+| ----------------- | ------------------------------------------------ |
+| **Completeness**  | Did the response address all parts of the query? |
+| **Accuracy**      | Are claims verifiable or well-reasoned?          |
+| **Clarity**       | Is the response clear and well-structured?       |
+| **Actionability** | Can the user act on this response?               |
 
 - **Threshold**: 0.7 — scores below this trigger another iteration.
 - **Max iterations**: 3 (default) — accepted regardless of score once reached.
@@ -164,15 +164,15 @@ flowchart LR
 
 ## Agent Responsibilities
 
-| Agent | Model | Role |
-|-------|-------|------|
-| `agency-director` | `glm-5.1:cloud` | Dispatch-only orchestrator. Classifies intent, routes to subagents, presents results. Never executes work itself. |
-| `orchestrator` | `glm-5.1:cloud` | Query executor. Uses tools (web search, weather) to answer user queries. |
-| `reasoner` | `glm-5.1:cloud` | Systematic thinker. Chain-of-thought decomposition via the `reasoning` skill. |
-| `council.conductor` | `glm-5.1:cloud` (opus alias) | Frames raw questions into neutral, context-enriched council prompts. |
-| `council.sub.advisor` | `deepseek-v4-pro:cloud` (sonnet alias) | Independent perspective analysis (one of five distinct identities). |
-| `council.sub.reviewer` | `glm-5.1:cloud` (opus alias) | Peer review of anonymised advisor responses. |
-| `council.sub.chairman` | `glm-5.1:cloud` (opus alias) | Synthesises all advisor responses and peer reviews into a structured verdict. |
+| Agent                  | Model                                  | Role                                                                                                              |
+| ---------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `agency-director`      | `glm-5.1:cloud`                        | Dispatch-only orchestrator. Classifies intent, routes to subagents, presents results. Never executes work itself. |
+| `orchestrator`         | `glm-5.1:cloud`                        | Query executor. Uses tools (web search, weather) to answer user queries.                                          |
+| `reasoner`             | `glm-5.1:cloud`                        | Systematic thinker. Chain-of-thought decomposition via the `reasoning` skill.                                     |
+| `council.conductor`    | `glm-5.1:cloud` (opus alias)           | Frames raw questions into neutral, context-enriched council prompts.                                              |
+| `council.sub.advisor`  | `deepseek-v4-pro:cloud` (sonnet alias) | Independent perspective analysis (one of five distinct identities).                                               |
+| `council.sub.reviewer` | `glm-5.1:cloud` (opus alias)           | Peer review of anonymised advisor responses.                                                                      |
+| `council.sub.chairman` | `glm-5.1:cloud` (opus alias)           | Synthesises all advisor responses and peer reviews into a structured verdict.                                     |
 
 ---
 

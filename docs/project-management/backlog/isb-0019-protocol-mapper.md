@@ -1,13 +1,13 @@
 # isb-0019: Protocol mapper service (OpenResponses ↔ internal events)
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-004 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-28 |
-| Dependencies | isb-0018 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-004 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-28   |
+| Dependencies | isb-0018     |
 
 ## Description
 

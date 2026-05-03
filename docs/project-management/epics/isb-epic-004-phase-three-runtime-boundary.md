@@ -1,11 +1,11 @@
 # isb-epic-004: Phase 3 — Backend Runtime Boundary
 
-| Field | Value |
-|-------|-------|
-| Phase | 3 |
-| Status | `backlog` |
-| Priority | `high` |
-| Created | 2026-04-28 |
+| Field      | Value                  |
+| ---------- | ---------------------- |
+| Phase      | 3                      |
+| Status     | `backlog`              |
+| Priority   | `high`                 |
+| Created    | 2026-04-28             |
 | Depends on | isb-epic-003 (Phase 2) |
 
 ## Objective
@@ -14,13 +14,13 @@ Replace ping-pong internals with an internal agent runtime service backed by Lan
 
 ## Tickets
 
-| Ticket | Title | Priority |
-|--------|-------|----------|
-| isb-0018 | Expand AgentRuntimePort with stream() and session support | high |
-| isb-0019 | Protocol mapper service (OpenResponses ↔ internal events) | high |
-| isb-0020 | Integrate LangGraph director workflow behind runtime port | high |
-| isb-0021 | Map OpenResponses input/instructions/previous_response_id to thread/session | high |
-| isb-0022 | Normalize LangGraph output to internal response events | high |
+| Ticket   | Title                                                                       | Priority |
+| -------- | --------------------------------------------------------------------------- | -------- |
+| isb-0018 | Expand AgentRuntimePort with stream() and session support                   | high     |
+| isb-0019 | Protocol mapper service (OpenResponses ↔ internal events)                   | high     |
+| isb-0020 | Integrate LangGraph director workflow behind runtime port                   | high     |
+| isb-0021 | Map OpenResponses input/instructions/previous_response_id to thread/session | high     |
+| isb-0022 | Normalize LangGraph output to internal response events                      | high     |
 
 ## Acceptance Criteria
 

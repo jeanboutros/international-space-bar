@@ -1,15 +1,15 @@
 # isb-0066: Harden remaining `config.schema.ts` blocks with `.default({})`
 
-| Field | Value |
-|-------|-------|
-| ID | isb-0066 |
-| Epic | [isb-epic-010](../epics/isb-epic-010-kubb-preprocessing-server-bootstrap-hardening.md) |
-| Type | `feature` |
-| Assignee | Engineer |
-| Priority | `low` |
-| Status | `open` |
-| Created | 2026-04-30 |
-| Dependencies | isb-0064 (establishes the schema-defaults pattern for `server` block) |
+| Field        | Value                                                                                  |
+| ------------ | -------------------------------------------------------------------------------------- |
+| ID           | isb-0066                                                                               |
+| Epic         | [isb-epic-010](../epics/isb-epic-010-kubb-preprocessing-server-bootstrap-hardening.md) |
+| Type         | `feature`                                                                              |
+| Assignee     | Engineer                                                                               |
+| Priority     | `low`                                                                                  |
+| Status       | `open`                                                                                 |
+| Created      | 2026-04-30                                                                             |
+| Dependencies | isb-0064 (establishes the schema-defaults pattern for `server` block)                  |
 
 ---
 
@@ -24,6 +24,7 @@ isb-0064 applies `.default({})` to the `server` block and field-level defaults t
 ## Scope
 
 For each remaining `.optional()` block (`app`, `logger`, `ollama`, `tavily`, `models`, `paths`):
+
 1. Replace `.optional()` with `.default({})` (or `.default(value)` where a sensible scalar default applies — e.g. `logger.level` will be covered by isb-0065).
 2. Add field-level `.default()` values for any sub-fields where a safe default is known and documented.
 3. Update `config.schema.test.ts` to verify each block is present (non-`undefined`) in the parsed output when the input omits that block entirely.

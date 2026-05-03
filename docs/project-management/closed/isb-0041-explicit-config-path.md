@@ -1,20 +1,21 @@
 # isb-0041: Explicit config file path override
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-009 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-29 |
-| Completed | — |
-| Dependencies | isb-0040 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-009 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-29   |
+| Completed    | —            |
+| Dependencies | isb-0040     |
 
 ## Description
 
 Allow the config file path to be overridden via CLI arg (`--config`/`-c`) or environment variable (`ISB_CONFIG_PATH`), instead of always resolving from `process.cwd()`.
 
 Precedence (highest to lowest):
+
 1. `--config` / `-c` CLI arg (from injected `CliArgs`)
 2. `ISB_CONFIG_PATH` env var
 3. Default: `join(process.cwd(), \`config.\${env}.yaml\`)`

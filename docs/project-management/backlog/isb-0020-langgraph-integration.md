@@ -1,13 +1,13 @@
 # isb-0020: Integrate LangGraph director workflow behind runtime port
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-004 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-28 |
-| Dependencies | isb-0019 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-004 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-28   |
+| Dependencies | isb-0019     |
 
 ## Description
 

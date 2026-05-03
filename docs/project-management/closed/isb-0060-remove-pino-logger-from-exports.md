@@ -1,15 +1,15 @@
 # isb-0060: Remove PinoLoggerService from LoggingModule exports
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-010 |
-| Type | `bug` |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `medium` |
-| Created | 2026-04-30 |
-| Completed | — |
-| Dependencies | none |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-010 |
+| Type         | `bug`        |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `medium`     |
+| Created      | 2026-04-30   |
+| Completed    | —            |
+| Dependencies | none         |
 
 ## Description
 
@@ -48,6 +48,7 @@ in `providers` so NestJS knows how to instantiate it.
 **File:** `src/international-space-bar-server/logging/logging.module.ts`
 
 **Current state:**
+
 ```typescript
 @Global()
 @Module({
@@ -59,6 +60,7 @@ export class LoggingModule {}
 ```
 
 **Expected state:**
+
 ```typescript
 @Global()
 @Module({
@@ -97,6 +99,7 @@ server starts successfully (`pnpm dev:server` or the integration smoke test).
 
 No new tests are required for this ticket. The change is a one-line deletion;
 correctness is verified by:
+
 - Existing `logging.module.test.ts` passing (verifies DI wiring is still functional)
 - `main.ts` smoke-level boot (verifies `app.get(PinoLoggerService)` still resolves)
 

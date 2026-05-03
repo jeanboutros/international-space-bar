@@ -1,13 +1,13 @@
 # isb-0021: Map OpenResponses input/instructions/previous_response_id to thread/session
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-004 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-28 |
-| Dependencies | isb-0020 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-004 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-28   |
+| Dependencies | isb-0020     |
 
 ## Description
 

@@ -24,77 +24,79 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const COUNTERS_PATH = resolve(__dirname, "counters.json");
 
 const KIND_CONFIG = {
-	ticket: { key: "lastTicket", prefix: "isb", width: 4 },
-	epic: { key: "lastEpic", prefix: "isb-epic", width: 3 },
-	clarification: { key: "lastClarification", prefix: "isb-clar", width: 4 },
-	adr: { key: "lastAdr", prefix: "isb-adr", width: 4 },
+    ticket: { key: "lastTicket", prefix: "isb", width: 4 },
+    epic: { key: "lastEpic", prefix: "isb-epic", width: 3 },
+    clarification: { key: "lastClarification", prefix: "isb-clar", width: 4 },
+    adr: { key: "lastAdr", prefix: "isb-adr", width: 4 },
 };
 
 // ── Argument parsing ────────────────────────────────────────────────
 
 function parseArgs(argv) {
-	const args = argv.slice(2);
-	const dryRun = args.includes("--dry-run");
-	const positional = args.filter((a) => a !== "--dry-run");
+    const args = argv.slice(2);
+    const dryRun = args.includes("--dry-run");
+    const positional = args.filter((a) => a !== "--dry-run");
 
-	const kind = positional[0];
-	if (!kind || !(kind in KIND_CONFIG)) {
-		console.error("Usage: node next-id.mjs <ticket|epic|clarification|adr> [count] [--dry-run]");
-		process.exit(1);
-	}
+    const kind = positional[0];
+    if (!kind || !(kind in KIND_CONFIG)) {
+        console.error(
+            "Usage: node next-id.mjs <ticket|epic|clarification|adr> [count] [--dry-run]",
+        );
+        process.exit(1);
+    }
 
-	const count = positional[1] ? Number.parseInt(positional[1], 10) : 1;
-	if (!Number.isFinite(count) || count < 1) {
-		console.error("Count must be a positive integer.");
-		process.exit(1);
-	}
+    const count = positional[1] ? Number.parseInt(positional[1], 10) : 1;
+    if (!Number.isFinite(count) || count < 1) {
+        console.error("Count must be a positive integer.");
+        process.exit(1);
+    }
 
-	return { kind, count, dryRun };
+    return { kind, count, dryRun };
 }
 
 // ── Counter I/O ─────────────────────────────────────────────────────
 
 function loadCounters() {
-	return JSON.parse(readFileSync(COUNTERS_PATH, "utf-8"));
+    return JSON.parse(readFileSync(COUNTERS_PATH, "utf-8"));
 }
 
 function saveCounters(counters) {
-	writeFileSync(COUNTERS_PATH, JSON.stringify(counters, null, 2) + "\n");
+    writeFileSync(COUNTERS_PATH, JSON.stringify(counters, null, 2) + "\n");
 }
 
 // ── ID generation ───────────────────────────────────────────────────
 
 function formatId(prefix, number, width) {
-	return `${prefix}-${String(number).padStart(width, "0")}`;
+    return `${prefix}-${String(number).padStart(width, "0")}`;
 }
 
 function generateIds(counters, kind, count) {
-	const { key, prefix, width } = KIND_CONFIG[kind];
-	const ids = [];
-	let last = counters[key];
+    const { key, prefix, width } = KIND_CONFIG[kind];
+    const ids = [];
+    let last = counters[key];
 
-	for (let i = 0; i < count; i++) {
-		last += 1;
-		ids.push(formatId(prefix, last, width));
-	}
+    for (let i = 0; i < count; i++) {
+        last += 1;
+        ids.push(formatId(prefix, last, width));
+    }
 
-	return { ids, updatedLast: last, counterKey: key };
+    return { ids, updatedLast: last, counterKey: key };
 }
 
 // ── Main ────────────────────────────────────────────────────────────
 
 function run() {
-	const { kind, count, dryRun } = parseArgs(process.argv);
-	const counters = loadCounters();
-	const { ids, updatedLast, counterKey } = generateIds(counters, kind, count);
+    const { kind, count, dryRun } = parseArgs(process.argv);
+    const counters = loadCounters();
+    const { ids, updatedLast, counterKey } = generateIds(counters, kind, count);
 
-	if (!dryRun) {
-		counters[counterKey] = updatedLast;
-		saveCounters(counters);
-	}
+    if (!dryRun) {
+        counters[counterKey] = updatedLast;
+        saveCounters(counters);
+    }
 
-	const result = { kind, ids, dryRun };
-	console.log(JSON.stringify(result, null, 2));
+    const result = { kind, ids, dryRun };
+    console.log(JSON.stringify(result, null, 2));
 }
 
 run();

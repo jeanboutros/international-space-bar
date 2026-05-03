@@ -48,11 +48,11 @@ logging. This service:
 
 The project enforces a hard separation between three logging concerns:
 
-| Concern | Infrastructure | Purpose |
-|---------|----------------|---------|
-| **System logging** (core app) | `Logging` class, `app.log` + TUI ring buffer | Infrastructure diagnostics: startup, config load, retries |
-| **Agent observability** | `agentLogger`, `agents.log` | Behavioural audit: intent classification, token usage, routing |
-| **HTTP server logging** | `PinoLoggerService`, `server.log` | NestJS internals, request lifecycle, DI events |
+| Concern                       | Infrastructure                               | Purpose                                                        |
+| ----------------------------- | -------------------------------------------- | -------------------------------------------------------------- |
+| **System logging** (core app) | `Logging` class, `app.log` + TUI ring buffer | Infrastructure diagnostics: startup, config load, retries      |
+| **Agent observability**       | `agentLogger`, `agents.log`                  | Behavioural audit: intent classification, token usage, routing |
+| **HTTP server logging**       | `PinoLoggerService`, `server.log`            | NestJS internals, request lifecycle, DI events                 |
 
 Mixing these into a single pino instance makes it impossible to:
 
@@ -138,6 +138,7 @@ export class LoggingModule {}
 ```
 
 `@Global()` means:
+
 - Any module can inject `PinoLoggerService` without importing `LoggingModule`.
 - `ApplicationConfigModule` is imported explicitly so `LoggingModule` is
   self-contained and can be tested in isolation — an `overrideProvider` on
@@ -237,18 +238,18 @@ Configuration is read from `config.<env>.yaml` under the `logger` key.
 
 ```yaml
 logger:
-  type: pino          # reserved for future multi-backend support
-  logFilePath: ./logs/server.log  # optional; relative to process.cwd()
-  level: debug        # optional; enum: fatal|error|warn|info|debug|trace
+    type: pino # reserved for future multi-backend support
+    logFilePath: ./logs/server.log # optional; relative to process.cwd()
+    level: debug # optional; enum: fatal|error|warn|info|debug|trace
 ```
 
 ### Fields
 
-| Field | Type | Required | Default | Notes |
-|-------|------|----------|---------|-------|
-| `type` | `string` | no | — | Reserved; unused by `PinoLoggerService` |
-| `logFilePath` | `string` | no | — | Resolved with `path.resolve(process.cwd(), ...)` before use |
-| `level` | `"fatal"\|"error"\|"warn"\|"info"\|"debug"\|"trace"` | no | `"info"` | Falls back with a pino warning when absent |
+| Field         | Type                                                 | Required | Default  | Notes                                                       |
+| ------------- | ---------------------------------------------------- | -------- | -------- | ----------------------------------------------------------- |
+| `type`        | `string`                                             | no       | —        | Reserved; unused by `PinoLoggerService`                     |
+| `logFilePath` | `string`                                             | no       | —        | Resolved with `path.resolve(process.cwd(), ...)` before use |
+| `level`       | `"fatal"\|"error"\|"warn"\|"info"\|"debug"\|"trace"` | no       | `"info"` | Falls back with a pino warning when absent                  |
 
 ### Level fallback behaviour
 
@@ -266,21 +267,21 @@ logFilePath if set).
 
 ### Stream strategy
 
-| Environment | Stdout | File |
-|-------------|--------|------|
+| Environment   | Stdout                       | File                              |
+| ------------- | ---------------------------- | --------------------------------- |
 | `dev`, `test` | pino-pretty (coloured, sync) | JSON lines (if `logFilePath` set) |
-| `prod` | JSON (fd 1, SonicBoom) | JSON lines (if `logFilePath` set) |
+| `prod`        | JSON (fd 1, SonicBoom)       | JSON lines (if `logFilePath` set) |
 
 ---
 
 ## 7. Concerns Separation Table
 
-| Concern | Logger instance | Config key | Destination | Notes |
-|---------|----------------|------------|-------------|-------|
-| HTTP server internals | `PinoLoggerService` | `config.logger` | stdout + `logFilePath` | This document |
-| Core app / infra | `Logging` class | `config.logFilePath` in `IConfig` | `app.log` + TUI ring buffer | `logging.ts` |
-| Agent observability | `agentLogger` (pino) | `config.agentLogFilePath` | `agents.log` | `agent-observability-logging.md` |
-| Future: API tracing | TBD (`pino-http`) | TBD | `api.log` | See §8 |
+| Concern               | Logger instance      | Config key                        | Destination                 | Notes                            |
+| --------------------- | -------------------- | --------------------------------- | --------------------------- | -------------------------------- |
+| HTTP server internals | `PinoLoggerService`  | `config.logger`                   | stdout + `logFilePath`      | This document                    |
+| Core app / infra      | `Logging` class      | `config.logFilePath` in `IConfig` | `app.log` + TUI ring buffer | `logging.ts`                     |
+| Agent observability   | `agentLogger` (pino) | `config.agentLogFilePath`         | `agents.log`                | `agent-observability-logging.md` |
+| Future: API tracing   | TBD (`pino-http`)    | TBD                               | `api.log`                   | See §8                           |
 
 **Rule:** No two rows in this table may share a pino instance or a stream.
 
@@ -365,5 +366,10 @@ This call reaches `PinoLoggerService.log("NestFactory is initializing...", "Nest
 which emits:
 
 ```json
-{ "level": "info", "time": "…", "nestContext": "NestFactory", "msg": "NestFactory is initializing..." }
+{
+    "level": "info",
+    "time": "…",
+    "nestContext": "NestFactory",
+    "msg": "NestFactory is initializing..."
+}
 ```

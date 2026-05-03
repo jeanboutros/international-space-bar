@@ -1,14 +1,14 @@
 # isb-0036: Zod validation for parsed YAML config
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-008 |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-29 |
-| Completed | — |
-| Dependencies | isb-0032 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-008 |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-29   |
+| Completed    | —            |
+| Dependencies | isb-0032     |
 
 ## Description
 
@@ -44,30 +44,42 @@ export const ConfigSchema = z.looseObject({
     app: z.looseObject({
         appVersion: z.string().optional(),
     }),
-    server: z.looseObject({
-        port: z.number(),
-        host: z.string(),
-    }).optional(),
-    logger: z.looseObject({
-        type: z.string(),
-        logFilePath: z.string(),
-        level: z.string(),
-    }).optional(),
-    ollama: z.looseObject({
-        baseUrl: z.string(),
-        apiKey: z.string(),
-    }).optional(),
-    tavily: z.looseObject({
-        apiKey: z.string(),
-    }).optional(),
-    models: z.looseObject({
-        default: z.string(),
-        aliases: z.record(z.string(), z.string()),
-    }).optional(),
-    paths: z.looseObject({
-        skillsRoot: z.string(),
-        agentsConfigDir: z.string(),
-    }).optional(),
+    server: z
+        .looseObject({
+            port: z.number(),
+            host: z.string(),
+        })
+        .optional(),
+    logger: z
+        .looseObject({
+            type: z.string(),
+            logFilePath: z.string(),
+            level: z.string(),
+        })
+        .optional(),
+    ollama: z
+        .looseObject({
+            baseUrl: z.string(),
+            apiKey: z.string(),
+        })
+        .optional(),
+    tavily: z
+        .looseObject({
+            apiKey: z.string(),
+        })
+        .optional(),
+    models: z
+        .looseObject({
+            default: z.string(),
+            aliases: z.record(z.string(), z.string()),
+        })
+        .optional(),
+    paths: z
+        .looseObject({
+            skillsRoot: z.string(),
+            agentsConfigDir: z.string(),
+        })
+        .optional(),
 });
 
 export type AppConfig = z.infer<typeof ConfigSchema>;
@@ -77,9 +89,7 @@ export type AppConfig = z.infer<typeof ConfigSchema>;
 // Inside loadConfig() — validation step
 const result = ConfigSchema.safeParse(resolved);
 if (!result.success) {
-    throw new ConfigurationException(
-        `Config validation failed: ${result.error.message}`,
-    );
+    throw new ConfigurationException(`Config validation failed: ${result.error.message}`);
 }
 this.config = Object.freeze(result.data);
 ```

@@ -1,15 +1,15 @@
 # isb-0056: Add Zod `.parse()` validation to all 20 constructed objects in ping-pong scaffold
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-002 |
-| Type | `feature` |
-| Status | `open` |
-| Assignee | Engineer |
-| Priority | `medium` |
-| Created | 2026-04-29 |
-| Completed | — |
-| Dependencies | isb-0054 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-002 |
+| Type         | `feature`    |
+| Status       | `open`       |
+| Assignee     | Engineer     |
+| Priority     | `medium`     |
+| Created      | 2026-04-29   |
+| Completed    | —            |
+| Dependencies | isb-0054     |
 
 ## Description
 
@@ -95,36 +95,24 @@ return responseResourceSchema.parse({ ... });
 ### Full inventory (20 objects)
 
 **`streamReasoningBlock` — 6 yields**
+
 1. `response.output_item.added` → `responseOutputItemAddedStreamingEventSchema`
 2. `response.reasoning_summary_part.added` → `responseReasoningSummaryPartAddedStreamingEventSchema`
-3. *(delta loop)* `response.reasoning_summary_text.delta` → `responseReasoningSummaryDeltaStreamingEventSchema`
+3. _(delta loop)_ `response.reasoning_summary_text.delta` → `responseReasoningSummaryDeltaStreamingEventSchema`
 4. `response.reasoning_summary_text.done` → `responseReasoningSummaryDoneStreamingEventSchema`
 5. `response.reasoning_summary_part.done` → `responseReasoningSummaryPartDoneStreamingEventSchema`
 6. `response.output_item.done` → `responseOutputItemDoneStreamingEventSchema`
 
-**`streamMessageBlock` — 6 yields**
-7. `response.output_item.added` → `responseOutputItemAddedStreamingEventSchema`
-8. `response.content_part.added` → `responseContentPartAddedStreamingEventSchema`
-9. *(delta loop)* `response.output_text.delta` → `responseOutputTextDeltaStreamingEventSchema`
-10. `response.output_text.done` → `responseOutputTextDoneStreamingEventSchema`
-11. `response.content_part.done` → `responseContentPartDoneStreamingEventSchema`
-12. `response.output_item.done` → `responseOutputItemDoneStreamingEventSchema`
+**`streamMessageBlock` — 6 yields** 7. `response.output_item.added` → `responseOutputItemAddedStreamingEventSchema` 8. `response.content_part.added` → `responseContentPartAddedStreamingEventSchema` 9. _(delta loop)_ `response.output_text.delta` → `responseOutputTextDeltaStreamingEventSchema` 10. `response.output_text.done` → `responseOutputTextDoneStreamingEventSchema` 11. `response.content_part.done` → `responseContentPartDoneStreamingEventSchema` 12. `response.output_item.done` → `responseOutputItemDoneStreamingEventSchema`
 
-**`stream()` body — 6 yields + 1 ResponseResource**
-13. `inProgressResponse` → `responseResourceSchema.parse()`
-14. `response.created` → `responseCreatedStreamingEventSchema`
-15. `response.output_item.added` (function_call) → `responseOutputItemAddedStreamingEventSchema`
-16. *(args loop)* `response.function_call_arguments.delta` → `responseFunctionCallArgumentsDeltaStreamingEventSchema`
-17. `response.function_call_arguments.done` → `responseFunctionCallArgumentsDoneStreamingEventSchema`
-18. `response.output_item.done` (function_call) → `responseOutputItemDoneStreamingEventSchema`
-19. `response.completed` → `responseCompletedStreamingEventSchema`
+**`stream()` body — 6 yields + 1 ResponseResource** 13. `inProgressResponse` → `responseResourceSchema.parse()` 14. `response.created` → `responseCreatedStreamingEventSchema` 15. `response.output_item.added` (function*call) → `responseOutputItemAddedStreamingEventSchema` 16. *(args loop)\_ `response.function_call_arguments.delta` → `responseFunctionCallArgumentsDeltaStreamingEventSchema` 17. `response.function_call_arguments.done` → `responseFunctionCallArgumentsDoneStreamingEventSchema` 18. `response.output_item.done` (function_call) → `responseOutputItemDoneStreamingEventSchema` 19. `response.completed` → `responseCompletedStreamingEventSchema`
 
-**`invoke()` — 1 return value**
-20. Return value → `responseResourceSchema.parse()`
+**`invoke()` — 1 return value** 20. Return value → `responseResourceSchema.parse()`
 
 ## Acceptance Criteria
 
 ### Implementation (from design doc §Acceptance criteria)
+
 - [ ] `responseResourceSchema.parse()` is called on the `invoke()` return value.
 - [ ] `responseResourceSchema.parse()` is called on `inProgressResponse` before it is used in any yield.
 - [ ] Every one of the 18 event yields is wrapped in its corresponding generated schema's `.parse()` call.
@@ -135,6 +123,7 @@ return responseResourceSchema.parse({ ... });
 - [ ] No new `// biome-ignore` or `// eslint-disable` directives are introduced.
 
 ### Smoke tests (new file: `ping-pong-schema.smoke.test.ts`)
+
 - [ ] `responseResourceSchema` passes `.parse()` for the `invoke()` return shape.
 - [ ] `responseResourceSchema` passes `.parse()` for the `inProgressResponse` shape.
 - [ ] `responseCreatedStreamingEventSchema` passes `.parse()` for a `response.created` event.
@@ -144,6 +133,7 @@ return responseResourceSchema.parse({ ... });
 - [ ] Negative: passing an object with the wrong `type` literal causes `.parse()` to throw `ZodError`.
 
 ### Documentation
+
 - [ ] `docs/designs/isb-full-scaffold-validation.md` status updated from `Draft` to `Implemented`.
 
 ## Files Affected
@@ -176,7 +166,12 @@ import { ZodError } from "zod";
 import { responseCreatedStreamingEventSchema } from "./generated/zod/index.js";
 
 assert.throws(
-    () => responseCreatedStreamingEventSchema.parse({ type: "wrong.type", sequence_number: 0, response: {} }),
+    () =>
+        responseCreatedStreamingEventSchema.parse({
+            type: "wrong.type",
+            sequence_number: 0,
+            response: {},
+        }),
     ZodError,
 );
 ```
@@ -193,6 +188,7 @@ assert.throws(
 **Closed**: 2026-04-29  
 **Phase C**: APPROVED (Challenger, loop 2 — docs fix + gateway revert)  
 **Commits**:
+
 - `df5f3bf` — feat(openresponses): add Zod parse validation to all 20 scaffold objects
 - `8c4be4b` — test(openresponses): add schema smoke tests for scaffold validation
 

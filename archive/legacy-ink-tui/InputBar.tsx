@@ -40,9 +40,7 @@ export default function InputBar({ isProcessing, onSubmit }: InputBarProps) {
             if (historyRef.current.length === 0) return;
             if (value.length > 0 && historyIndex < 0) return;
             const nextIdx =
-                historyIndex === -1
-                    ? historyRef.current.length - 1
-                    : Math.max(0, historyIndex - 1);
+                historyIndex === -1 ? historyRef.current.length - 1 : Math.max(0, historyIndex - 1);
             setHistoryIndex(nextIdx);
             setValue(historyRef.current[nextIdx]!);
             return;

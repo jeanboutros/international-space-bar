@@ -1,15 +1,15 @@
 # isb-0049: Kubb schema generation — run generate:schemas and commit output
 
-| Field | Value |
-|-------|-------|
-| Epic | isb-epic-002 |
-| Type | feature |
-| Status | `backlog` |
-| Assignee | Engineer |
-| Priority | `high` |
-| Created | 2026-04-29 |
-| Dependencies | isb-0048 |
-| Parent | isb-0046 |
+| Field        | Value        |
+| ------------ | ------------ |
+| Epic         | isb-epic-002 |
+| Type         | feature      |
+| Status       | `backlog`    |
+| Assignee     | Engineer     |
+| Priority     | `high`       |
+| Created      | 2026-04-29   |
+| Dependencies | isb-0048     |
+| Parent       | isb-0046     |
 
 ## Description
 
