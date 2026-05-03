@@ -22,6 +22,12 @@ export default defineConfig(
         ignores: [
             "dist/**",
             "scripts/**",
+            ".claude/**",
+            ".vscode/**",
+            ".agent/**",
+            ".github/**",
+            ".opencode/**",
+            ".tmp/**",
             "src/international-space-bar/**",
             "src/**/openresponses/openresponses.generated.d.ts",
             "src/**/openresponses/generated/**",
