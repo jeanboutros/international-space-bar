@@ -1,5 +1,8 @@
 import { randomUUID } from "node:crypto";
 
+// TODO(isb-0020): Replace content_part.added/done with reasoning_summary_part.added/done
+// and add reasoning_summary.done event between last delta and content_part.done.
+// Current implementation uses generic content_part events instead of reasoning-specific ones.
 import {
     responseContentPartAddedStreamingEventSchema,
     responseContentPartDoneStreamingEventSchema,
