@@ -273,7 +273,11 @@ The `websocket-compact-new-chain` test and `compact-response`/`compact-missing-m
 
 ### TODO(ISB-WS-PRODUCTION-RUNTIME): Replace PingPongRuntimeService
 
-The scaffold runtime uses `ChatOllama`. When Ollama is not available, it falls back to a simple streaming "pong" sequence. Replace with the LangGraph-based agent runtime once wired (ISB-0020).
+The scaffold runtime now uses `ResponseStream` + block factories for streaming
+(see [Response Stream Builder](response-stream-builder.md)). When Ollama is
+reachable, it routes through `wrapAsGraph` + `langGraphBlocks`. The WebSocket
+gateway consumes the same `AsyncIterable<ResponseStreamEvent>` surface — no
+transport-specific changes are needed for the new architecture.
 
 ### TODO(ISB-WS-HEALTH-MONITOR): WebSocket health monitoring
 

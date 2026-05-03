@@ -733,3 +733,8 @@ The MVP described by this document is done when:
    documented, validated exception.
 6. The old Ink UI is archived and no longer part of the default runtime path.
 7. `pnpm check` and `pnpm build` pass.
+
+## Related documents
+
+- [Response Stream Builder](response-stream-builder.md) — block-based streaming
+  architecture that replaces the hand-built event sequences from Phase 1.
