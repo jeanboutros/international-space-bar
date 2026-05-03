@@ -15,16 +15,16 @@ For project-specific details (protocol contracts, source layout, delivery phases
 
 ## Tech Stack Baseline
 
-| Concern | Choice | Rationale |
-|---------|--------|-----------|
-| Runtime | Node.js LTS | Stability, native ESM, TypeScript ecosystem |
-| Language | TypeScript — strict mode, ESM | Full type safety, native modules |
-| Backend framework | NestJS | Modular, decorator-driven, DI out of the box |
-| Validation | Zod | Runtime + compile-time safety; replaces `class-validator` |
-| Package manager | pnpm | Workspace-aware, strict isolation |
-| Dev runner | tsx | Preferred over `ts-node` for ESM |
-| Bundler | tsup | Preferred over raw `tsc + tsc-alias` |
-| Formatting + lint | Biome + ESLint | Biome: format, imports, non-type-aware. ESLint: type-aware only |
+| Concern           | Choice                        | Rationale                                                       |
+| ----------------- | ----------------------------- | --------------------------------------------------------------- |
+| Runtime           | Node.js LTS                   | Stability, native ESM, TypeScript ecosystem                     |
+| Language          | TypeScript — strict mode, ESM | Full type safety, native modules                                |
+| Backend framework | NestJS                        | Modular, decorator-driven, DI out of the box                    |
+| Validation        | Zod                           | Runtime + compile-time safety; replaces `class-validator`       |
+| Package manager   | pnpm                          | Workspace-aware, strict isolation                               |
+| Dev runner        | tsx                           | Preferred over `ts-node` for ESM                                |
+| Bundler           | tsup                          | Preferred over raw `tsc + tsc-alias`                            |
+| Formatting + lint | Biome + ESLint                | Biome: format, imports, non-type-aware. ESLint: type-aware only |
 
 ---
 
@@ -139,11 +139,11 @@ async create(
 
 Separate logging by concern. Each domain gets its own logger instance and destination. Never share pino instances or stream configurations across concerns.
 
-| Concern | Purpose | Examples |
-|---------|---------|---------|
-| System logging | Infrastructure diagnostics | Startup, config, HTTP errors, retries |
-| Domain observability | Behavioural audit trail | Intent classification, routing decisions, token usage |
-| API observability | Request/response tracing | Latency, status codes, request IDs |
+| Concern              | Purpose                    | Examples                                              |
+| -------------------- | -------------------------- | ----------------------------------------------------- |
+| System logging       | Infrastructure diagnostics | Startup, config, HTTP errors, retries                 |
+| Domain observability | Behavioural audit trail    | Intent classification, routing decisions, token usage |
+| API observability    | Request/response tracing   | Latency, status codes, request IDs                    |
 
 **Domain messages are not system logs. System diagnostics are not domain tuning data.**
 

@@ -7,39 +7,44 @@ description: "Run any question, idea, or decision through a council of 5 AI advi
 
 ## Agent Definitions
 
-| Agent | File | Role | Standalone? |
-|---|---|---|---|
-| Council Conductor | `council.conductor.yaml` | Orchestrates the full protocol | Yes — invoked by Agency Director |
-| Council Advisor | `council.sub.advisor.yaml` | Reusable advisor (identity injected at invocation) | No — sub-agent of conductor |
-| Council Reviewer | `council.sub.reviewer.yaml` | Peer-reviews anonymized responses | No — sub-agent of conductor |
-| Council Chairman | `council.sub.chairman.yaml` | Synthesizes final verdict | No — sub-agent of conductor |
+| Agent             | File                        | Role                                               | Standalone?                      |
+| ----------------- | --------------------------- | -------------------------------------------------- | -------------------------------- |
+| Council Conductor | `council.conductor.yaml`    | Orchestrates the full protocol                     | Yes — invoked by Agency Director |
+| Council Advisor   | `council.sub.advisor.yaml`  | Reusable advisor (identity injected at invocation) | No — sub-agent of conductor      |
+| Council Reviewer  | `council.sub.reviewer.yaml` | Peer-reviews anonymized responses                  | No — sub-agent of conductor      |
+| Council Chairman  | `council.sub.chairman.yaml` | Synthesizes final verdict                          | No — sub-agent of conductor      |
 
 ## The Five Advisors
 
 ### 1. The Contrarian
+
 Actively looks for what's wrong, missing, what will fail. Assumes the idea has a fatal flaw and tries to find it.
 
 ### 2. The First Principles Thinker
+
 Ignores surface-level question, asks "what are we actually trying to solve?" Strips assumptions. Rebuilds from ground up.
 
 ### 3. The Expansionist
+
 Looks for upside everyone else is missing. What could be bigger? What adjacent opportunity is hiding?
 
 ### 4. The Outsider
+
 Zero context about the user, their field, or history. Responds purely to what's in front of them.
 
 ### 5. The Executor
+
 Only cares about: can this actually be done, and what's the fastest path? Ignores theory, strategy, big-picture.
 
 ---
 
 ## Model Configuration
 
-| Round | Agents | Model |
-|---|---|---|
-| **Advisors** (Step 2) | 5 advisors | `sonnet` |
-| **Peer Reviewers** (Step 3) | 5 reviewers | `opus` |
-| **Chairman** (Step 4) | 1 chairman | `opus` |
+| Round                       | Agents      | Model    |
+| --------------------------- | ----------- | -------- |
+| **Advisors** (Step 2)       | 5 advisors  | `sonnet` |
+| **Peer Reviewers** (Step 3) | 5 reviewers | `opus`   |
+| **Chairman** (Step 4)       | 1 chairman  | `opus`   |
 
 All agents run at **max reasoning effort**.
 

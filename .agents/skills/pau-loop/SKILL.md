@@ -38,25 +38,29 @@ PLAN ──→ APPLY ──→ UNIFY
 **Type:** [backend | frontend | database | testing | devops]
 
 ### Acceptance Criteria
+
 1. [AC-1 from task]
 2. [AC-2 from task]
-...
+   ...
 
 ### Files to Create/Modify
-| # | File Path | Action | Description |
-|---|-----------|--------|-------------|
-| 1 | src/... | Create | [what and why] |
+
+| #   | File Path | Action | Description    |
+| --- | --------- | ------ | -------------- |
+| 1   | src/...   | Create | [what and why] |
 
 ### Approach
+
 [Brief description of implementation approach — max 3 paragraphs]
 
 ### Risks / Unknowns
+
 [Any concerns — or "None identified"]
 ```
 
 3. **Present the plan** to the Agency Director.
-   - The Director approves, or escalates to the user for complex tasks.
-   - Do NOT proceed to APPLY until the plan is approved.
+    - The Director approves, or escalates to the user for complex tasks.
+    - Do NOT proceed to APPLY until the plan is approved.
 
 ### PLAN Phase Rules
 
@@ -73,24 +77,24 @@ PLAN ──→ APPLY ──→ UNIFY
 ### Steps
 
 1. **Write the code** as planned:
-   - Follow the architecture patterns from the project's conventions
-   - Follow the coding conventions from the project's existing code
+    - Follow the architecture patterns from the project's conventions
+    - Follow the coding conventions from the project's existing code
 
 2. **Self-validate** — run available checks (typecheck, lint, format, build).
 
 3. **Self-qualify** — read the code back and check each acceptance criterion:
-   - For each AC: does the code I just wrote satisfy this?
-   - If NO: fix it now, before leaving APPLY
-   - If UNCLEAR: note it for UNIFY phase
+    - For each AC: does the code I just wrote satisfy this?
+    - If NO: fix it now, before leaving APPLY
+    - If UNCLEAR: note it for UNIFY phase
 
 4. **Report status** to the Director:
 
-| Status | Meaning |
-|--------|---------|
-| `DONE` | All AC appear met; self-validation passed |
+| Status               | Meaning                                          |
+| -------------------- | ------------------------------------------------ |
+| `DONE`               | All AC appear met; self-validation passed        |
 | `DONE_WITH_CONCERNS` | AC appear met but there are concerns (list them) |
-| `NEEDS_CONTEXT` | Missing information prevents completion |
-| `BLOCKED` | Cannot proceed (trigger assumption-trap) |
+| `NEEDS_CONTEXT`      | Missing information prevents completion          |
+| `BLOCKED`            | Cannot proceed (trigger assumption-trap)         |
 
 ### APPLY Phase Rules
 
@@ -109,37 +113,37 @@ PLAN ──→ APPLY ──→ UNIFY
 
 1. **For each acceptance criterion**, determine:
 
-| Verdict | Meaning | Evidence Required |
-|---------|---------|-------------------|
-| **MET** | Criterion is satisfied | Specific code reference or test result |
-| **NOT MET** | Criterion is not satisfied | What is missing and why |
-| **UNTESTABLE** | Criterion is vague or cannot be verified | Triggers re-engagement with user |
+| Verdict        | Meaning                                  | Evidence Required                      |
+| -------------- | ---------------------------------------- | -------------------------------------- |
+| **MET**        | Criterion is satisfied                   | Specific code reference or test result |
+| **NOT MET**    | Criterion is not satisfied               | What is missing and why                |
+| **UNTESTABLE** | Criterion is vague or cannot be verified | Triggers re-engagement with user       |
 
 2. **Report the UNIFY results:**
 
 ```markdown
 ## UNIFY Report — [Task ID]
 
-| # | Acceptance Criterion | Verdict | Evidence |
-|---|---------------------|---------|----------|
-| AC-1 | [criterion text] | MET | [file:line or test name] |
-| AC-2 | [criterion text] | NOT MET | [what is missing] |
+| #    | Acceptance Criterion | Verdict | Evidence                 |
+| ---- | -------------------- | ------- | ------------------------ |
+| AC-1 | [criterion text]     | MET     | [file:line or test name] |
+| AC-2 | [criterion text]     | NOT MET | [what is missing]        |
 
 **Overall:** [ALL MET | HAS GAPS | BLOCKED]
 ```
 
 3. **If ALL MET:**
-   - Task is implementation-complete
-   - Proceed to the next task
+    - Task is implementation-complete
+    - Proceed to the next task
 
 4. **If NOT MET (any criterion):**
-   - Loop back to APPLY with the specific gaps
-   - Maximum 3 APPLY-UNIFY iterations per task
-   - If 3 iterations fail: escalate to user via Director
+    - Loop back to APPLY with the specific gaps
+    - Maximum 3 APPLY-UNIFY iterations per task
+    - If 3 iterations fail: escalate to user via Director
 
 5. **If UNTESTABLE (any criterion):**
-   - Director re-engages the user to clarify the criterion
-   - Loop pauses until clarification received
+    - Director re-engages the user to clarify the criterion
+    - Loop pauses until clarification received
 
 ### UNIFY Phase Rules
 

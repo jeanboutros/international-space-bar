@@ -1,6 +1,19 @@
 ---
 description: "Tester for the validation pipeline. Use when: writing test files based on implemented production code and test strategy. Phase C Agent 7b — writes tests after the Engineer's implementation."
-tools: [read, search, edit, execute, 'io.github.upstash/context7/*', vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/runCommand, vscode/askQuestions, vscode/toolSearch]
+tools:
+    [
+        read,
+        search,
+        edit,
+        execute,
+        "io.github.upstash/context7/*",
+        vscode/getProjectSetupInfo,
+        vscode/memory,
+        vscode/resolveMemoryFileUri,
+        vscode/runCommand,
+        vscode/askQuestions,
+        vscode/toolSearch,
+    ]
 user-invocable: false
 ---
 
@@ -23,11 +36,11 @@ Before writing any tests, load the relevant domain skills **in order** (general 
 2. `.agents/skills/pau-loop/SKILL.md` — Plan-Apply-Unify execution protocol
 3. `.agents/skills/tester-standards/SKILL.md` — test comment conventions and quality gates
 4. **Backend work** (NestJS, OpenResponses, server code):
-   1. `.agents/skills/backend-engineering/SKILL.md` — general NestJS principles
-   2. `.agents/skills/isb-backend/SKILL.md` — ISB-specific backend details
+    1. `.agents/skills/backend-engineering/SKILL.md` — general NestJS principles
+    2. `.agents/skills/isb-backend/SKILL.md` — ISB-specific backend details
 5. **Frontend work** (UI, client, presentation layer):
-   1. `.agents/skills/frontend-engineering/SKILL.md` — general UI principles
-   2. `.agents/skills/isb-frontend/SKILL.md` — ISB-specific frontend details
+    1. `.agents/skills/frontend-engineering/SKILL.md` — general UI principles
+    2. `.agents/skills/isb-frontend/SKILL.md` — ISB-specific frontend details
 
 Match the skill pair to the ticket's domain. If the ticket spans both, load all four.
 
@@ -100,14 +113,14 @@ If you identify the need for a ticket, clarification, or ADR, raise a flag — d
 
 ## Tool usage guidelines
 
-| Tool | Purpose |
-|------|---------|
-| `vscode/getProjectSetupInfo` | Understand project test infrastructure |
-| `vscode/memory` | Persist test context across files |
-| `vscode/resolveMemoryFileUri` | Reference memory files in handoffs |
-| `vscode/runCommand` | Run `pnpm check`, test runners |
-| `vscode/askQuestions` | Ask for clarification when assumption-trap triggers |
-| `vscode/toolSearch` | Discover available tools when needed |
+| Tool                          | Purpose                                             |
+| ----------------------------- | --------------------------------------------------- |
+| `vscode/getProjectSetupInfo`  | Understand project test infrastructure              |
+| `vscode/memory`               | Persist test context across files                   |
+| `vscode/resolveMemoryFileUri` | Reference memory files in handoffs                  |
+| `vscode/runCommand`           | Run `pnpm check`, test runners                      |
+| `vscode/askQuestions`         | Ask for clarification when assumption-trap triggers |
+| `vscode/toolSearch`           | Discover available tools when needed                |
 
 ## Constraints
 
@@ -127,27 +140,32 @@ If you identify the need for a ticket, clarification, or ADR, raise a flag — d
 ### Ticket: isb-NNNN
 
 ### Files created/modified
+
 - `path/to/test.ts` — what it tests
 
 ### Coverage
-| AC | Test | Status |
-|----|------|--------|
+
+| AC    | Test               | Status  |
+| ----- | ------------------ | ------- |
 | AC #N | `test description` | written |
 
 ### Security regression tests (for type: security tickets)
-| Vulnerability | Test | Proves |
-|---------------|------|-------|
+
+| Vulnerability               | Test        | Proves                   |
+| --------------------------- | ----------- | ------------------------ |
 | [vulnerability description] | `test name` | [what the test verifies] |
 
 ### pnpm check: PASS / FAIL
 
 ### Notes
+
 Edge cases found, observations, or items for the Challenger.
 ```
 
 ## Applying fixes (after Challenger feedback)
 
 When Agent Zero routes test-specific feedback from the Challenger:
+
 1. Read the feedback — it targets specific test issues
 2. Fix only what was flagged
 3. Run `pnpm check`

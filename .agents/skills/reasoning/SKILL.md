@@ -46,27 +46,27 @@ Before finalizing any output:
 ```typescript
 // ❌ Bad: Trying to solve everything at once
 function solveComplexProblem() {
-  // 500 lines of tangled logic
+    // 500 lines of tangled logic
 }
 
 // ✅ Good: Decomposed into clear steps
 function solveComplexProblem() {
-  const parsed = parseInput();
-  const validated = validateData(parsed);
-  const processed = processData(validated);
-  return formatOutput(processed);
+    const parsed = parseInput();
+    const validated = validateData(parsed);
+    const processed = processData(validated);
+    return formatOutput(processed);
 }
 ```
 
 ### 4. Verification Strategies
 
-| Strategy | When to Use |
-|----------|-------------|
-| **Trace Through** | Algorithm logic |
-| **Edge Cases** | Input validation |
-| **Type Check** | TypeScript code |
-| **Unit Test** | Critical functions |
-| **Dry Run** | Complex flows |
+| Strategy          | When to Use        |
+| ----------------- | ------------------ |
+| **Trace Through** | Algorithm logic    |
+| **Edge Cases**    | Input validation   |
+| **Type Check**    | TypeScript code    |
+| **Unit Test**     | Critical functions |
+| **Dry Run**       | Complex flows      |
 
 ### 5. Error Detection
 
@@ -88,24 +88,29 @@ Use this template for complex tasks:
 ## Task: [Description]
 
 ### Understanding
+
 - Goal: [What we need to achieve]
 - Constraints: [Limitations]
 - Inputs: [Available data]
 
 ### Approach
+
 1. Step 1: [Description]
 2. Step 2: [Description]
 3. Step 3: [Description]
 
 ### Execution
+
 [Work through each step]
 
 ### Verification
+
 - [ ] Goal achieved
 - [ ] Constraints satisfied
 - [ ] No side effects
 
 ### Reflection
+
 - What worked: [...]
 - What could improve: [...]
 ```

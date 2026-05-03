@@ -1,6 +1,16 @@
 ---
 description: "Test planner for the validation pipeline. Use when: creating test strategy and test plans from a validated design document. Phase B Agent 4 — defines what to test, test types, and coverage expectations."
-tools: [read, search, 'io.github.upstash/context7/*', vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/askQuestions, vscode/toolSearch]
+tools:
+    [
+        read,
+        search,
+        "io.github.upstash/context7/*",
+        vscode/getProjectSetupInfo,
+        vscode/memory,
+        vscode/resolveMemoryFileUri,
+        vscode/askQuestions,
+        vscode/toolSearch,
+    ]
 user-invocable: false
 ---
 
@@ -57,13 +67,13 @@ Analyse the validated design document and produce a test strategy. You define WH
 
 ## Tool usage guidelines
 
-| Tool | Purpose |
-|------|---------|
-| `vscode/getProjectSetupInfo` | Understand project test infrastructure |
-| `vscode/memory` | Persist test strategy context |
-| `vscode/resolveMemoryFileUri` | Reference memory files in handoffs |
-| `vscode/askQuestions` | Ask for clarification when assumption-trap triggers |
-| `vscode/toolSearch` | Discover available tools when needed |
+| Tool                          | Purpose                                             |
+| ----------------------------- | --------------------------------------------------- |
+| `vscode/getProjectSetupInfo`  | Understand project test infrastructure              |
+| `vscode/memory`               | Persist test strategy context                       |
+| `vscode/resolveMemoryFileUri` | Reference memory files in handoffs                  |
+| `vscode/askQuestions`         | Ask for clarification when assumption-trap triggers |
+| `vscode/toolSearch`           | Discover available tools when needed                |
 
 ## Output format
 
@@ -72,9 +82,9 @@ Analyse the validated design document and produce a test strategy. You define WH
 
 ### Test targets
 
-| Target | Type | What to verify | AC reference |
-|--------|------|----------------|--------------|
-| `function/module` | unit / integration / smoke / security | Description | AC #N |
+| Target            | Type                                  | What to verify | AC reference |
+| ----------------- | ------------------------------------- | -------------- | ------------ |
+| `function/module` | unit / integration / smoke / security | Description    | AC #N        |
 
 ### Edge cases
 
@@ -82,17 +92,18 @@ Analyse the validated design document and produce a test strategy. You define WH
 
 ### Security test cases (from Security Reviewer findings)
 
-| Target | Type | What to verify | Security finding reference |
-|--------|------|----------------|---------------------------|
-| `function/module` | security | Description | Phase A finding #N |
+| Target            | Type     | What to verify | Security finding reference |
+| ----------------- | -------- | -------------- | -------------------------- |
+| `function/module` | security | Description    | Phase A finding #N         |
 
 ### Test dependencies
 
-| Test | Depends on ticket |
-|------|-------------------|
-| [test description] | isb-NNNN |
+| Test               | Depends on ticket |
+| ------------------ | ----------------- |
+| [test description] | isb-NNNN          |
 
 ### Notes for the Tester
+
 Specific guidance, patterns to follow, existing test files to reference.
 ```
 

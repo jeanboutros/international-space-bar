@@ -27,15 +27,15 @@ The backend is an **outer adapter** around the existing core agent system. Proto
 
 These extend the general backend stack with ISB-specific choices:
 
-| Concern | Choice |
-|---------|--------|
-| Runtime | Node.js 22 (Active LTS) |
-| Language | TypeScript 5 — strict mode, ESM (`"type": "module"`) |
-| Validation | Zod 4 |
-| Agent framework | `@langchain/langgraph` with `StateSchema` + `MessagesValue` |
-| Agent orchestration | `deepagents` |
-| External protocol | OpenResponses via `POST /v1/responses` |
-| Current client | OpenCode (custom provider with `@ai-sdk/openai`) |
+| Concern             | Choice                                                      |
+| ------------------- | ----------------------------------------------------------- |
+| Runtime             | Node.js 22 (Active LTS)                                     |
+| Language            | TypeScript 5 — strict mode, ESM (`"type": "module"`)        |
+| Validation          | Zod 4                                                       |
+| Agent framework     | `@langchain/langgraph` with `StateSchema` + `MessagesValue` |
+| Agent orchestration | `deepagents`                                                |
+| External protocol   | OpenResponses via `POST /v1/responses`                      |
+| Current client      | OpenCode (custom provider with `@ai-sdk/openai`)            |
 
 ### NestJS Dependencies
 
@@ -106,11 +106,11 @@ The backend treats OpenResponses as the **external API contract**. The OpenRespo
 
 ### Endpoints
 
-| Endpoint | Phase | Purpose |
-|----------|-------|---------|
-| `POST /v1/responses` | Phase 0 | Non-streaming ping-pong |
-| `POST /v1/responses` with `stream: true` | Phase 1 | Streaming ping-pong |
-| `POST /v1/responses/compact` | Phase 2+ | Add when required by compliance scope |
+| Endpoint                                 | Phase    | Purpose                               |
+| ---------------------------------------- | -------- | ------------------------------------- |
+| `POST /v1/responses`                     | Phase 0  | Non-streaming ping-pong               |
+| `POST /v1/responses` with `stream: true` | Phase 1  | Streaming ping-pong                   |
+| `POST /v1/responses/compact`             | Phase 2+ | Add when required by compliance scope |
 
 ### Request Schema
 
@@ -137,31 +137,31 @@ export type CreateResponseBody = z.infer<typeof CreateResponseBodySchema>;
 
 ```json
 {
-  "id": "resp_<uuid>",
-  "object": "response",
-  "created_at": 1730000000,
-  "model": "isb-ping",
-  "status": "completed",
-  "output": [
-    {
-      "id": "msg_<uuid>",
-      "type": "message",
-      "status": "completed",
-      "role": "assistant",
-      "content": [
+    "id": "resp_<uuid>",
+    "object": "response",
+    "created_at": 1730000000,
+    "model": "isb-ping",
+    "status": "completed",
+    "output": [
         {
-          "type": "output_text",
-          "text": "pong",
-          "annotations": []
+            "id": "msg_<uuid>",
+            "type": "message",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "output_text",
+                    "text": "pong",
+                    "annotations": []
+                }
+            ]
         }
-      ]
+    ],
+    "usage": {
+        "input_tokens": 0,
+        "output_tokens": 1,
+        "total_tokens": 1
     }
-  ],
-  "usage": {
-    "input_tokens": 0,
-    "output_tokens": 1,
-    "total_tokens": 1
-  }
 }
 ```
 
@@ -222,21 +222,21 @@ Checked-in example config: `docs/examples/opencode-isb-ping.jsonc`
 
 ```jsonc
 {
-  "$schema": "https://opencode.ai/config.json",
-  "model": "international-space-bar/isb-ping",
-  "provider": {
-    "international-space-bar": {
-      "npm": "@ai-sdk/openai",
-      "name": "International Space Bar",
-      "options": {
-        "baseURL": "http://127.0.0.1:3000/v1",
-        "apiKey": "{env:ISB_OPENRESPONSES_API_KEY}"
-      },
-      "models": {
-        "isb-ping": { "name": "ISB Ping" }
-      }
-    }
-  }
+    "$schema": "https://opencode.ai/config.json",
+    "model": "international-space-bar/isb-ping",
+    "provider": {
+        "international-space-bar": {
+            "npm": "@ai-sdk/openai",
+            "name": "International Space Bar",
+            "options": {
+                "baseURL": "http://127.0.0.1:3000/v1",
+                "apiKey": "{env:ISB_OPENRESPONSES_API_KEY}",
+            },
+            "models": {
+                "isb-ping": { "name": "ISB Ping" },
+            },
+        },
+    },
 }
 ```
 
@@ -270,13 +270,14 @@ get-library-docs: context7CompatibleLibraryID="/websites/langchain-ai_github_io_
 
 ## Separation of Concerns — Logging (ISB-Specific)
 
-| Concern | Destination | Purpose |
-|---------|-------------|---------|
-| System logging | `app.log` + ring buffer | Infrastructure diagnostics |
-| Agent observability | `agents.log` | Behavioural audit trail |
-| Future: API observability | `api.log` | Request/response tracing |
+| Concern                   | Destination             | Purpose                    |
+| ------------------------- | ----------------------- | -------------------------- |
+| System logging            | `app.log` + ring buffer | Infrastructure diagnostics |
+| Agent observability       | `agents.log`            | Behavioural audit trail    |
+| Future: API observability | `api.log`               | Request/response tracing   |
 
 Each concern gets its own pino instance. Wired via `AppContext`:
+
 - `ctx.logger` → system events → `app.log` + stdout
 - `ctx.agentLogger` → agent observability → `agents.log` + stdout (dev only)
 
@@ -284,15 +285,15 @@ Each concern gets its own pino instance. Wired via `AppContext`:
 
 ## Phased Delivery Plan
 
-| Phase | Scope | Priority |
-|-------|-------|----------|
-| 0 | NestJS scaffold, non-streaming ping-pong, OpenCode proof, UI archive | critical |
-| 1 | Streaming SSE ping-pong | high |
-| 2 | OpenResponses compliance baseline | high |
-| 3 | LangGraph/DeepAgents runtime integration behind `AgentRuntimePort` | high |
-| 4 | Tools, tool messages, approvals | medium |
-| 5 | Durability, observability, doc updates | medium |
-| 6 | Future client/UI strategy | low |
+| Phase | Scope                                                                | Priority |
+| ----- | -------------------------------------------------------------------- | -------- |
+| 0     | NestJS scaffold, non-streaming ping-pong, OpenCode proof, UI archive | critical |
+| 1     | Streaming SSE ping-pong                                              | high     |
+| 2     | OpenResponses compliance baseline                                    | high     |
+| 3     | LangGraph/DeepAgents runtime integration behind `AgentRuntimePort`   | high     |
+| 4     | Tools, tool messages, approvals                                      | medium   |
+| 5     | Durability, observability, doc updates                               | medium   |
+| 6     | Future client/UI strategy                                            | low      |
 
 See [docs/openresponses-backend-phased-design.md](../../docs/openresponses-backend-phased-design.md) for full acceptance criteria per phase.
 

@@ -18,15 +18,15 @@ Body explaining what changed, why, and any affected files.
 
 ## Types
 
-| Type | When to use |
-|------|-------------|
-| `feat` | New capability or public API addition |
-| `refactor` | Code restructure with no behaviour change |
-| `fix` | Bug fix, lint error resolution, or broken-behaviour correction |
-| `chore` | Tooling, dependencies, CI, config — no production code change |
-| `docs` | Documentation only (`*.md`, JSDoc, comments) |
-| `test` | Tests only |
-| `perf` | Performance improvement |
+| Type       | When to use                                                    |
+| ---------- | -------------------------------------------------------------- |
+| `feat`     | New capability or public API addition                          |
+| `refactor` | Code restructure with no behaviour change                      |
+| `fix`      | Bug fix, lint error resolution, or broken-behaviour correction |
+| `chore`    | Tooling, dependencies, CI, config — no production code change  |
+| `docs`     | Documentation only (`*.md`, JSDoc, comments)                   |
+| `test`     | Tests only                                                     |
+| `perf`     | Performance improvement                                        |
 
 ## Scopes
 
@@ -36,6 +36,7 @@ Omit the scope when the commit genuinely spans multiple unrelated modules (e.g.,
 ## Body
 
 Always include a body when:
+
 - More than one file changed, OR
 - The reason for the change is not obvious from the subject.
 

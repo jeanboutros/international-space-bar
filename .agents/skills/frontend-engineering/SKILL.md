@@ -25,6 +25,7 @@ UI (outermost)
 ```
 
 This means:
+
 - **UI code never imports domain, orchestration, or infrastructure modules.**
 - The composition root (or a DI container) wires backend capabilities into UI components via props, callbacks, event streams, or injected services.
 - If the UI needs data that lives in the domain, it requests it through the protocol.
@@ -35,15 +36,16 @@ This means:
 
 ### Allowed Imports
 
-| UI Layer | May Import From |
-|----------|----------------|
-| Components | Interfaces/contracts, shared utilities, other UI components |
-| UI utilities | Interfaces/contracts, shared utilities |
-| **Never** | Domain services, orchestration, LLM adapters, tool implementations |
+| UI Layer     | May Import From                                                    |
+| ------------ | ------------------------------------------------------------------ |
+| Components   | Interfaces/contracts, shared utilities, other UI components        |
+| UI utilities | Interfaces/contracts, shared utilities                             |
+| **Never**    | Domain services, orchestration, LLM adapters, tool implementations |
 
 ### Dependency Injection
 
 The composition root connects the UI to the backend. The UI receives:
+
 - **Callbacks** for actions (send message, approve tool call).
 - **Streams/observables** for data (message deltas, status updates).
 - **Configuration** for connection details (base URL, auth).
@@ -57,6 +59,7 @@ The UI never constructs backend services or directly invokes domain logic.
 ### The Client Communicates Over HTTP
 
 Whether the UI is a TUI, web app, or mobile app, it talks to the backend through the **same protocol surface**. This gives:
+
 - **Substitutability** — swap the client without changing the backend.
 - **Testability** — mock the HTTP layer to test the UI in isolation.
 - **Decoupling** — UI and backend can evolve independently.
@@ -100,25 +103,28 @@ while (true) {
 ### Framework-Agnostic State
 
 State management should be **external to the rendering framework** when possible. This makes state:
+
 - Testable without rendering.
 - Shareable across components without prop drilling.
 - Portable if the rendering framework changes.
 
 Good patterns:
+
 - **External stores** (Zustand, Jotai, Valtio) — framework-agnostic, subscription-based.
 - **Signals** (Solid, Preact signals) — fine-grained reactivity.
 - **Event-driven** — state machine or reducer pattern driven by SSE events.
 
 Avoid:
+
 - Framework-locked state that can't be tested without mounting components.
 - Global mutable singletons without subscription patterns.
 
 ### UI State vs Server State
 
-| Type | Owns | Examples |
-|------|------|---------|
-| Server state | Backend | Messages, agent responses, session data |
-| UI state | Client | Scroll position, input focus, panel visibility |
+| Type          | Owns     | Examples                                             |
+| ------------- | -------- | ---------------------------------------------------- |
+| Server state  | Backend  | Messages, agent responses, session data              |
+| UI state      | Client   | Scroll position, input focus, panel visibility       |
 | Derived state | Computed | "Is streaming?" (derived from SSE connection status) |
 
 Server state should be the source of truth. The UI caches and projects it for rendering, but doesn't own it.

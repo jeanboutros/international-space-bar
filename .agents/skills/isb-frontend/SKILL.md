@@ -38,15 +38,15 @@ archive/legacy-ink-tui/
 
 ### Original Tech Stack (Archived)
 
-| Concern | Choice |
-|---------|--------|
-| Framework | Ink 7 (React for CLI) |
-| React | React 19.2 |
-| State | Zustand 5 |
+| Concern    | Choice                                                      |
+| ---------- | ----------------------------------------------------------- |
+| Framework  | Ink 7 (React for CLI)                                       |
+| React      | React 19.2                                                  |
+| State      | Zustand 5                                                   |
 | Components | InputBar, MessageList, LogPane, StatusPane, InterruptPrompt |
-| Streaming | log-stream.ts (pino ring buffer → Ink) |
-| Theme | theme.ts (shared color/style tokens) |
-| Mouse | use-mouse-scroll.ts (custom hook) |
+| Streaming  | log-stream.ts (pino ring buffer → Ink)                      |
+| Theme      | theme.ts (shared color/style tokens)                        |
+| Mouse      | use-mouse-scroll.ts (custom hook)                           |
 
 ### Archive Rules
 
@@ -75,19 +75,19 @@ OpenCode is the interaction client for phases 0–5. It connects to the backend 
 ```jsonc
 // docs/examples/opencode-isb-ping.jsonc
 {
-  "provider": {
-    "international-space-bar": {
-      "npm": "@ai-sdk/openai",
-      "name": "International Space Bar",
-      "options": {
-        "baseURL": "http://127.0.0.1:3000/v1",
-        "apiKey": "{env:ISB_OPENRESPONSES_API_KEY}"
-      },
-      "models": {
-        "isb-ping": { "name": "ISB Ping" }
-      }
-    }
-  }
+    "provider": {
+        "international-space-bar": {
+            "npm": "@ai-sdk/openai",
+            "name": "International Space Bar",
+            "options": {
+                "baseURL": "http://127.0.0.1:3000/v1",
+                "apiKey": "{env:ISB_OPENRESPONSES_API_KEY}",
+            },
+            "models": {
+                "isb-ping": { "name": "ISB Ping" },
+            },
+        },
+    },
 }
 ```
 
@@ -108,11 +108,11 @@ OpenCode is the interaction client for phases 0–5. It connects to the backend 
 
 The frontend communicates with the ISB backend exclusively through **OpenResponses**:
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `POST /v1/responses` | Non-streaming | Send input, receive complete response |
-| `POST /v1/responses` | Streaming (`stream: true`) | SSE event stream |
-| `GET /health` | Health check | Service status |
+| Endpoint             | Method                     | Purpose                               |
+| -------------------- | -------------------------- | ------------------------------------- |
+| `POST /v1/responses` | Non-streaming              | Send input, receive complete response |
+| `POST /v1/responses` | Streaming (`stream: true`) | SSE event stream                      |
+| `GET /health`        | Health check               | Service status                        |
 
 ### SSE Event Sequence
 
@@ -130,12 +130,12 @@ When phases 0–5 are complete, the team will evaluate the next client/UI direct
 
 ### Options Under Consideration
 
-| Option | Pros | Cons |
-|--------|------|------|
-| **Keep OpenCode** | Zero UI work, existing tool ecosystem, community maintained | Limited customisation, dependent on external project |
-| **New custom TUI** | Full control, branded experience, deep agent integration | Significant effort, maintenance burden |
-| **Web UI** | Rich interaction, accessible, no terminal dependency | Requires web stack, hosting, auth |
-| **Protocol-only (headless)** | Maximum flexibility, any client can connect | No default experience for users |
+| Option                       | Pros                                                        | Cons                                                 |
+| ---------------------------- | ----------------------------------------------------------- | ---------------------------------------------------- |
+| **Keep OpenCode**            | Zero UI work, existing tool ecosystem, community maintained | Limited customisation, dependent on external project |
+| **New custom TUI**           | Full control, branded experience, deep agent integration    | Significant effort, maintenance burden               |
+| **Web UI**                   | Rich interaction, accessible, no terminal dependency        | Requires web stack, hosting, auth                    |
+| **Protocol-only (headless)** | Maximum flexibility, any client can connect                 | No default experience for users                      |
 
 ### Evaluation Criteria (Phase 6)
 
@@ -155,12 +155,12 @@ ISB-specific layered architecture constraints:
 
 Technology candidates (evaluate at Phase 6, not before):
 
-| Library | Notes |
-|---------|-------|
-| Ink 7+ | Proven in this repo, React model, but archived |
-| Ratatui (via wasm/napi) | Rust TUI, high performance, less JS-native |
-| Blessed/neo-blessed | Legacy, not recommended |
-| Web-based (React/Solid) | If web UI path is chosen |
+| Library                 | Notes                                          |
+| ----------------------- | ---------------------------------------------- |
+| Ink 7+                  | Proven in this repo, React model, but archived |
+| Ratatui (via wasm/napi) | Rust TUI, high performance, less JS-native     |
+| Blessed/neo-blessed     | Legacy, not recommended                        |
+| Web-based (React/Solid) | If web UI path is chosen                       |
 
 ### If a Web UI Is Built
 
@@ -173,13 +173,13 @@ Technology candidates (evaluate at Phase 6, not before):
 
 ## ISB Tech Stack Constraints (For Future UI Work)
 
-| Concern | Constraint |
-|---------|-----------|
-| Runtime | Node.js 22 (Active LTS) |
-| Language | TypeScript 5 — strict mode, ESM (`"type": "module"`) |
-| Validation | Zod 4 for any client-side schemas |
-| Package manager | pnpm |
-| Quality | `pnpm check` must exit 0 after every change |
-| Formatting | Biome (format + imports + non-type-aware lint) |
-| Linting | ESLint (type-aware rules only) |
-| Module system | ESM — no CommonJS |
+| Concern         | Constraint                                           |
+| --------------- | ---------------------------------------------------- |
+| Runtime         | Node.js 22 (Active LTS)                              |
+| Language        | TypeScript 5 — strict mode, ESM (`"type": "module"`) |
+| Validation      | Zod 4 for any client-side schemas                    |
+| Package manager | pnpm                                                 |
+| Quality         | `pnpm check` must exit 0 after every change          |
+| Formatting      | Biome (format + imports + non-type-aware lint)       |
+| Linting         | ESLint (type-aware rules only)                       |
+| Module system   | ESM — no CommonJS                                    |

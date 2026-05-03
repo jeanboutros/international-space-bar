@@ -45,6 +45,7 @@ IMPACT: <What downstream work depends on this answer>
 ## After the User Answers
 
 When the Director re-invokes you with the user's answer appended to context:
+
 1. Incorporate the answer into your working state
 2. Continue processing from where you stopped
 3. If you hit ANOTHER trap, halt again with a new `STATUS: BLOCKED`

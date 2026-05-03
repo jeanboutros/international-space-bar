@@ -2,27 +2,27 @@
 name: complex-reasoning
 description: Multi-step reasoning patterns and frameworks for systematic problem solving. Activate for Chain-of-Thought, Tree-of-Thought, hypothesis-driven debugging, and structured analytical approaches that leverage extended thinking.
 allowed-tools:
-  - Bash
-  - Read
-  - Write
-  - Edit
-  - Glob
-  - Grep
-  - Task
-  - WebFetch
+    - Bash
+    - Read
+    - Write
+    - Edit
+    - Glob
+    - Grep
+    - Task
+    - WebFetch
 dependencies:
-  - extended-thinking
+    - extended-thinking
 triggers:
-  - chain of thought
-  - tree of thought
-  - step by step
-  - reasoning
-  - systematic
-  - hypothesis
-  - debug complex
-  - break down
-  - analyze systematically
-  - multi-step
+    - chain of thought
+    - tree of thought
+    - step by step
+    - reasoning
+    - systematic
+    - hypothesis
+    - debug complex
+    - break down
+    - analyze systematically
+    - multi-step
 ---
 
 # Complex Reasoning Skill
@@ -50,24 +50,29 @@ Linear step-by-step reasoning for sequential problems.
 **Problem**: [State the problem clearly]
 
 **Step 1: Understand the Context**
+
 - What do we know?
 - What are the constraints?
 - What is the expected outcome?
 
 **Step 2: Identify Key Components**
+
 - Component A: [description]
 - Component B: [description]
 - Interactions: [how they relate]
 
 **Step 3: Analyze Each Component**
+
 - Component A analysis...
 - Component B analysis...
 
 **Step 4: Synthesize Findings**
+
 - Key insight 1
 - Key insight 2
 
 **Step 5: Formulate Solution**
+
 - Recommended approach
 - Rationale
 - Trade-offs
@@ -85,28 +90,32 @@ Branching exploration for problems with multiple solution paths.
 **Root Problem**: [Problem statement]
 
 ### Branch 1: Approach A
+
 ├── Pros: [List advantages]
 ├── Cons: [List disadvantages]
 ├── Feasibility: [High/Medium/Low]
 ├── Sub-branch 1.1: [Variation]
-│   └── Outcome: [Expected result]
+│ └── Outcome: [Expected result]
 └── Sub-branch 1.2: [Variation]
-    └── Outcome: [Expected result]
+└── Outcome: [Expected result]
 
 ### Branch 2: Approach B
+
 ├── Pros: [List advantages]
 ├── Cons: [List disadvantages]
 ├── Feasibility: [High/Medium/Low]
 └── Sub-branches: [...]
 
 ### Branch 3: Approach C
+
 ├── Pros: [...]
 ├── Cons: [...]
 └── Feasibility: [...]
 
 ### Evaluation Matrix
+
 | Approach | Feasibility | Impact | Risk | Score |
-|----------|-------------|--------|------|-------|
+| -------- | ----------- | ------ | ---- | ----- |
 | A        | High        | Medium | Low  | 8/10  |
 | B        | Medium      | High   | Med  | 7/10  |
 | C        | Low         | High   | High | 5/10  |
@@ -124,20 +133,24 @@ Mutually Exclusive, Collectively Exhaustive analysis.
 **Problem Space**: [Define the complete problem]
 
 ### Category 1: [Mutually exclusive category]
+
 - Sub-element 1.1
 - Sub-element 1.2
 - Sub-element 1.3
 
 ### Category 2: [Mutually exclusive category]
+
 - Sub-element 2.1
 - Sub-element 2.2
 
 ### Category 3: [Mutually exclusive category]
+
 - Sub-element 3.1
 - Sub-element 3.2
 - Sub-element 3.3
 
 **Completeness Check**:
+
 - [ ] Categories are mutually exclusive (no overlap)
 - [ ] Categories are collectively exhaustive (cover all cases)
 - [ ] Each sub-element belongs to exactly one category
@@ -145,9 +158,9 @@ Mutually Exclusive, Collectively Exhaustive analysis.
 **Priority Matrix**:
 | Category | Urgency | Impact | Action |
 |----------|---------|--------|--------|
-| 1        | High    | High   | Now    |
-| 2        | Medium  | High   | Next   |
-| 3        | Low     | Medium | Later  |
+| 1 | High | High | Now |
+| 2 | Medium | High | Next |
+| 3 | Low | Medium | Later |
 ```
 
 ### Hypothesis-Driven Debugging
@@ -162,27 +175,34 @@ Systematic approach to debugging complex issues.
 **Environment**: [Relevant context]
 
 ### Hypothesis 1: [Most likely cause]
+
 **Evidence For**:
+
 - [Supporting observation 1]
 - [Supporting observation 2]
 
 **Evidence Against**:
+
 - [Contradicting observation]
 
 **Test**: [How to validate]
 **Result**: [Confirmed/Refuted]
 
 ### Hypothesis 2: [Second most likely]
+
 **Evidence For**:
+
 - [...]
 
 **Evidence Against**:
+
 - [...]
 
 **Test**: [...]
 **Result**: [...]
 
 ### Root Cause Identified
+
 **Cause**: [Confirmed root cause]
 **Evidence Chain**: [How we proved it]
 **Fix**: [Remediation steps]
@@ -197,24 +217,28 @@ Systematic approach to debugging complex issues.
 ## Dependency Analysis: [Component Name]
 
 ### Direct Dependencies
+
 | Dependency | Version | Purpose | Risk Level |
-|------------|---------|---------|------------|
+| ---------- | ------- | ------- | ---------- |
 | dep-a      | 2.3.1   | Auth    | Low        |
 | dep-b      | 1.0.0   | Data    | Medium     |
 
 ### Transitive Dependencies
+
 - Total: [N] packages
 - Security vulnerabilities: [N]
 - Outdated: [N]
 
 ### Dependency Graph
 ```
+
 [component]
 ├── dep-a
-│   ├── sub-dep-1
-│   └── sub-dep-2
+│ ├── sub-dep-1
+│ └── sub-dep-2
 └── dep-b
-    └── sub-dep-3
+└── sub-dep-3
+
 ```
 
 ### Risk Assessment
@@ -233,23 +257,27 @@ Systematic approach to debugging complex issues.
 ## Impact Analysis: [Proposed Change]
 
 ### Affected Components
+
 | Component | Impact Type | Severity | Test Required |
-|-----------|-------------|----------|---------------|
+| --------- | ----------- | -------- | ------------- |
 | Service A | Direct      | High     | Yes           |
 | Service B | Indirect    | Medium   | Yes           |
 | Client C  | Downstream  | Low      | Optional      |
 
 ### Risk Assessment
+
 - **Breaking Changes**: [List any]
 - **Performance Impact**: [Expected effect]
 - **Data Migration**: [Required/Not required]
 
 ### Rollback Plan
+
 1. [Step 1]
 2. [Step 2]
 3. [Verification]
 
 ### Recommendation
+
 [Go/No-Go with reasoning]
 ```
 

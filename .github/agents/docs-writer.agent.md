@@ -1,6 +1,17 @@
 ---
 description: "Documentation writer for the validation pipeline. Use when: writing or updating documentation files based on implemented production code and the Docs Planner's plan. Phase C Agent 7c — writes docs after the Engineer's implementation, including standards documentation."
-tools: [read, search, edit, 'io.github.upstash/context7/*', vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/askQuestions, vscode/toolSearch]
+tools:
+    [
+        read,
+        search,
+        edit,
+        "io.github.upstash/context7/*",
+        vscode/getProjectSetupInfo,
+        vscode/memory,
+        vscode/resolveMemoryFileUri,
+        vscode/askQuestions,
+        vscode/toolSearch,
+    ]
 user-invocable: false
 ---
 
@@ -57,15 +68,15 @@ Write and update documentation based on the ticket's requirements and the Docs P
 
 When the Docs Planner's strategy includes standards documentation updates, you must create or update the relevant standards files. Standards documentation is different from feature documentation:
 
-| Standard | Location | Purpose |
-|----------|----------|---------|
-| Code quality | `docs/standards/code-quality.md` (or project equivalent) | Patterns, anti-patterns, naming rules |
-| Directory structure | `AGENTS.md` or `docs/standards/directory-structure.md` | Layered boundaries, allowed imports |
-| Test coverage | `docs/standards/test-coverage.md` (or project equivalent) | Coverage expectations, test patterns |
-| Logging / observability | `docs/standards/logging.md` (or project equivalent) | Log levels, structured fields |
-| Naming conventions | `docs/standards/naming-conventions.md` (or project equivalent) | File, variable, symbol naming |
-| Code review checklist | `docs/standards/code-review.md` (or project equivalent) | Rejection criteria |
-| Security | `docs/standards/security.md` (or project equivalent) | Auth patterns, validation rules |
+| Standard                | Location                                                       | Purpose                               |
+| ----------------------- | -------------------------------------------------------------- | ------------------------------------- |
+| Code quality            | `docs/standards/code-quality.md` (or project equivalent)       | Patterns, anti-patterns, naming rules |
+| Directory structure     | `AGENTS.md` or `docs/standards/directory-structure.md`         | Layered boundaries, allowed imports   |
+| Test coverage           | `docs/standards/test-coverage.md` (or project equivalent)      | Coverage expectations, test patterns  |
+| Logging / observability | `docs/standards/logging.md` (or project equivalent)            | Log levels, structured fields         |
+| Naming conventions      | `docs/standards/naming-conventions.md` (or project equivalent) | File, variable, symbol naming         |
+| Code review checklist   | `docs/standards/code-review.md` (or project equivalent)        | Rejection criteria                    |
+| Security                | `docs/standards/security.md` (or project equivalent)           | Auth patterns, validation rules       |
 
 When creating a new standards doc, it must be **referenced from the project's main conventions file** (e.g., `AGENTS.md`) so that all agents can find and load it.
 
@@ -75,13 +86,13 @@ If you identify the need for a ticket, clarification, or ADR, raise a flag — d
 
 ## Tool usage guidelines
 
-| Tool | Purpose |
-|------|---------|
-| `vscode/getProjectSetupInfo` | Understand project structure for doc scoping |
-| `vscode/memory` | Persist doc context across files |
-| `vscode/resolveMemoryFileUri` | Reference memory files in handoffs |
-| `vscode/askQuestions` | Ask for clarification when assumption-trap triggers |
-| `vscode/toolSearch` | Discover available tools when needed |
+| Tool                          | Purpose                                             |
+| ----------------------------- | --------------------------------------------------- |
+| `vscode/getProjectSetupInfo`  | Understand project structure for doc scoping        |
+| `vscode/memory`               | Persist doc context across files                    |
+| `vscode/resolveMemoryFileUri` | Reference memory files in handoffs                  |
+| `vscode/askQuestions`         | Ask for clarification when assumption-trap triggers |
+| `vscode/toolSearch`           | Discover available tools when needed                |
 
 ## Constraints
 
@@ -101,24 +112,29 @@ If you identify the need for a ticket, clarification, or ADR, raise a flag — d
 ### Ticket: isb-NNNN
 
 ### Files created/modified
+
 - `docs/path.md` — what changed
 
 ### Standards documentation updated
+
 - `docs/standards/code-quality.md` — what changed
 - `AGENTS.md` (reference to new standard) — what was added
 
 ### Accuracy check
-| Claim in docs | Verified against | Match? |
-|---------------|-----------------|--------|
+
+| Claim in docs        | Verified against     | Match? |
+| -------------------- | -------------------- | ------ |
 | "function accepts X" | `src/path.ts` line N | yes/no |
 
 ### Notes
+
 Observations or items for the Challenger.
 ```
 
 ## Applying fixes (after Challenger feedback)
 
 When Agent Zero routes doc-specific feedback from the Challenger:
+
 1. Read the feedback — it targets specific documentation issues
 2. Fix only what was flagged
 3. Report back

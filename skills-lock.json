@@ -1,15 +1,15 @@
 {
-  "version": 1,
-  "skills": {
-    "complex-reasoning": {
-      "source": "lobbi-docs/claude",
-      "sourceType": "github",
-      "computedHash": "f228e4360781e9c2e45a309a9155b4c47ec9a8a71696a3bc91a1cb84f429733d"
-    },
-    "reasoning": {
-      "source": "alicoder001/agent-skills",
-      "sourceType": "github",
-      "computedHash": "9a7f21178fed2880b48351dd61d9ec32505f8bf41d465630149cb7ddcf29d288"
+    "version": 1,
+    "skills": {
+        "complex-reasoning": {
+            "source": "lobbi-docs/claude",
+            "sourceType": "github",
+            "computedHash": "f228e4360781e9c2e45a309a9155b4c47ec9a8a71696a3bc91a1cb84f429733d"
+        },
+        "reasoning": {
+            "source": "alicoder001/agent-skills",
+            "sourceType": "github",
+            "computedHash": "9a7f21178fed2880b48351dd61d9ec32505f8bf41d465630149cb7ddcf29d288"
+        }
     }
-  }
 }

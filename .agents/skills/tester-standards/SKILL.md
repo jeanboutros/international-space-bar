@@ -1,6 +1,6 @@
 ---
 name: tester-standards
-description: 'Testing standards for the Tester agent. Use when: writing unit tests, integration tests, or API smoke-test scripts. Covers mandatory comment conventions for LLM-reviewable tests, standalone Node.js API test scripts in scripts/, and test quality gates.'
+description: "Testing standards for the Tester agent. Use when: writing unit tests, integration tests, or API smoke-test scripts. Covers mandatory comment conventions for LLM-reviewable tests, standalone Node.js API test scripts in scripts/, and test quality gates."
 ---
 
 # Tester Standards
@@ -8,6 +8,7 @@ description: 'Testing standards for the Tester agent. Use when: writing unit tes
 ## When to use
 
 Load this skill before writing any test file or API test script. It defines:
+
 1. Comment conventions that make tests reviewable by other LLM agents
 2. Standalone Node.js API test scripts beyond unit tests
 3. Quality checklist before reporting
@@ -46,6 +47,7 @@ describe("ResponsesController.create() — non-streaming", () => {
 ### Per-test comments (three-line minimum)
 
 Every `it()` / `test()` block must have a comment block with:
+
 1. **What** — what behaviour is being tested
 2. **Why** — why this case matters (edge case, regression, AC reference)
 3. **Steps** — what the Arrange/Act/Assert steps do
@@ -71,9 +73,7 @@ Inside the test body, mark each phase:
 const body = { model: "isb-ping", input: "ping" };
 
 // --- Act ---
-const response = await request(app.getHttpServer())
-  .post("/v1/responses")
-  .send(body);
+const response = await request(app.getHttpServer()).post("/v1/responses").send(body);
 
 // --- Assert ---
 expect(response.status).toBe(401);
@@ -92,6 +92,7 @@ expect(result.usage.total_tokens).toBe(1);
 ## Part 2 — Standalone API test scripts
 
 Beyond unit and integration tests, the Tester must create simple, standalone Node.js scripts in `scripts/` that exercise every API endpoint against a running server. These scripts serve as:
+
 - Runnable acceptance checks any agent can execute
 - Living documentation of how to call each endpoint
 - Regression canaries that don't depend on the test framework
@@ -99,6 +100,7 @@ Beyond unit and integration tests, the Tester must create simple, standalone Nod
 ### Script conventions
 
 Each script:
+
 - Lives in `scripts/test-api-<endpoint-name>.mjs` (ESM, no build step needed)
 - Uses only Node.js built-in `fetch` (no external dependencies)
 - Is fully commented explaining each request and what the response should contain
@@ -135,14 +137,14 @@ const API_KEY = process.env.ISB_OPENRESPONSES_API_KEY ?? "local-dev-key";
  * @returns {Promise<Response>}
  */
 async function apiRequest(path, options = {}) {
-  return fetch(`${BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${API_KEY}`,
-      ...options.headers,
-    },
-  });
+    return fetch(`${BASE_URL}${path}`, {
+        ...options,
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${API_KEY}`,
+            ...options.headers,
+        },
+    });
 }
 
 /**
@@ -151,52 +153,52 @@ async function apiRequest(path, options = {}) {
  * @param {string} label — what was being checked
  */
 function assert(condition, label) {
-  if (condition) {
-    console.log(`  ✓ ${label}`);
-  } else {
-    console.error(`  ✗ ${label}`);
-    throw new Error(`Assertion failed: ${label}`);
-  }
+    if (condition) {
+        console.log(`  ✓ ${label}`);
+    } else {
+        console.error(`  ✗ ${label}`);
+        throw new Error(`Assertion failed: ${label}`);
+    }
 }
 
 // --- Test: valid ping-pong request ---
 // Send a minimal valid request and verify the full response shape.
 async function testPingPong() {
-  console.log("\nTest: POST /v1/responses — ping-pong");
+    console.log("\nTest: POST /v1/responses — ping-pong");
 
-  // Arrange — build a valid ping request body
-  const body = { model: "isb-ping", input: "ping" };
+    // Arrange — build a valid ping request body
+    const body = { model: "isb-ping", input: "ping" };
 
-  // Act — send the request
-  const res = await apiRequest("/v1/responses", {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
+    // Act — send the request
+    const res = await apiRequest("/v1/responses", {
+        method: "POST",
+        body: JSON.stringify(body),
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  // Assert — verify response structure matches OpenResponses contract
-  assert(res.status === 200, `status is 200 (got ${res.status})`);
-  assert(data.object === "response", `object is "response"`);
-  assert(data.status === "completed", `status is "completed"`);
-  assert(Array.isArray(data.output), `output is an array`);
-  assert(data.output[0]?.role === "assistant", `first output role is "assistant"`);
+    // Assert — verify response structure matches OpenResponses contract
+    assert(res.status === 200, `status is 200 (got ${res.status})`);
+    assert(data.object === "response", `object is "response"`);
+    assert(data.status === "completed", `status is "completed"`);
+    assert(Array.isArray(data.output), `output is an array`);
+    assert(data.output[0]?.role === "assistant", `first output role is "assistant"`);
 
-  // The content must contain "pong" text
-  const text = data.output[0]?.content?.[0]?.text;
-  assert(text === "pong", `output text is "pong" (got "${text}")`);
+    // The content must contain "pong" text
+    const text = data.output[0]?.content?.[0]?.text;
+    assert(text === "pong", `output text is "pong" (got "${text}")`);
 
-  console.log("  Response:", JSON.stringify(data, null, 2));
+    console.log("  Response:", JSON.stringify(data, null, 2));
 }
 
 // --- Run all tests ---
 try {
-  await testPingPong();
-  console.log("\n✓ All API tests passed\n");
-  process.exit(0);
+    await testPingPong();
+    console.log("\n✓ All API tests passed\n");
+    process.exit(0);
 } catch (error) {
-  console.error(`\n✗ API test failed: ${error.message}\n`);
-  process.exit(1);
+    console.error(`\n✗ API test failed: ${error.message}\n`);
+    process.exit(1);
 }
 ```
 
@@ -208,10 +210,10 @@ try {
 
 ### Script naming convention
 
-| Endpoint | Script |
-|----------|--------|
-| `GET /health` | `scripts/test-api-health.mjs` |
-| `POST /v1/responses` | `scripts/test-api-responses.mjs` |
+| Endpoint                         | Script                                  |
+| -------------------------------- | --------------------------------------- |
+| `GET /health`                    | `scripts/test-api-health.mjs`           |
+| `POST /v1/responses`             | `scripts/test-api-responses.mjs`        |
 | `POST /v1/responses` (streaming) | `scripts/test-api-responses-stream.mjs` |
 
 ## Part 3 — Quality checklist

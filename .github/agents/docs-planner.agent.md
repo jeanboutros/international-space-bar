@@ -1,6 +1,16 @@
 ---
 description: "Documentation planner for the validation pipeline. Use when: creating documentation plans from a validated design document. Phase B Agent 5 — defines what to document, which files to create or update, including standards documentation."
-tools: [read, search, 'io.github.upstash/context7/*', vscode/getProjectSetupInfo, vscode/memory, vscode/resolveMemoryFileUri, vscode/askQuestions, vscode/toolSearch]
+tools:
+    [
+        read,
+        search,
+        "io.github.upstash/context7/*",
+        vscode/getProjectSetupInfo,
+        vscode/memory,
+        vscode/resolveMemoryFileUri,
+        vscode/askQuestions,
+        vscode/toolSearch,
+    ]
 user-invocable: false
 ---
 
@@ -49,15 +59,15 @@ Analyse the validated design document and produce a documentation plan. You defi
 
 Every feature implementation must be accompanied by up-to-date **standards documentation**. You must evaluate which standards docs need creating or updating for this feature:
 
-| Standard | What to check | Update if |
-|----------|--------------|-----------|
-| Code quality | Patterns, anti-patterns, naming rules, function size limits | New patterns introduced or existing ones changed |
-| Directory structure / architecture | Layered boundaries, allowed imports per layer, file placement rules | New layers, modules, or architectural changes |
-| Test coverage | Minimum coverage, test structure, mocking patterns | New test patterns or coverage expectations |
-| Logging / observability | Log levels, structured logging fields, what not to log | New logging requirements or observability patterns |
-| Naming conventions | File naming, variable naming, exported symbol naming | New naming patterns introduced |
-| Code review checklist | Explicit list of rejection criteria | New rejection criteria from this feature |
-| Security | Input validation, auth patterns, secret handling, vulnerability categories | New security patterns or attack surfaces introduced |
+| Standard                           | What to check                                                              | Update if                                           |
+| ---------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------- |
+| Code quality                       | Patterns, anti-patterns, naming rules, function size limits                | New patterns introduced or existing ones changed    |
+| Directory structure / architecture | Layered boundaries, allowed imports per layer, file placement rules        | New layers, modules, or architectural changes       |
+| Test coverage                      | Minimum coverage, test structure, mocking patterns                         | New test patterns or coverage expectations          |
+| Logging / observability            | Log levels, structured logging fields, what not to log                     | New logging requirements or observability patterns  |
+| Naming conventions                 | File naming, variable naming, exported symbol naming                       | New naming patterns introduced                      |
+| Code review checklist              | Explicit list of rejection criteria                                        | New rejection criteria from this feature            |
+| Security                           | Input validation, auth patterns, secret handling, vulnerability categories | New security patterns or attack surfaces introduced |
 
 If the project doesn't yet have a standards doc in one of these categories, flag it for creation.
 
@@ -72,13 +82,13 @@ If the project doesn't yet have a standards doc in one of these categories, flag
 
 ## Tool usage guidelines
 
-| Tool | Purpose |
-|------|---------|
-| `vscode/getProjectSetupInfo` | Understand project structure for doc scoping |
-| `vscode/memory` | Persist doc planning context |
-| `vscode/resolveMemoryFileUri` | Reference memory files in handoffs |
-| `vscode/askQuestions` | Ask for clarification when assumption-trap triggers |
-| `vscode/toolSearch` | Discover available tools when needed |
+| Tool                          | Purpose                                             |
+| ----------------------------- | --------------------------------------------------- |
+| `vscode/getProjectSetupInfo`  | Understand project structure for doc scoping        |
+| `vscode/memory`               | Persist doc planning context                        |
+| `vscode/resolveMemoryFileUri` | Reference memory files in handoffs                  |
+| `vscode/askQuestions`         | Ask for clarification when assumption-trap triggers |
+| `vscode/toolSearch`           | Discover available tools when needed                |
 
 ## Output format
 
@@ -87,29 +97,30 @@ If the project doesn't yet have a standards doc in one of these categories, flag
 
 ### New files
 
-| File | Purpose | Depends on ticket |
-|------|---------|-------------------|
-| `docs/path.md` | Description | isb-NNNN |
+| File           | Purpose     | Depends on ticket |
+| -------------- | ----------- | ----------------- |
+| `docs/path.md` | Description | isb-NNNN          |
 
 ### Updates to existing files
 
-| File | Section | Change description | Depends on ticket |
-|------|---------|-------------------|-------------------|
-| `AGENTS.md` | Architecture | Add new principle | isb-NNNN |
+| File        | Section      | Change description | Depends on ticket |
+| ----------- | ------------ | ------------------ | ----------------- |
+| `AGENTS.md` | Architecture | Add new principle  | isb-NNNN          |
 
 ### Standards documentation updates
 
-| Standard | Action | Change description | Depends on ticket |
-|----------|--------|-------------------|-------------------|
-| Code quality | Create / Update | Description | isb-NNNN |
-| Directory structure | Create / Update | Description | isb-NNNN |
-| Test coverage | Create / Update | Description | isb-NNNN |
-| Logging / observability | Create / Update | Description | isb-NNNN |
-| Naming conventions | Create / Update | Description | isb-NNNN |
-| Code review checklist | Create / Update | Description | isb-NNNN |
-| Security | Create / Update | Description | isb-NNNN |
+| Standard                | Action          | Change description | Depends on ticket |
+| ----------------------- | --------------- | ------------------ | ----------------- |
+| Code quality            | Create / Update | Description        | isb-NNNN          |
+| Directory structure     | Create / Update | Description        | isb-NNNN          |
+| Test coverage           | Create / Update | Description        | isb-NNNN          |
+| Logging / observability | Create / Update | Description        | isb-NNNN          |
+| Naming conventions      | Create / Update | Description        | isb-NNNN          |
+| Code review checklist   | Create / Update | Description        | isb-NNNN          |
+| Security                | Create / Update | Description        | isb-NNNN          |
 
 ### Notes for the Docs Writer
+
 Specific guidance, tone, existing docs to reference for style consistency.
 ```
 
