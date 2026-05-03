@@ -2,6 +2,7 @@
 
 | Field | Value |
 |-------|-------|
+| ID | `isb-adv-0001` |
 | Status | `open` |
 | Source | isb-epic-011 (Phase C review, Security Reviewer) |
 | Severity | MEDIUM |

@@ -67,10 +67,10 @@ When delegating to an agent, instruct them to load their required skills BEFORE 
 
 ## ID generation
 
-**NEVER invent ticket, epic, clarification, or ADR numbers.** Always run the script:
+**NEVER invent ticket, epic, clarification, ADR, or advisory numbers.** Always run the script:
 
 ```bash
-node docs/project-management/next-id.mjs <ticket|epic|clarification|adr> [count] [--dry-run]
+node docs/project-management/next-id.mjs <ticket|epic|clarification|adr|advisory> [count] [--dry-run]
 ```
 
 ## Flag routing — mandatory
@@ -227,10 +227,18 @@ must be persisted as **advisory files** in `docs/project-management/advisories/`
 ### Advisory file format
 
 ```
-docs/project-management/advisories/<epic-id>-<short-slug>.md
+docs/project-management/advisories/<advisory-id>-<short-slug>.md
 ```
 
-Example: `isb-epic-011-error-message-leak.md`, `isb-epic-011-reasoning-block-spec-gaps.md`
+Generate advisory IDs using:
+
+```bash
+node docs/project-management/next-id.mjs advisory [count] [--dry-run]
+```
+
+IDs follow the pattern `isb-adv-NNNN` (e.g., `isb-adv-0001`, `isb-adv-0002`).
+
+Example filenames: `isb-adv-0001-error-message-leak.md`, `isb-adv-0002-reasoning-block-spec-gaps.md`
 
 ### Advisory file content
 
@@ -238,6 +246,7 @@ Each advisory must contain:
 
 | Field | Description |
 |-------|-------------|
+| ID | The advisory ID (e.g., `isb-adv-0001`) |
 | Status | `open` or `resolved` |
 | Source | Epic/ticket that produced the finding |
 | Severity | CRITICAL / HIGH / MEDIUM / LOW |

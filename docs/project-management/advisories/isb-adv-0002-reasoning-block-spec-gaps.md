@@ -2,6 +2,7 @@
 
 | Field | Value |
 |-------|-------|
+| ID | `isb-adv-0002` |
 | Status | `open` |
 | Source | isb-epic-011 (Phase C review, Engineer W-2/W-3) |
 | Severity | MEDIUM |

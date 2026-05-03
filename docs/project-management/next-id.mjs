@@ -10,6 +10,7 @@
  *   node next-id.mjs epic 3              # next 3 epic ids
  *   node next-id.mjs clarification       # next clarification id
  *   node next-id.mjs adr                 # next ADR id
+ *   node next-id.mjs advisory            # next advisory id
  *   node next-id.mjs ticket --dry-run    # preview without updating counters
  *
  * Output (JSON, one object per run — easy for LLMs to parse):
@@ -28,6 +29,7 @@ const KIND_CONFIG = {
     epic: { key: "lastEpic", prefix: "isb-epic", width: 3 },
     clarification: { key: "lastClarification", prefix: "isb-clar", width: 4 },
     adr: { key: "lastAdr", prefix: "isb-adr", width: 4 },
+    advisory: { key: "lastAdvisory", prefix: "isb-adv", width: 4 },
 };
 
 // ── Argument parsing ────────────────────────────────────────────────
@@ -40,7 +42,7 @@ function parseArgs(argv) {
     const kind = positional[0];
     if (!kind || !(kind in KIND_CONFIG)) {
         console.error(
-            "Usage: node next-id.mjs <ticket|epic|clarification|adr> [count] [--dry-run]",
+            "Usage: node next-id.mjs <ticket|epic|clarification|adr|advisory> [count] [--dry-run]",
         );
         process.exit(1);
     }
