@@ -36,7 +36,7 @@ export class AsyncQueue<T> implements IAsyncQueue<T> {
         if (this.resolve) {
             const r = this.resolve;
             this.resolve = null;
-            r({ value: undefined as unknown as T, done: true });
+            r({ value: undefined, done: true });
         }
     }
 
@@ -65,97 +65,119 @@ export interface LangGraphBlocksOptions {
 }
 
 /**
- * Subscribes to a compiled LangGraph's streamEvents() and produces Block[]
- * for ResponseStream.run().
+ * Subscribes to a compiled LangGraph's streamEvents() and yields Block
+ * instances in real-time for ResponseStream.run().
+ *
+ * Uses a concurrent producer pattern: a detached async IIFE drives the
+ * streamEvents iteration and pushes blocks to an AsyncQueue channel,
+ * while this generator yields blocks from the channel as they arrive.
+ * This avoids a yield/pull deadlock that would occur with a naive
+ * async generator approach.
  */
-export async function langGraphBlocks(
+export async function* langGraphBlocks(
     graph: StreamableGraph,
     input: readonly BaseMessage[],
     options?: LangGraphBlocksOptions,
-): Promise<Block[]> {
-    const blocks: Block[] = [];
-    let currentMessageQueue: AsyncQueue<Delta> | null = null;
-    let currentReasoningQueue: AsyncQueue<Delta> | null = null;
-    const toolQueues = new Map<string, AsyncQueue<Delta>>();
+): AsyncGenerator<Block> {
+    const blockChannel = new AsyncQueue<Block>();
 
-    const stream = graph.streamEvents({ messages: input }, { version: "v2", streamMode: "values" });
+    const producer = (async () => {
+        let currentMessageQueue: AsyncQueue<Delta> | null = null;
+        let currentReasoningQueue: AsyncQueue<Delta> | null = null;
+        const toolQueues = new Map<string, AsyncQueue<Delta>>();
 
-    for await (const event of stream) {
-        const { event: eventType, data } = event;
+        try {
+            const stream = graph.streamEvents(
+                { messages: input },
+                { version: "v2", streamMode: "values" },
+            );
 
-        if (eventType === "on_chat_model_stream") {
-            const chunk = data?.chunk;
-            if (!chunk) continue;
+            for await (const event of stream) {
+                const { event: eventType, data } = event;
 
-            // Handle tool calls
-            if (chunk.tool_call_chunks?.length) {
-                for (const toolChunk of chunk.tool_call_chunks) {
-                    const id = toolChunk.id ?? toolChunk.index?.toString() ?? "0";
-                    if (!toolQueues.has(id)) {
-                        const q = new AsyncQueue<Delta>();
-                        toolQueues.set(id, q);
-                        blocks.push(
-                            functionCallBlock(q, {
-                                name: toolChunk.name ?? "unknown",
-                                callId: id,
-                            }),
-                        );
+                if (eventType === "on_chat_model_stream") {
+                    const chunk = data?.chunk;
+                    if (!chunk) continue;
+
+                    // Handle tool calls
+                    if (chunk.tool_call_chunks?.length) {
+                        for (const toolChunk of chunk.tool_call_chunks) {
+                            const id = toolChunk.id ?? toolChunk.index?.toString() ?? "0";
+                            if (!toolQueues.has(id)) {
+                                const q = new AsyncQueue<Delta>();
+                                toolQueues.set(id, q);
+                                blockChannel.push(
+                                    functionCallBlock(q, {
+                                        name: toolChunk.name ?? "unknown",
+                                        callId: id,
+                                    }),
+                                );
+                            }
+                            if (toolChunk.args) {
+                                toolQueues.get(id)!.push({ text: toolChunk.args });
+                            }
+                        }
+                        continue;
                     }
-                    if (toolChunk.args) {
-                        toolQueues.get(id)!.push({ text: toolChunk.args });
+
+                    // Handle reasoning (thinking) content
+                    if (options?.hasReasoning && chunk.additional_kwargs?.reasoning_content) {
+                        if (!currentReasoningQueue) {
+                            currentReasoningQueue = new AsyncQueue<Delta>();
+                            blockChannel.push(reasoningBlock(currentReasoningQueue));
+                        }
+                        currentReasoningQueue.push({
+                            text: chunk.additional_kwargs.reasoning_content as string,
+                        });
+                        continue;
                     }
-                }
-                continue;
-            }
 
-            // Handle reasoning (thinking) content
-            if (options?.hasReasoning && chunk.additional_kwargs?.reasoning_content) {
-                if (!currentReasoningQueue) {
-                    currentReasoningQueue = new AsyncQueue<Delta>();
-                    blocks.push(reasoningBlock(currentReasoningQueue));
+                    // Handle text content
+                    const text = typeof chunk.content === "string" ? chunk.content : null;
+                    if (text) {
+                        if (currentReasoningQueue) {
+                            currentReasoningQueue.end();
+                            currentReasoningQueue = null;
+                        }
+                        if (!currentMessageQueue) {
+                            currentMessageQueue = new AsyncQueue<Delta>();
+                            blockChannel.push(messageBlock(currentMessageQueue));
+                        }
+                        currentMessageQueue.push({ text });
+                    }
+                } else if (eventType === "on_chat_model_end") {
+                    // Close all open queues for this model invocation
+                    if (currentMessageQueue) {
+                        currentMessageQueue.end();
+                        currentMessageQueue = null;
+                    }
+                    if (currentReasoningQueue) {
+                        currentReasoningQueue.end();
+                        currentReasoningQueue = null;
+                    }
+                    for (const q of toolQueues.values()) {
+                        q.end();
+                    }
+                    toolQueues.clear();
                 }
-                currentReasoningQueue.push({
-                    text: chunk.additional_kwargs.reasoning_content as string,
-                });
-                continue;
             }
-
-            // Handle text content
-            const text = typeof chunk.content === "string" ? chunk.content : null;
-            if (text) {
-                if (currentReasoningQueue) {
-                    currentReasoningQueue.end();
-                    currentReasoningQueue = null;
-                }
-                if (!currentMessageQueue) {
-                    currentMessageQueue = new AsyncQueue<Delta>();
-                    blocks.push(messageBlock(currentMessageQueue));
-                }
-                currentMessageQueue.push({ text });
-            }
-        } else if (eventType === "on_chat_model_end") {
-            // Close all open queues
-            if (currentMessageQueue) {
-                currentMessageQueue.end();
-                currentMessageQueue = null;
-            }
-            if (currentReasoningQueue) {
-                currentReasoningQueue.end();
-                currentReasoningQueue = null;
-            }
+        } finally {
+            // End ALL open queues to prevent consumer deadlock on error
+            currentMessageQueue?.end();
+            currentReasoningQueue?.end();
             for (const q of toolQueues.values()) {
                 q.end();
             }
-            toolQueues.clear();
+            blockChannel.end();
         }
-    }
+    })();
 
-    // Ensure all queues are closed
-    currentMessageQueue?.end();
-    currentReasoningQueue?.end();
-    for (const q of toolQueues.values()) {
-        q.end();
+    try {
+        for await (const block of blockChannel) {
+            yield block;
+        }
+    } finally {
+        // Swallow producer errors — consumer error takes priority
+        await producer.catch(() => {});
     }
-
-    return blocks;
 }
