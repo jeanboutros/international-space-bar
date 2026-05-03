@@ -55,11 +55,11 @@ function reasoningBlock(
         if (typeof input === "string") {
             accumulated = input;
             yield responseReasoningSummaryDeltaStreamingEventSchema.parse({
-                type: "response.reasoning_summary.delta",
+                type: "response.reasoning_summary_text.delta",
                 sequence_number: ctx.nextSeq(),
                 item_id: itemId,
                 output_index: outputIndex,
-                content_index: contentIndex,
+                summary_index: contentIndex,
                 delta: input,
             });
         } else {
@@ -67,11 +67,11 @@ function reasoningBlock(
                 if (ctx.abortSignal?.aborted) break;
                 accumulated += delta.text;
                 yield responseReasoningSummaryDeltaStreamingEventSchema.parse({
-                    type: "response.reasoning_summary.delta",
+                    type: "response.reasoning_summary_text.delta",
                     sequence_number: ctx.nextSeq(),
                     item_id: itemId,
                     output_index: outputIndex,
-                    content_index: contentIndex,
+                    summary_index: contentIndex,
                     delta: delta.text,
                 });
             }
