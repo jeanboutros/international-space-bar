@@ -4,6 +4,11 @@ import type { Block } from "./response-stream.js";
 import { messageBlock, reasoningBlock, functionCallBlock } from "./blocks/index.js";
 import type { Delta, AsyncQueue as IAsyncQueue } from "./blocks/index.js";
 
+/**
+ * Contract for a compiled LangGraph that exposes a streaming event interface.
+ *
+ * Satisfied by any `CompiledStateGraph` from `@langchain/langgraph`.
+ */
 interface StreamableGraph {
     streamEvents(
         input: Record<string, unknown>,
@@ -13,14 +18,34 @@ interface StreamableGraph {
 }
 
 /**
- * A minimal AsyncQueue that provides back-pressure between a producer
- * (LangGraph streamEvents) and a consumer (block factory).
+ * A minimal async queue that provides back-pressure between a producer
+ * (LangGraph `streamEvents`) and a consumer (block factory).
+ *
+ * Used both as a delta channel within individual blocks and as the
+ * block-level channel inside {@link langGraphBlocks}.
+ *
+ * @typeParam T - The element type flowing through the queue.
+ *
+ * @example
+ * ```ts
+ * const q = new AsyncQueue<Delta>();
+ * q.push({ text: "hello" });
+ * q.end();
+ * for await (const delta of q) {
+ *   console.log(delta.text);
+ * }
+ * ```
  */
 export class AsyncQueue<T> implements IAsyncQueue<T> {
     private buffer: T[] = [];
     private resolve: ((value: IteratorResult<T>) => void) | null = null;
     private done = false;
 
+    /**
+     * Enqueue a value, resolving a pending consumer if one is waiting.
+     *
+     * @param value - The element to enqueue.
+     */
     push(value: T): void {
         if (this.resolve) {
             const r = this.resolve;
@@ -31,6 +56,11 @@ export class AsyncQueue<T> implements IAsyncQueue<T> {
         }
     }
 
+    /**
+     * Signal that no more values will be pushed.
+     *
+     * Any pending or future consumer iteration will complete.
+     */
     end(): void {
         this.done = true;
         if (this.resolve) {
@@ -40,6 +70,11 @@ export class AsyncQueue<T> implements IAsyncQueue<T> {
         }
     }
 
+    /**
+     * Returns an async iterator that yields values as they are pushed.
+     *
+     * @returns An `AsyncIterator` that completes when {@link end} is called.
+     */
     [Symbol.asyncIterator](): AsyncIterator<T> {
         return {
             next: () => {
@@ -60,19 +95,39 @@ export class AsyncQueue<T> implements IAsyncQueue<T> {
     }
 }
 
+/**
+ * Options controlling which block types {@link langGraphBlocks} emits.
+ */
 export interface LangGraphBlocksOptions {
+    /** When `true`, model reasoning/thinking content is emitted as `reasoningBlock` instances. */
     readonly hasReasoning?: boolean;
 }
 
 /**
- * Subscribes to a compiled LangGraph's streamEvents() and yields Block
- * instances in real-time for ResponseStream.run().
+ * Subscribes to a compiled LangGraph's `streamEvents()` and yields
+ * {@link Block} instances in real-time for {@link ResponseStream.run}.
  *
- * Uses a concurrent producer pattern: a detached async IIFE drives the
- * streamEvents iteration and pushes blocks to an AsyncQueue channel,
- * while this generator yields blocks from the channel as they arrive.
- * This avoids a yield/pull deadlock that would occur with a naive
- * async generator approach.
+ * @remarks
+ * Uses a **concurrent producer** pattern: a detached async IIFE drives
+ * the `streamEvents` iteration and pushes blocks to an {@link AsyncQueue}
+ * channel, while this generator yields blocks from the channel as they
+ * arrive. This avoids a yield/pull deadlock that would occur with a
+ * naive `async function*` approach — if the generator yielded a block
+ * and then waited for the consumer to pull, it could never push the
+ * next delta to that block's queue because it would be suspended at
+ * the `yield` point.
+ *
+ * @param graph - A compiled LangGraph exposing `streamEvents()`.
+ * @param input - The conversation messages to pass as graph input.
+ * @param options - Optional flags (e.g. enable reasoning blocks).
+ * @returns An async generator of {@link Block} instances, each ready
+ *   to be consumed by {@link ResponseStream.run}.
+ *
+ * @example
+ * ```ts
+ * const ctx = new ResponseStream(request);
+ * yield* ctx.run(langGraphBlocks(graph, baseMessages, { hasReasoning: true }));
+ * ```
  */
 export async function* langGraphBlocks(
     graph: StreamableGraph,

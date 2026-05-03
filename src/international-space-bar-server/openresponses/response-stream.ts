@@ -10,8 +10,34 @@ import {
 } from "./generated/zod/index.js";
 import type { ItemField, ResponseResource, ResponseStreamEvent, Usage } from "./responses.types.js";
 
+/**
+ * A block factory: given a {@link ResponseStream} context, yields the
+ * OpenResponses streaming events for one output item (message, reasoning,
+ * or function call).
+ *
+ * @example
+ * ```ts
+ * const block: Block = messageBlock("hello world");
+ * for await (const event of block(ctx)) {
+ *   console.log(event.type);
+ * }
+ * ```
+ */
 export type Block = (ctx: ResponseStream) => AsyncGenerator<ResponseStreamEvent>;
 
+/**
+ * Orchestrates an OpenResponses streaming response.
+ *
+ * Owns protocol-level state (sequence counter, output index, usage
+ * accumulator) and emits the `response.created` / `response.completed`
+ * envelope around an iterable of {@link Block} instances.
+ *
+ * @example
+ * ```ts
+ * const ctx = new ResponseStream(request);
+ * yield* ctx.run(langGraphBlocks(graph, messages));
+ * ```
+ */
 export class ResponseStream {
     private _seq = 0;
     private _outputIndex = 0;
@@ -32,24 +58,59 @@ export class ResponseStream {
         this._shell = this.buildShell(request);
     }
 
+    /**
+     * The zero-based index of the current output item being processed.
+     * Incremented by {@link run} after each block completes.
+     */
     get outputIndex(): number {
         return this._outputIndex;
     }
 
+    /**
+     * Returns the next monotonically-increasing sequence number for
+     * an SSE event and advances the internal counter.
+     *
+     * @returns The sequence number to use for the next event.
+     */
     nextSeq(): number {
         return this._seq++;
     }
 
+    /**
+     * Records a completed output item so it appears in the final
+     * `response.completed` payload.
+     *
+     * @param item - The completed output item (message, reasoning, or function call).
+     */
     recordOutputItem(item: ItemField): void {
         this._output.push(item);
     }
 
+    /**
+     * Accumulates token usage from a block into the response-level totals.
+     *
+     * @param delta - Partial usage counts to add (e.g. `{ output_tokens: 42 }`).
+     */
     addUsage(delta: Partial<Usage>): void {
         if (delta.input_tokens != null) this._usage.input_tokens += delta.input_tokens;
         if (delta.output_tokens != null) this._usage.output_tokens += delta.output_tokens;
         this._usage.total_tokens = this._usage.input_tokens + this._usage.output_tokens;
     }
 
+    /**
+     * Executes the streaming response lifecycle: emits `response.created`,
+     * iterates blocks yielding their events, then emits the terminal event
+     * (`completed`, `incomplete`, or `failed`).
+     *
+     * @param blocks - An iterable (or async iterable) of {@link Block} factories.
+     * @returns An async generator of {@link ResponseStreamEvent} objects.
+     *
+     * @example
+     * ```ts
+     * const ctx = new ResponseStream(request);
+     * yield* ctx.run([messageBlock("pong")]);
+     * ```
+     */
     async *run(
         blocks: Iterable<Block> | AsyncIterable<Block>,
     ): AsyncGenerator<ResponseStreamEvent> {
@@ -57,7 +118,7 @@ export class ResponseStream {
             type: "response.created",
             sequence_number: this.nextSeq(),
             response: this._shell,
-        }) as ResponseStreamEvent;
+        });
 
         try {
             for await (const block of blocks) {
@@ -77,7 +138,7 @@ export class ResponseStream {
                     usage: this._usage,
                     error: { code: "server_error", message },
                 },
-            }) as ResponseStreamEvent;
+            });
             return;
         }
 
@@ -92,7 +153,7 @@ export class ResponseStream {
                     usage: this._usage,
                     incomplete_details: { reason: "cancelled" },
                 },
-            }) as ResponseStreamEvent;
+            });
             return;
         }
 
@@ -106,7 +167,7 @@ export class ResponseStream {
                 output: this._output,
                 usage: this._usage,
             },
-        }) as ResponseStreamEvent;
+        });
     }
 
     private buildShell(request: AgentInvokeRequest): ResponseResource {

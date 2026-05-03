@@ -14,9 +14,38 @@ import type { ResponseStream } from "../response-stream.js";
 import type { ReasoningBody, ResponseStreamEvent } from "../responses.types.js";
 import type { AsyncQueue, Delta } from "./message-block.js";
 
+/**
+ * Creates a {@link Block} that emits a reasoning (thinking) output item.
+ *
+ * Accepts either a complete summary string (single-shot) or an
+ * {@link AsyncQueue} of {@link Delta} chunks for real-time streaming.
+ *
+ * @param summary - The full reasoning summary text (single-shot mode).
+ * @returns A block factory that yields OpenResponses reasoning events.
+ *
+ * @example
+ * ```ts
+ * yield* ctx.run([reasoningBlock("The user asked for X, so I will...")]);
+ * ```
+ */
 function reasoningBlock(
     summary: string,
 ): (ctx: ResponseStream) => AsyncGenerator<ResponseStreamEvent>;
+/**
+ * Creates a {@link Block} that emits a reasoning (thinking) output item.
+ *
+ * @param queue - An async iterable of text deltas (streaming mode).
+ * @returns A block factory that yields OpenResponses reasoning events.
+ *
+ * @example
+ * ```ts
+ * const q = new AsyncQueue<Delta>();
+ * const block = reasoningBlock(q);
+ * q.push({ text: "Let me think..." });
+ * q.end();
+ * yield* ctx.run([block]);
+ * ```
+ */
 function reasoningBlock(
     queue: AsyncQueue<Delta>,
 ): (ctx: ResponseStream) => AsyncGenerator<ResponseStreamEvent>;

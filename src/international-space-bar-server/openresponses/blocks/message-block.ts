@@ -11,13 +11,55 @@ import {
 import type { ResponseStream } from "../response-stream.js";
 import type { Message, ResponseStreamEvent } from "../responses.types.js";
 
+/**
+ * A single text chunk yielded by a streaming producer (e.g. an LLM token).
+ */
 export interface Delta {
+    /** The text content of this chunk. */
     readonly text: string;
 }
 
+/**
+ * An async iterable queue contract used by block factories to consume
+ * streamed deltas from a producer.
+ *
+ * @typeParam T - The element type (typically {@link Delta}).
+ */
 export interface AsyncQueue<T> extends AsyncIterable<T> {}
 
+/**
+ * Creates a {@link Block} that emits an assistant message output item.
+ *
+ * Accepts either a complete string (single-shot) or an {@link AsyncQueue}
+ * of {@link Delta} chunks for real-time streaming from an LLM.
+ *
+ * @param text - The full message text (single-shot mode).
+ * @returns A block factory that yields OpenResponses message events.
+ *
+ * @example
+ * ```ts
+ * // Single-shot
+ * yield* ctx.run([messageBlock("pong")]);
+ * ```
+ */
 function messageBlock(text: string): (ctx: ResponseStream) => AsyncGenerator<ResponseStreamEvent>;
+/**
+ * Creates a {@link Block} that emits an assistant message output item.
+ *
+ * @param queue - An async iterable of text deltas (streaming mode).
+ * @returns A block factory that yields OpenResponses message events.
+ *
+ * @example
+ * ```ts
+ * // Streaming from an AsyncQueue
+ * const q = new AsyncQueue<Delta>();
+ * const block = messageBlock(q);
+ * q.push({ text: "hel" });
+ * q.push({ text: "lo" });
+ * q.end();
+ * yield* ctx.run([block]);
+ * ```
+ */
 function messageBlock(
     queue: AsyncQueue<Delta>,
 ): (ctx: ResponseStream) => AsyncGenerator<ResponseStreamEvent>;
