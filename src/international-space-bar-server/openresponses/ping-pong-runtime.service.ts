@@ -75,7 +75,8 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         // invoke. For example, if the model is "simple-workflow", we should invoke the simpleWorkflowGraph.
         // The user should be able to switch between different workflows and llms by changing the model name 
         // in the request.
-        // TODO: Identify how the list of models can be shared with 
+        // TODO: Identify how the list of models can be shared with the client and if there is a protocol 
+        // standard for that.
         const v1 = this.streamSimplePong(
             request,
             `res_${randomUUID()}`,
@@ -126,7 +127,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         // ── Full LLM streaming (Ollama reachable) ───────────────────────────────
         const llm = new ChatOllama({ model: "gemma4:e2b", baseUrl: ollamaBaseUrl });
 
-        
+
         // ── Tool for index 3 ────────────────────────────────────────────────────
         const weatherTool = {
             type: "function" as const,

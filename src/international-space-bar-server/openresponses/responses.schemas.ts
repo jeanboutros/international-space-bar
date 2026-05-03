@@ -13,6 +13,6 @@ export const CreateResponseSchema = (
         // to the agent runtime without inspecting individual item shapes.
         input: z.union([z.string(), z.array(z.unknown())]).optional(),
     })
-    .passthrough();
+    .loose();
 
 export type CreateResponseBody = z.infer<typeof CreateResponseSchema>;
