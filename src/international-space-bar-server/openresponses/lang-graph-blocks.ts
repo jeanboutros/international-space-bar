@@ -1,9 +1,16 @@
-import type { CompiledStateGraph } from "@langchain/langgraph";
 import type { BaseMessage } from "@langchain/core/messages";
 
 import type { Block } from "./response-stream.js";
 import { messageBlock, reasoningBlock, functionCallBlock } from "./blocks/index.js";
 import type { Delta, AsyncQueue as IAsyncQueue } from "./blocks/index.js";
+
+interface StreamableGraph {
+    streamEvents(
+        input: Record<string, unknown>,
+        options: Record<string, unknown>,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ): AsyncIterable<{ event: string; data: any }>;
+}
 
 /**
  * A minimal AsyncQueue that provides back-pressure between a producer
@@ -62,14 +69,7 @@ export interface LangGraphBlocksOptions {
  * for ResponseStream.run().
  */
 export async function langGraphBlocks(
-    graph: CompiledStateGraph<
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        any
-    >,
+    graph: StreamableGraph,
     input: readonly BaseMessage[],
     options?: LangGraphBlocksOptions,
 ): Promise<Block[]> {
