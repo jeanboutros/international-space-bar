@@ -4,34 +4,34 @@
 version: 1
 
 app:
-  appVersion: "0.1.0"
+    appVersion: "0.1.0"
 
 server:
-  port: 3000
-  host: "127.0.0.1"
-  enableCors: true
-  corsOrigins:
-    - "http://localhost:3000"
+    port: 3000
+    host: "127.0.0.1"
+    enableCors: true
+    corsOrigins:
+        - "http://localhost:3000"
 
 logger:
-  type: pino
-  logFilePath: ./logs/app.log
-  level: debug
+    type: pino
+    logFilePath: ./logs/app.log
+    level: debug
 
 ollama:
-  baseUrl: https://ollama.com
-  apiKey: SECRET[OLLAMA_API_KEY]
+    baseUrl: https://ollama.com
+    apiKey: SECRET[OLLAMA_API_KEY]
 
 tavily:
-  apiKey: SECRET[TAVILY_API_KEY]
+    apiKey: SECRET[TAVILY_API_KEY]
 
 models:
-  default: glm-5.1:cloud
-  aliases:
-    opus: glm-5.1:cloud
-    sonnet: deepseek-v4-pro:cloud
-    haiku: ollama:gemma4:31b-cloud
+    default: glm-5.1:cloud
+    aliases:
+        opus: glm-5.1:cloud
+        sonnet: deepseek-v4-pro:cloud
+        haiku: ollama:gemma4:31b-cloud
 
 paths:
-  skillsRoot: .agents/skills/
-  agentsConfigDir: .agents/agents/
+    skillsRoot: .agents/skills/
+    agentsConfigDir: .agents/agents/

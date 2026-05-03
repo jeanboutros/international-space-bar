@@ -14,8 +14,8 @@ import { readFileSync, writeFileSync } from "node:fs";
 
 const filePath = process.argv[2];
 if (!filePath) {
-	console.error("Usage: node scripts/fix-openapi-discriminators.mjs <file>");
-	process.exit(1);
+    console.error("Usage: node scripts/fix-openapi-discriminators.mjs <file>");
+    process.exit(1);
 }
 
 let content = readFileSync(filePath, "utf8");
@@ -32,9 +32,9 @@ let content = readFileSync(filePath, "utf8");
 // with it. The regex is case-insensitive for "always" / "Always".
 
 content = content.replace(
-	/[Aa]lways\b[^`]*`([^`]+)`\. \(enum property replaced by openapi-typescript\)(\n\s+\* @enum \{string\}\n\s+\*\/\n\s+type: )"[^"]+";/g,
-	(match, originalValue, middle) =>
-		`Always \`${originalValue}\`. (enum property replaced by openapi-typescript)${middle}"${originalValue}";`,
+    /[Aa]lways\b[^`]*`([^`]+)`\. \(enum property replaced by openapi-typescript\)(\n\s+\* @enum \{string\}\n\s+\*\/\n\s+type: )"[^"]+";/g,
+    (match, originalValue, middle) =>
+        `Always \`${originalValue}\`. (enum property replaced by openapi-typescript)${middle}"${originalValue}";`,
 );
 
 writeFileSync(filePath, content);

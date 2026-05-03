@@ -209,7 +209,7 @@ async function testStreamAccepted() {
 /** @type {{ id: string; label: string; fn: () => Promise<void> }[]} */
 const CASES = [
     { id: "C-1", label: "valid request baseline → HTTP 200", fn: testValidRequestBaseline },
-    { id: "C-2", label: 'empty model → HTTP 400/422', fn: testEmptyModelRejected },
+    { id: "C-2", label: "empty model → HTTP 400/422", fn: testEmptyModelRejected },
     { id: "C-3", label: "null model → HTTP 400/422", fn: testNullModelRejected },
     { id: "C-4", label: "array input → HTTP 200", fn: testArrayInputAccepted },
     { id: "C-5", label: "unknown field passthrough → HTTP 200", fn: testUnknownFieldAccepted },

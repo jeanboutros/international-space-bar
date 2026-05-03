@@ -4,28 +4,28 @@
 version: 1
 
 app:
-  appVersion: "0.1.0"
+    appVersion: "0.1.0"
 
 server:
-  port: 3000
-  host: "0.0.0.0"
+    port: 3000
+    host: "0.0.0.0"
 
 logger:
-  type: pino
-  logFilePath: ./logs/app.log
-  level: info
+    type: pino
+    logFilePath: ./logs/app.log
+    level: info
 
 ollama:
-  baseUrl: SECRET[OLLAMA_BASE_URL]
-  apiKey: SECRET[OLLAMA_API_KEY]
+    baseUrl: SECRET[OLLAMA_BASE_URL]
+    apiKey: SECRET[OLLAMA_API_KEY]
 
 tavily:
-  apiKey: SECRET[TAVILY_API_KEY]
+    apiKey: SECRET[TAVILY_API_KEY]
 
 models:
-  default: glm-5.1:cloud
-  aliases: {}
+    default: glm-5.1:cloud
+    aliases: {}
 
 paths:
-  skillsRoot: .agents/skills/
-  agentsConfigDir: .agents/agents/
+    skillsRoot: .agents/skills/
+    agentsConfigDir: .agents/agents/

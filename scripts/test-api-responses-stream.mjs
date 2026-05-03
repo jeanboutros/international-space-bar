@@ -34,7 +34,7 @@ const options = {
     method: "POST",
     headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${API_KEY}`,
+        Authorization: `Bearer ${API_KEY}`,
         "Content-Length": Buffer.byteLength(BODY),
     },
 };

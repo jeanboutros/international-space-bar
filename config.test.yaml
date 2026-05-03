@@ -4,21 +4,21 @@
 version: 1
 
 app:
-  appVersion: "0.1.0"
+    appVersion: "0.1.0"
 
 server:
-  port: 3001
-  host: "127.0.0.1"
+    port: 3001
+    host: "127.0.0.1"
 
 logger:
-  type: pino
-  logFilePath: ./logs/test.log
-  level: warn
+    type: pino
+    logFilePath: ./logs/test.log
+    level: warn
 
 models:
-  default: test-model
-  aliases: {}
+    default: test-model
+    aliases: {}
 
 paths:
-  skillsRoot: .agents/skills/
-  agentsConfigDir: .agents/agents/
+    skillsRoot: .agents/skills/
+    agentsConfigDir: .agents/agents/
