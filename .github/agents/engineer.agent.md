@@ -142,6 +142,22 @@ For each ticket, you MUST follow the Plan-Apply-Unify protocol:
 - Every change must be additive unless the ticket explicitly says otherwise
 - Run `pnpm check` after **each logical unit**, not just at the end
 
+### Documentation obligations — MANDATORY for new code
+
+Every **new** public symbol you create MUST have JSDoc documentation. This is a hard requirement — the Challenger will reject code that lacks it.
+
+| Symbol type | Required JSDoc |
+|-------------|---------------|
+| Exported function | `@param` for each parameter, `@returns`, at least one `@example` |
+| Exported class | Class-level description, `@example` of basic usage |
+| Public method | `@param`, `@returns`, `@example` |
+| Exported interface / type alias | Description of purpose, `@example` if non-trivial |
+| Exported constant | Description of what it holds and when to use it |
+
+**Why this matters:** Architecturally significant code (e.g. `AsyncQueue`, `ResponseStream`, block factories) forms the contract between server ↔ LLM ↔ client layers. Future engineers and agents cannot reason about it without documentation. Undocumented public APIs are a **quality gate failure**, not a style preference.
+
+**Exception:** Generated code (`openresponses/generated/`) and test files (`.test.ts`) are exempt.
+
 ### Implementation output format
 
 ```markdown

@@ -191,6 +191,38 @@ The following are **mandatory rejection criteria**, not suggestions or nice-to-h
 - ALWAYS check the actual files, not just the agents' reports
 - ALWAYS review the Security Reviewer's assessment as part of your verdict
 
+## Mandatory self-audit — NEVER SKIP
+
+Before writing your verdict, you MUST complete this checklist **explicitly in your output**. Every row must show a concrete finding or "PASS — checked N files". If a row is blank or missing, your review is incomplete and INVALID.
+
+This exists because a prior pipeline run (isb-epic-011) allowed code with zero JSDoc to pass — the reviewer focused on architecture and forgot to check documentation. That failure shipped undocumented `AsyncQueue`, `ResponseStream`, and all block factories.
+
+```markdown
+### Self-audit checklist
+
+| Category                        | Checked? | Finding or PASS                 |
+| ------------------------------- | -------- | ------------------------------- |
+| SOLID                           | yes / no | [specific finding or PASS]      |
+| DRY                             | yes / no | [specific finding or PASS]      |
+| Clean Architecture              | yes / no | [specific finding or PASS]      |
+| Folder structure                | yes / no | [specific finding or PASS]      |
+| Code currency (Context7)        | yes / no | [specific finding or PASS]      |
+| Function size & complexity      | yes / no | [specific finding or PASS]      |
+| Performance & resource mgmt     | yes / no | [specific finding or PASS]      |
+| Code smells                     | yes / no | [specific finding or PASS]      |
+| **JSDoc on new public symbols** | yes / no | [list files checked + findings] |
+| Structured logging              | yes / no | [specific finding or PASS]      |
+| Security                        | yes / no | [specific finding or PASS]      |
+| Security assessment             | yes / no | [specific finding or PASS]      |
+```
+
+The **JSDoc on new public symbols** row requires you to:
+1. List every new exported function, class, interface, and type alias
+2. Verify each has `@param`, `@returns`, and `@example`
+3. If ANY lack documentation → **REJECT** (not a warning, not deferred)
+
+"Scaffold code" or "zero consumers today" is NOT an excuse to skip JSDoc. If code is exported, it is a public API, and it MUST be documented.
+
 ## Output format
 
 ```markdown

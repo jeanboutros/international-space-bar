@@ -64,6 +64,20 @@ Write and update documentation based on the ticket's requirements and the Docs P
 - Code-level documentation (JSDoc for new public interfaces)
 - **Standards documentation** (code quality, directory structure, test coverage, logging, naming conventions, code review checklist, security patterns)
 
+### JSDoc — MANDATORY deliverable
+
+For every ticket, you MUST scan all files the Engineer created or modified and verify that **every new exported symbol** has complete JSDoc. This is not optional or deferred.
+
+**Process:**
+1. List all new exported functions, classes, interfaces, type aliases, and constants
+2. For each: verify it has a description, `@param` (if applicable), `@returns` (if applicable), and at least one `@example`
+3. If missing → **write the JSDoc yourself** (you have edit access to source files for documentation only)
+4. Include the JSDoc additions in your Documentation Report under "JSDoc added"
+
+**Why:** The Engineer's mandate is to write working code. Your mandate is to ensure it's documented. The Challenger will reject the ticket if JSDoc is missing — catching it here avoids rejection loops.
+
+**Exception:** Generated code (`openresponses/generated/`), test files (`.test.ts`), and private (non-exported) symbols are exempt.
+
 ### Standards documentation
 
 When the Docs Planner's strategy includes standards documentation updates, you must create or update the relevant standards files. Standards documentation is different from feature documentation:
