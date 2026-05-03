@@ -9,7 +9,7 @@ import {
     responseOutputTextDoneStreamingEventSchema,
 } from "../generated/zod/index.js";
 import type { ResponseStream } from "../response-stream.js";
-import type { ItemField, ResponseStreamEvent } from "../responses.types.js";
+import type { Message, ResponseStreamEvent } from "../responses.types.js";
 
 export interface Delta {
     readonly text: string;
@@ -29,20 +29,20 @@ function messageBlock(
         const outputIndex = ctx.outputIndex;
         const contentIndex = 0;
 
-        const item: ItemField = {
+        const item: Message = {
             type: "message",
             id: itemId,
             status: "in_progress",
             role: "assistant",
             content: [],
-        } as unknown as ItemField;
+        };
 
         yield responseOutputItemAddedStreamingEventSchema.parse({
             type: "response.output_item.added",
             sequence_number: ctx.nextSeq(),
             output_index: outputIndex,
             item,
-        }) as ResponseStreamEvent;
+        });
 
         yield responseContentPartAddedStreamingEventSchema.parse({
             type: "response.content_part.added",
@@ -51,7 +51,7 @@ function messageBlock(
             output_index: outputIndex,
             content_index: contentIndex,
             part: { type: "output_text", text: "", annotations: [] },
-        }) as ResponseStreamEvent;
+        });
 
         let accumulated = "";
 
@@ -64,7 +64,7 @@ function messageBlock(
                 output_index: outputIndex,
                 content_index: contentIndex,
                 delta: input,
-            }) as ResponseStreamEvent;
+            });
         } else {
             for await (const delta of input) {
                 if (ctx.abortSignal?.aborted) break;
@@ -76,7 +76,7 @@ function messageBlock(
                     output_index: outputIndex,
                     content_index: contentIndex,
                     delta: delta.text,
-                }) as ResponseStreamEvent;
+                });
             }
         }
 
@@ -87,7 +87,7 @@ function messageBlock(
             output_index: outputIndex,
             content_index: contentIndex,
             text: accumulated,
-        }) as ResponseStreamEvent;
+        });
 
         yield responseContentPartDoneStreamingEventSchema.parse({
             type: "response.content_part.done",
@@ -96,22 +96,22 @@ function messageBlock(
             output_index: outputIndex,
             content_index: contentIndex,
             part: { type: "output_text", text: accumulated, annotations: [] },
-        }) as ResponseStreamEvent;
+        });
 
-        const completedItem: ItemField = {
+        const completedItem: Message = {
             type: "message",
             id: itemId,
             status: "completed",
             role: "assistant",
             content: [{ type: "output_text", text: accumulated, annotations: [] }],
-        } as unknown as ItemField;
+        };
 
         yield responseOutputItemDoneStreamingEventSchema.parse({
             type: "response.output_item.done",
             sequence_number: ctx.nextSeq(),
             output_index: outputIndex,
             item: completedItem,
-        }) as ResponseStreamEvent;
+        });
 
         ctx.recordOutputItem(completedItem);
         ctx.addUsage({ output_tokens: accumulated.length });

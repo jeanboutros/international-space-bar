@@ -11,7 +11,7 @@ import {
     responseReasoningSummaryDeltaStreamingEventSchema,
 } from "../generated/zod/index.js";
 import type { ResponseStream } from "../response-stream.js";
-import type { ItemField, ResponseStreamEvent } from "../responses.types.js";
+import type { ReasoningBody, ResponseStreamEvent } from "../responses.types.js";
 import type { AsyncQueue, Delta } from "./message-block.js";
 
 function reasoningBlock(
@@ -28,19 +28,18 @@ function reasoningBlock(
         const outputIndex = ctx.outputIndex;
         const contentIndex = 0;
 
-        const item: ItemField = {
+        const item: ReasoningBody = {
             type: "reasoning",
             id: itemId,
-            status: "in_progress",
             summary: [],
-        } as unknown as ItemField;
+        };
 
         yield responseOutputItemAddedStreamingEventSchema.parse({
             type: "response.output_item.added",
             sequence_number: ctx.nextSeq(),
             output_index: outputIndex,
             item,
-        }) as ResponseStreamEvent;
+        });
 
         yield responseContentPartAddedStreamingEventSchema.parse({
             type: "response.content_part.added",
@@ -49,7 +48,7 @@ function reasoningBlock(
             output_index: outputIndex,
             content_index: contentIndex,
             part: { type: "summary_text", text: "" },
-        }) as ResponseStreamEvent;
+        });
 
         let accumulated = "";
 
@@ -62,7 +61,7 @@ function reasoningBlock(
                 output_index: outputIndex,
                 content_index: contentIndex,
                 delta: input,
-            }) as ResponseStreamEvent;
+            });
         } else {
             for await (const delta of input) {
                 if (ctx.abortSignal?.aborted) break;
@@ -74,7 +73,7 @@ function reasoningBlock(
                     output_index: outputIndex,
                     content_index: contentIndex,
                     delta: delta.text,
-                }) as ResponseStreamEvent;
+                });
             }
         }
 
@@ -85,21 +84,20 @@ function reasoningBlock(
             output_index: outputIndex,
             content_index: contentIndex,
             part: { type: "summary_text", text: accumulated },
-        }) as ResponseStreamEvent;
+        });
 
-        const completedItem: ItemField = {
+        const completedItem: ReasoningBody = {
             type: "reasoning",
             id: itemId,
-            status: "completed",
             summary: [{ type: "summary_text", text: accumulated }],
-        } as unknown as ItemField;
+        };
 
         yield responseOutputItemDoneStreamingEventSchema.parse({
             type: "response.output_item.done",
             sequence_number: ctx.nextSeq(),
             output_index: outputIndex,
             item: completedItem,
-        }) as ResponseStreamEvent;
+        });
 
         ctx.recordOutputItem(completedItem);
     };
