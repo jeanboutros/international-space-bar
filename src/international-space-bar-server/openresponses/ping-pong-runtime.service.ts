@@ -8,7 +8,9 @@ import { z } from "zod";
 import type { ILogger } from "../common/interfaces/index.js";
 import { LOGGER } from "../common/interfaces/logger.port.js";
 import type { AgentInvokeRequest, AgentRuntimePort } from "./agent-runtime.port.js";
+import { messageBlock } from "./blocks/index.js";
 import { toBaseMessages } from "./input-to-messages.js";
+import { ResponseStream } from "./response-stream.js";
 import { responseCompletedStreamingEventSchema } from "./generated/zod/responseCompletedStreamingEventSchema.js";
 import { responseContentPartAddedStreamingEventSchema } from "./generated/zod/responseContentPartAddedStreamingEventSchema.js";
 import { responseContentPartDoneStreamingEventSchema } from "./generated/zod/responseContentPartDoneStreamingEventSchema.js";
@@ -124,7 +126,8 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         const useOllama = await this.isOllamaReachable(ollamaBaseUrl);
 
         if (!useOllama) {
-            yield* this.streamSimplePong(request, respId, seq, now, abortSignal);
+            const rs = new ResponseStream(request);
+            yield* rs.run([messageBlock("pong")]);
             return;
         }
 

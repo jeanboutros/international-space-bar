@@ -6,6 +6,7 @@ import {
     responseOutputItemAddedStreamingEventSchema,
     responseOutputItemDoneStreamingEventSchema,
     responseOutputTextDeltaStreamingEventSchema,
+    responseOutputTextDoneStreamingEventSchema,
 } from "../generated/zod/index.js";
 import type { ResponseStream } from "../response-stream.js";
 import type { ItemField, ResponseStreamEvent } from "../responses.types.js";
@@ -78,6 +79,15 @@ function messageBlock(
                 }) as ResponseStreamEvent;
             }
         }
+
+        yield responseOutputTextDoneStreamingEventSchema.parse({
+            type: "response.output_text.done",
+            sequence_number: ctx.nextSeq(),
+            item_id: itemId,
+            output_index: outputIndex,
+            content_index: contentIndex,
+            text: accumulated,
+        }) as ResponseStreamEvent;
 
         yield responseContentPartDoneStreamingEventSchema.parse({
             type: "response.content_part.done",
