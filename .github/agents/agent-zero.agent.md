@@ -182,6 +182,39 @@ Before transitioning between major phases:
 - ALWAYS ask for user approval at phase transitions
 - ALWAYS report errors before attempting any recovery
 
+## Review persistence — mandatory
+
+After **every** validation round (Phase A, Phase B planning output, Phase C post-execution review), save the **full, unabridged** outputs from all participating agents to `docs/project-management/reviews/`. This applies to ALL rounds — including rejected rounds that loop back for re-evaluation.
+
+### Naming convention
+
+```
+docs/project-management/reviews/<epic-id>-phase-<phase>-round-<N>.md
+```
+
+Examples:
+
+- `isb-epic-011-phase-a-round-1.md` — first Phase A validation (rejected)
+- `isb-epic-011-phase-a-round-2.md` — second Phase A validation (satisfied)
+- `isb-epic-011-phase-b-round-1.md` — Phase B planning output
+- `isb-epic-011-phase-c-review-round-1.md` — post-execution full review
+
+### Content requirements
+
+Each review file must contain:
+
+1. **Header table**: date, verdict (SATISFIED/NOT SATISFIED/APPROVED/REJECTED), round number, loop iteration
+2. **Full agent outputs**: the complete review from each agent (Architect, Engineer, Security Reviewer, Tech Validator) — not summaries, not excerpts, the full text
+3. **Flags raised**: all flags in structured format
+4. **Verdict**: the gatekeeper's final decision with reasoning
+
+### Rules
+
+- Save **every** round, not just the final approved round. Rejected rounds are valuable context for understanding why a design iterated.
+- Link all review files from the epic file under a `## Reviews` section.
+- Never overwrite a previous round's file — each round gets its own numbered file.
+- The round number increments per phase per epic (round-1, round-2, round-3 for Phase A loops; separate numbering for Phase B and Phase C reviews).
+
 ## Output format
 
 When reporting to the user, provide:
@@ -191,3 +224,4 @@ When reporting to the user, provide:
 - Any blockers, clarifications, or escalations
 - Links to created/modified files
 - Security assessment summary (from Phase A and Phase C)
+- Link to the saved review file for this round
