@@ -4,6 +4,80 @@ import type { Block } from "./response-stream.js";
 import { messageBlock, reasoningBlock, functionCallBlock } from "./blocks/index.js";
 import type { Delta, AsyncQueue as IAsyncQueue } from "./blocks/index.js";
 
+// ─── Stream event types ─────────────────────────────────────────────────────
+
+/** A single tool call fragment from a `on_chat_model_stream` event. */
+interface ToolCallChunkParsed {
+    readonly id: string | undefined;
+    readonly index: number | undefined;
+    readonly name: string | undefined;
+    readonly args: string | undefined;
+}
+
+/** Parsed chat model chunk with typed fields. */
+interface ChatModelChunk {
+    readonly content: string | null;
+    readonly toolCallChunks: readonly ToolCallChunkParsed[];
+    readonly reasoningContent: string | null;
+}
+
+/** Discriminated union of parsed LangGraph stream events. */
+type ParsedStreamEvent =
+    | { readonly type: "chat_model_stream"; readonly chunk: ChatModelChunk }
+    | { readonly type: "chat_model_end" }
+    | { readonly type: "other" };
+
+/**
+ * Narrows a raw LangGraph `streamEvents` v2 entry into a typed discriminated
+ * union. Contains the single `any`-boundary — all downstream code operates on
+ * the narrowed types.
+ */
+function parseStreamEvent(raw: { event: string; data: unknown }): ParsedStreamEvent {
+    if (raw.event === "on_chat_model_stream") {
+        const data = raw.data as Record<string, unknown> | null | undefined;
+        const rawChunk = data?.chunk;
+        if (!rawChunk || typeof rawChunk !== "object") return { type: "other" };
+        const chunk = rawChunk as Record<string, unknown>;
+
+        // Tool call chunks
+        const rawTools: unknown[] = Array.isArray(chunk.tool_call_chunks)
+            ? (chunk.tool_call_chunks as unknown[])
+            : [];
+        const toolCallChunks: ToolCallChunkParsed[] = rawTools.map((t) => {
+            const obj = t && typeof t === "object" ? (t as Record<string, unknown>) : {};
+            return {
+                id: typeof obj.id === "string" ? obj.id : undefined,
+                index: typeof obj.index === "number" ? obj.index : undefined,
+                name: typeof obj.name === "string" ? obj.name : undefined,
+                args: typeof obj.args === "string" ? obj.args : undefined,
+            };
+        });
+
+        // Reasoning content
+        const additionalKwargs =
+            typeof chunk.additional_kwargs === "object" && chunk.additional_kwargs
+                ? (chunk.additional_kwargs as Record<string, unknown>)
+                : null;
+        const reasoningContent =
+            additionalKwargs && typeof additionalKwargs.reasoning_content === "string"
+                ? additionalKwargs.reasoning_content
+                : null;
+
+        // Text content
+        const content = typeof chunk.content === "string" ? chunk.content : null;
+
+        return { type: "chat_model_stream", chunk: { content, toolCallChunks, reasoningContent } };
+    }
+
+    if (raw.event === "on_chat_model_end") {
+        return { type: "chat_model_end" };
+    }
+
+    return { type: "other" };
+}
+
+// ─── StreamableGraph interface ──────────────────────────────────────────────
+
 /**
  * Contract for a compiled LangGraph that exposes a streaming event interface.
  *
@@ -13,8 +87,7 @@ interface StreamableGraph {
     streamEvents(
         input: Record<string, unknown>,
         options: Record<string, unknown>,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ): AsyncIterable<{ event: string; data: any }>;
+    ): AsyncIterable<{ event: string; data: unknown }>;
 }
 
 /**
@@ -148,15 +221,14 @@ export async function* langGraphBlocks(
             );
 
             for await (const event of stream) {
-                const { event: eventType, data } = event;
+                const parsed = parseStreamEvent(event);
 
-                if (eventType === "on_chat_model_stream") {
-                    const chunk = data?.chunk;
-                    if (!chunk) continue;
+                if (parsed.type === "chat_model_stream") {
+                    const { chunk } = parsed;
 
                     // Handle tool calls
-                    if (chunk.tool_call_chunks?.length) {
-                        for (const toolChunk of chunk.tool_call_chunks) {
+                    if (chunk.toolCallChunks.length) {
+                        for (const toolChunk of chunk.toolCallChunks) {
                             const id = toolChunk.id ?? toolChunk.index?.toString() ?? "0";
                             if (!toolQueues.has(id)) {
                                 const q = new AsyncQueue<Delta>();
@@ -176,20 +248,17 @@ export async function* langGraphBlocks(
                     }
 
                     // Handle reasoning (thinking) content
-                    if (options?.hasReasoning && chunk.additional_kwargs?.reasoning_content) {
+                    if (options?.hasReasoning && chunk.reasoningContent) {
                         if (!currentReasoningQueue) {
                             currentReasoningQueue = new AsyncQueue<Delta>();
                             blockChannel.push(reasoningBlock(currentReasoningQueue));
                         }
-                        currentReasoningQueue.push({
-                            text: chunk.additional_kwargs.reasoning_content as string,
-                        });
+                        currentReasoningQueue.push({ text: chunk.reasoningContent });
                         continue;
                     }
 
                     // Handle text content
-                    const text = typeof chunk.content === "string" ? chunk.content : null;
-                    if (text) {
+                    if (chunk.content) {
                         if (currentReasoningQueue) {
                             currentReasoningQueue.end();
                             currentReasoningQueue = null;
@@ -198,9 +267,9 @@ export async function* langGraphBlocks(
                             currentMessageQueue = new AsyncQueue<Delta>();
                             blockChannel.push(messageBlock(currentMessageQueue));
                         }
-                        currentMessageQueue.push({ text });
+                        currentMessageQueue.push({ text: chunk.content });
                     }
-                } else if (eventType === "on_chat_model_end") {
+                } else if (parsed.type === "chat_model_end") {
                     // Close all open queues for this model invocation
                     if (currentMessageQueue) {
                         currentMessageQueue.end();
