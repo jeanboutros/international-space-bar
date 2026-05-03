@@ -1,11 +1,11 @@
 # Post-Execution Full Review — isb-epic-013, Round 1
 
-| Field   | Value                           |
-| ------- | ------------------------------- |
-| Date    | 2026-05-03                      |
-| Verdict | SATISFIED                       |
-| Round   | 1 (post-execution re-entry)     |
-| Phase   | A (re-entry after Phase C)      |
+| Field   | Value                       |
+| ------- | --------------------------- |
+| Date    | 2026-05-03                  |
+| Verdict | SATISFIED                   |
+| Round   | 1 (post-execution re-entry) |
+| Phase   | A (re-entry after Phase C)  |
 
 ## Participants
 
@@ -90,13 +90,13 @@ None.
 
 ### Non-blocking concerns tracked by tickets
 
-| Concern | Severity | Ticket |
-|---------|----------|--------|
-| Producer errors swallowed (AC-4 mismatch) | medium | isb-0097 |
-| Inaccurate logging comment | low | isb-0098 |
-| Untyped `data.*` accesses / `as string` cast | medium | isb-0099 |
-| `err.message` leak in `response.failed` | medium | isb-adv-0001 |
-| Unbounded AsyncQueue buffer | low | acceptable |
+| Concern                                      | Severity | Ticket       |
+| -------------------------------------------- | -------- | ------------ |
+| Producer errors swallowed (AC-4 mismatch)    | medium   | isb-0097     |
+| Inaccurate logging comment                   | low      | isb-0098     |
+| Untyped `data.*` accesses / `as string` cast | medium   | isb-0099     |
+| `err.message` leak in `response.failed`      | medium   | isb-adv-0001 |
+| Unbounded AsyncQueue buffer                  | low      | acceptable   |
 
 ### Recommendation
 

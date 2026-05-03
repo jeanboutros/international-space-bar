@@ -1,11 +1,11 @@
 # Phase C Challenger Review — isb-epic-013, Round 1
 
-| Field   | Value                |
-| ------- | -------------------- |
-| Date    | 2026-05-03           |
-| Verdict | APPROVED             |
-| Round   | 1                    |
-| Phase   | C (post-execution)   |
+| Field   | Value              |
+| ------- | ------------------ |
+| Date    | 2026-05-03         |
+| Verdict | APPROVED           |
+| Round   | 1                  |
+| Phase   | C (post-execution) |
 
 ## Verdict
 

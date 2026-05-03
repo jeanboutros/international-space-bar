@@ -1,13 +1,13 @@
 # isb-0098 — Remove inaccurate "errors are logged" comment
 
-| Field       | Value                                      |
-| ----------- | ------------------------------------------ |
-| ID          | isb-0098                                   |
-| Status      | backlog                                    |
-| Priority    | low                                        |
-| Epic        | —                                          |
-| Source      | Challenger review isb-epic-013 (obs. 2)    |
-| Depends on  | —                                          |
+| Field      | Value                                   |
+| ---------- | --------------------------------------- |
+| ID         | isb-0098                                |
+| Status     | backlog                                 |
+| Priority   | low                                     |
+| Epic       | —                                       |
+| Source     | Challenger review isb-epic-013 (obs. 2) |
+| Depends on | —                                       |
 
 ## Context
 

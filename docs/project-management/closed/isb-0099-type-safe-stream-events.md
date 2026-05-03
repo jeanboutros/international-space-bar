@@ -1,13 +1,13 @@
 # isb-0099 — Add type-safe event parser for streamEvents
 
-| Field       | Value                                      |
-| ----------- | ------------------------------------------ |
-| ID          | isb-0099                                   |
-| Status      | backlog                                    |
-| Priority    | medium                                     |
-| Epic        | —                                          |
-| Source      | Challenger review isb-epic-013 (obs. 3)    |
-| Depends on  | —                                          |
+| Field      | Value                                   |
+| ---------- | --------------------------------------- |
+| ID         | isb-0099                                |
+| Status     | backlog                                 |
+| Priority   | medium                                  |
+| Epic       | —                                       |
+| Source     | Challenger review isb-epic-013 (obs. 3) |
+| Depends on | —                                       |
 
 ## Context
 

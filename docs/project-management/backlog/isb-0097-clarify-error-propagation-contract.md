@@ -1,13 +1,13 @@
 # isb-0097 — Clarify error propagation contract in langGraphBlocks
 
-| Field       | Value                                      |
-| ----------- | ------------------------------------------ |
-| ID          | isb-0097                                   |
-| Status      | backlog                                    |
-| Priority    | low                                        |
-| Epic        | —                                          |
-| Source      | Challenger review isb-epic-013 (obs. 1)    |
-| Depends on  | —                                          |
+| Field      | Value                                   |
+| ---------- | --------------------------------------- |
+| ID         | isb-0097                                |
+| Status     | backlog                                 |
+| Priority   | low                                     |
+| Epic       | —                                       |
+| Source     | Challenger review isb-epic-013 (obs. 1) |
+| Depends on | —                                       |
 
 ## Context
 
