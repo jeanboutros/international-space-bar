@@ -401,8 +401,6 @@ Today, `streamSimplePong` simply `return`s on abort, leaving the SSE stream trun
 
 The current `MessageItemShape` and `FunctionCallItemShape` Zod shapes restrict `status` to `["in_progress", "completed"]`. The spec also allows `"incomplete"`. The class's internal shapes will widen these to match the spec, so an aborted message item can be reported as `status: "incomplete"` rather than forced to `"completed"`.
 
-> **Note:** Reasoning items have no `status` field per the OpenAPI spec — only message and function_call items carry status.
-
 Additionally, the spec defines fields the current code never emits or accepts:
 
 - **`Message.phase`** (`"commentary" | "final_answer"`) — used by some models (e.g. `gpt-5.3-codex`) to distinguish intermediate from final assistant messages. Optional, but must be passed through.
