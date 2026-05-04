@@ -45,7 +45,7 @@ export class PingPongRuntimeService implements AgentRuntimePort {
         const graph = wrapAsGraph(llm);
         const input = messages.length > 0 ? messages : [new HumanMessage(request.input as string)];
 
-        yield* rs.run(langGraphBlocks(graph, input, undefined, this.logger));
+        yield* rs.run(langGraphBlocks(graph, input, { hasReasoning: true }, this.logger));
     }
 
     private async isOllamaReachable(baseUrl: string): Promise<boolean> {
