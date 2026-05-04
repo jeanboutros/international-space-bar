@@ -184,7 +184,12 @@ export class ResponseStream {
             instructions: config?.instructions ?? null,
             output: [],
             error: null,
-            tools: config?.tools ?? [],
+            tools: (config?.tools ?? []).map((t) => {
+                // FunctionToolParam.strict is optional but FunctionTool.strict requires boolean | null.
+                // Normalise missing strict to null before schema validation.
+                if (typeof t !== "object" || t === null || "strict" in t) return t;
+                return { ...t, strict: null };
+            }),
             tool_choice: config?.tool_choice ?? "auto",
             truncation: config?.truncation ?? "disabled",
             parallel_tool_calls: config?.parallel_tool_calls ?? true,

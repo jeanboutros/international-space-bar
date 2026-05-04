@@ -54,7 +54,7 @@ export class ResponsesService {
             top_p: (body.top_p as number | undefined) ?? null,
             max_output_tokens: (body.max_output_tokens as number | undefined) ?? null,
             tools: (body.tools as readonly unknown[] | undefined) ?? [],
-            tool_choice: (body.tool_choice as unknown) ?? null,
+            tool_choice: body.tool_choice ?? null,
             truncation: (body.truncation as string | undefined) ?? null,
             metadata: (body.metadata as Record<string, string> | undefined) ?? null,
             store: (body.store as boolean | undefined) ?? true,
