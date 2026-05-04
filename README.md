@@ -192,7 +192,7 @@ See [docs/compliance-test.md](docs/compliance-test.md).
 | Regenerate Zod schemas                        | `pnpm generate:schemas` |
 | Compliance tests                              | `pnpm test:compliance`  |
 
-`pnpm check` runs Biome (formatting + non-type-aware linting, auto-fix) then ESLint (type-aware rules). Both must exit 0 before any commit.
+`pnpm check` runs Prettier (formatting, auto-fix) then ESLint (type-aware rules, auto-fix). Both must exit 0 before any commit.
 
 ---
 
@@ -213,6 +213,7 @@ src/international-space-bar-server/  # NestJS outer adapter (outermost layer)
   app.module.ts                      # Root module
   application-config/                # Zod-validated config + secrets resolution
   common/                            # Guards, pipes, shared server infrastructure
+  graphs/                            # Server-wired LangGraph workflows (simple-workflow)
   health/                            # Health-check controller
   logging/                           # PinoLoggerService (bridges NestJS + ILogger)
   openresponses/                     # OpenResponses protocol controller, service, schemas

@@ -3,7 +3,7 @@
 | Field      | Value                                   |
 | ---------- | --------------------------------------- |
 | ID         | isb-0099                                |
-| Status     | backlog                                 |
+| Status     | closed                                  |
 | Priority   | medium                                  |
 | Epic       | —                                       |
 | Source     | Challenger review isb-epic-013 (obs. 3) |

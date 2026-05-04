@@ -3,7 +3,7 @@
 | Field      | Value                                                               |
 | ---------- | ------------------------------------------------------------------- |
 | Priority   | `high`                                                              |
-| Status     | `planning`                                                          |
+| Status     | `in-progress`                                                       |
 | Created    | 2026-05-03                                                          |
 | Design doc | [docs/response-stream-builder.md](../../response-stream-builder.md) |
 | Tickets    | isb-0074 – isb-0076 (Phase A), isb-0077 – isb-0089 (Phase B)        |

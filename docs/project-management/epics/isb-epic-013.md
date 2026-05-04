@@ -3,7 +3,7 @@
 | Field      | Value                                              |
 | ---------- | -------------------------------------------------- |
 | Priority   | `high`                                             |
-| Status     | `not-started`                                      |
+| Status     | `closed`                                           |
 | Created    | 2026-05-03                                         |
 | Design doc | `docs/designs/isb-langgraph-streaming-refactor.md` |
 | Advisory   | isb-adv-0003                                       |

@@ -1,5 +1,9 @@
 # Epic: isb-epic-012 — Block factory type narrowing
 
+| Field  | Value    |
+| ------ | -------- |
+| Status | `closed` |
+
 ## Summary
 
 Replace unsafe `as unknown as ItemField` double-casts in block factories with

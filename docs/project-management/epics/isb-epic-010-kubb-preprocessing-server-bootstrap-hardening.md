@@ -3,7 +3,7 @@
 | Field      | Value                                                                                                                       |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------- |
 | Priority   | `high`                                                                                                                      |
-| Status     | `not-started`                                                                                                               |
+| Status     | `closed`                                                                                                                    |
 | Created    | 2026-04-30                                                                                                                  |
 | Design doc | [docs/designs/isb-kubb-preprocessing-and-server-bootstrap.md](../../designs/isb-kubb-preprocessing-and-server-bootstrap.md) |
 | Tickets    | isb-0057, isb-0058, isb-0059, isb-0060, isb-0061, isb-0062, isb-0063                                                        |
