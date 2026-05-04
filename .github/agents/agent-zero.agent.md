@@ -218,6 +218,7 @@ Each review file must contain:
 ## Advisories — persistent follow-up tracking
 
 After the post-execution full review, any findings that are:
+
 - **NOT SATISFIED** verdicts from reviewers (but overridden by the Tech Validator as non-blocking), OR
 - **Security advisories** (vulnerability flags marked non-blocking), OR
 - **Tech debt** flagged for follow-up
@@ -244,16 +245,16 @@ Example filenames: `isb-adv-0001-error-message-leak.md`, `isb-adv-0002-reasoning
 
 Each advisory must contain:
 
-| Field | Description |
-|-------|-------------|
-| ID | The advisory ID (e.g., `isb-adv-0001`) |
-| Status | `open` or `resolved` |
-| Source | Epic/ticket that produced the finding |
-| Severity | CRITICAL / HIGH / MEDIUM / LOW |
-| Category | `security` / `spec-compliance` / `tech-debt` / `performance` |
-| Finding | The specific issue (one sentence) |
-| Details | Full context from the reviewer |
-| Resolution | Empty when open; links to the ticket/epic that resolved it |
+| Field      | Description                                                  |
+| ---------- | ------------------------------------------------------------ |
+| ID         | The advisory ID (e.g., `isb-adv-0001`)                       |
+| Status     | `open` or `resolved`                                         |
+| Source     | Epic/ticket that produced the finding                        |
+| Severity   | CRITICAL / HIGH / MEDIUM / LOW                               |
+| Category   | `security` / `spec-compliance` / `tech-debt` / `performance` |
+| Finding    | The specific issue (one sentence)                            |
+| Details    | Full context from the reviewer                               |
+| Resolution | Empty when open; links to the ticket/epic that resolved it   |
 
 ### End-of-pipeline advisory prompt — mandatory
 
@@ -271,9 +272,9 @@ When Agent Zero is invoked to implement the next piece of work (new design dispa
 
 1. **Before** loading the design or reading tickets, scan `docs/project-management/advisories/` for all files with `Status: open`
 2. If open advisories exist, present them to the user grouped by severity and ask:
-   > "There are N open advisories from previous pipeline runs. Should I:
-   > (a) Analyse and plan work to address them first, or
-   > (b) Proceed with the requested work and defer advisories to a future run?"
+    > "There are N open advisories from previous pipeline runs. Should I:
+    > (a) Analyse and plan work to address them first, or
+    > (b) Proceed with the requested work and defer advisories to a future run?"
 3. If the user chooses (a) → treat as a new pipeline run: invoke reviewers to assess impact, route to PM for ticket creation
 4. If the user chooses (b) → proceed with the requested work; advisories remain open
 
