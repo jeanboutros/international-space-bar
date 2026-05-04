@@ -961,6 +961,7 @@ The controller does not know LangGraph exists. The workflow runner does not know
 - Existing streaming design: `docs/response-stream-builder.md` and `docs/designs/isb-langgraph-streaming-refactor.md`.
 - Historical simple workflow reference only, not a future dependency: `src/international-space-bar-server/graphs/simple-workflow.graph.ts`.
 - Historical LangGraph adapter reference only, not a future dependency: `src/international-space-bar-server/openresponses/lang-graph-blocks.ts`.
+- Internal repository references above were opened and verified on 2026-05-04.
 - LangGraph streaming docs fetched from source and verified on 2026-05-04: <https://github.com/langchain-ai/langgraphjs/blob/740ce21852b1cc84e9210294f1851624e9d51cfe/docs/docs/concepts/streaming.md>.
 - LangGraph SDK stream mode type fetched from source commit `740ce21852b1cc84e9210294f1851624e9d51cfe` and verified on 2026-05-04: <https://github.com/langchain-ai/langgraphjs/blob/740ce21852b1cc84e9210294f1851624e9d51cfe/libs/sdk/src/types.stream.ts>.
 - OpenResponses generated streaming event types directory: `src/international-space-bar-server/openresponses/generated/types/`.
