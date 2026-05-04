@@ -7,9 +7,10 @@ void describe("simpleWorkflowGraph", () => {
             messages: [],
         };
 
-        const result = await simpleWorkflowGraph.invoke({ messages: [], query: "query" }, { runId: "test-run" });
+        const result = await simpleWorkflowGraph.invoke(
+            { messages: [], query: "query" },
+            { runId: "test-run" },
+        );
         console.log("Result with empty messages:", result);
     });
 });
-
-

@@ -18,12 +18,12 @@ import type { ItemField, ResponseStreamEvent } from "../responses.types.js";
 /** Minimal mock of ResponseStream — satisfies block factory interface. */
 function mockCtx(opts?: { abortSignal?: AbortSignal }): ResponseStream & {
     readonly recorded: ItemField[];
-    readonly usageDeltas: Array<{ output_tokens?: number }>;
+    readonly usageDeltas: { output_tokens?: number }[];
 } {
     let seq = 0;
     let outputIdx = 0;
     const recorded: ItemField[] = [];
-    const usageDeltas: Array<{ output_tokens?: number }> = [];
+    const usageDeltas: { output_tokens?: number }[] = [];
     return {
         get outputIndex() {
             return outputIdx++;
@@ -36,7 +36,7 @@ function mockCtx(opts?: { abortSignal?: AbortSignal }): ResponseStream & {
         usageDeltas,
     } as unknown as ResponseStream & {
         readonly recorded: ItemField[];
-        readonly usageDeltas: Array<{ output_tokens?: number }>;
+        readonly usageDeltas: { output_tokens?: number }[];
     };
 }
 
@@ -73,7 +73,10 @@ describe("functionCallBlock", () => {
         const events = await collectEvents(block(ctx));
 
         // --- Assert ---
-        assert.ok(events.length >= 4, "expected at least 4 events (added, 2 deltas, args.done, item.done)");
+        assert.ok(
+            events.length >= 4,
+            "expected at least 4 events (added, 2 deltas, args.done, item.done)",
+        );
 
         const added = events[0] as Record<string, unknown>;
         assert.equal(added.type, "response.output_item.added");
@@ -105,7 +108,7 @@ describe("functionCallBlock", () => {
         const added = events[0] as Record<string, unknown>;
         const item = added.item as Record<string, unknown>;
         assert.ok(
-            typeof item.call_id === "string" && (item.call_id as string).startsWith("call_"),
+            typeof item.call_id === "string" && item.call_id.startsWith("call_"),
             "auto-generated callId should start with call_",
         );
     });

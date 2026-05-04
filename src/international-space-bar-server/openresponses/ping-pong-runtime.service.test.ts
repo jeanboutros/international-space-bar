@@ -7,12 +7,12 @@ import type { Message, OutputTextContent } from "./responses.types.js";
 
 function makeNoopLogger(): ILogger {
     return {
-        info: () => {},
-        warn: () => {},
-        error: () => {},
-        debug: () => {},
-        trace: () => {},
-        fatal: () => {},
+        info: () => { },
+        warn: () => { },
+        error: () => { },
+        debug: () => { },
+        trace: () => { },
+        fatal: () => { },
         child: makeNoopLogger,
     };
 }
