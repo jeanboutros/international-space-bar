@@ -224,6 +224,9 @@ export async function* langGraphBlocks(
 
             for await (const event of stream) {
                 const parsed = parseStreamEvent(event);
+                if (logger) {
+                    logger.debug({ event, parsed }, 'Parsed LangGraph stream event');
+                }
 
                 if (parsed.type === "chat_model_stream") {
                     const { chunk } = parsed;
