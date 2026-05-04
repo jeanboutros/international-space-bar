@@ -117,15 +117,15 @@ type WsClient = InstanceType<typeof WebSocket>;
 @Injectable()
 @WebSocketGateway({ path: RESPONSES_WS_PATH })
 export class ResponsesGateway
-    implements OnGatewayConnection<WsClient>, OnGatewayDisconnect<WsClient>, OnGatewayInit<WsClient> {
-
+    implements OnGatewayConnection<WsClient>, OnGatewayDisconnect<WsClient>, OnGatewayInit<WsClient>
+{
     // Store each client's connection with its own state object
     private readonly connections = new WeakMap<WsClient, ConnectionState>();
 
     constructor(
         @Inject(AGENT_RUNTIME_PORT) private readonly runtime: AgentRuntimePort,
         @Inject(LOGGER) private readonly logger: ILogger,
-    ) { }
+    ) {}
 
     // ── Connection lifecycle ──────────────────────────────────────────────
 
