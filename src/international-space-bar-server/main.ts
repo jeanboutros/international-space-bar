@@ -36,21 +36,20 @@ async function bootstrap() {
 
     logger.info(`Listening on ${host}:${port}`);
 
-    app.enableShutdownHooks();
     await app.listen(port, host);
 
-    const _shutdown = async (signal: string) => {
+    const shutdown = async (signal: string) => {
         logger.log(`Received ${signal}, closing application...`);
         await app.close();
         process.exit(0);
     };
 
-    // process.once("SIGINT", () => {
-    //     void shutdown("SIGINT");
-    // });
-    // process.once("SIGTERM", () => {
-    //     void shutdown("SIGTERM");
-    // });
+    process.once("SIGINT", () => {
+        void shutdown("SIGINT");
+    });
+    process.once("SIGTERM", () => {
+        void shutdown("SIGTERM");
+    });
 }
 
 await bootstrap().catch((error: unknown) => {
