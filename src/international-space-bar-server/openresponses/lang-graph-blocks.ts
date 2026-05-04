@@ -3,6 +3,7 @@ import type { BaseMessage } from "@langchain/core/messages";
 import type { Block } from "./response-stream.js";
 import { messageBlock, reasoningBlock, functionCallBlock } from "./blocks/index.js";
 import type { Delta, AsyncQueue as IAsyncQueue } from "./blocks/index.js";
+import { ILogger } from "../common/interfaces/index.js";
 
 // ─── Stream event types ─────────────────────────────────────────────────────
 
@@ -206,6 +207,7 @@ export async function* langGraphBlocks(
     graph: StreamableGraph,
     input: readonly BaseMessage[],
     options?: LangGraphBlocksOptions,
+    logger?: ILogger,
 ): AsyncGenerator<Block> {
     const blockChannel = new AsyncQueue<Block>();
 
@@ -302,6 +304,6 @@ export async function* langGraphBlocks(
         }
     } finally {
         // Swallow producer errors — consumer error takes priority
-        await producer.catch(() => {});
+        await producer.catch((reason) => { logger?.error(`LangGraph producer error: ${reason instanceof Error ? reason.stack : reason}`); });
     }
 }

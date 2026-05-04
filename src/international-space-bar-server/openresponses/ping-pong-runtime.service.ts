@@ -16,7 +16,7 @@ import { wrapAsGraph } from "./wrap-as-graph.js";
 
 @Injectable()
 export class PingPongRuntimeService implements AgentRuntimePort {
-    constructor(@Inject(LOGGER) private readonly logger: ILogger) {}
+    constructor(@Inject(LOGGER) private readonly logger: ILogger) { }
 
     // TODO(isb-0020): Implement when LangGraph adapter is wired.
     invoke(_request: AgentInvokeRequest): Promise<ResponseResource> {
@@ -41,11 +41,11 @@ export class PingPongRuntimeService implements AgentRuntimePort {
             typeof request.input === "string" ? request.input : `[${messages.length} messages]`;
         this.logger.info(`Streaming with LangGraph for input: ${inputSummary}`);
 
-        const llm = new ChatOllama({ model: request.model, baseUrl: ollamaBaseUrl });
+        const llm = new ChatOllama({ model: 'gemma4:e2b', baseUrl: ollamaBaseUrl });
         const graph = wrapAsGraph(llm);
         const input = messages.length > 0 ? messages : [new HumanMessage(request.input as string)];
 
-        yield* rs.run(langGraphBlocks(graph, input));
+        yield* rs.run(langGraphBlocks(graph, input, undefined, this.logger));
     }
 
     private async isOllamaReachable(baseUrl: string): Promise<boolean> {
