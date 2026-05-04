@@ -3,7 +3,11 @@
 > **Status:** First draft
 > **Date:** 2026-05-04
 > **Scope:** Workflow layout, lazy loading, LangGraph chunk streaming, OpenResponses conversion, and the first `simple` workflow migration.
-> **Deferred:** Open advisories `isb-adv-0001` and `isb-adv-0002` remain deferred per user direction.
+> **Deferred:** Open advisories
+> [`isb-adv-0001`](../project-management/advisories/isb-adv-0001-error-message-leak.md)
+> and
+> [`isb-adv-0002`](../project-management/advisories/isb-adv-0002-reasoning-block-spec-gaps.md)
+> remain deferred per user direction.
 
 ---
 
@@ -955,8 +959,14 @@ The controller does not know LangGraph exists. The workflow runner does not know
 
 - README migration note: `README.md` lines 199-229 in this repository.
 - Existing streaming design: `docs/response-stream-builder.md` and `docs/designs/isb-langgraph-streaming-refactor.md`.
-- Current simple workflow: `src/international-space-bar-server/graphs/simple-workflow.graph.ts`.
-- Current LangGraph adapter: `src/international-space-bar-server/openresponses/lang-graph-blocks.ts`.
-- LangGraph streaming docs fetched from source: <https://raw.githubusercontent.com/langchain-ai/langgraphjs/main/docs/docs/concepts/streaming.md>.
-- LangGraph SDK stream mode type fetched from source commit `740ce21852b1cc84e9210294f1851624e9d51cfe`: <https://github.com/langchain-ai/langgraphjs/blob/740ce21852b1cc84e9210294f1851624e9d51cfe/libs/sdk/src/types.stream.ts>.
-- OpenResponses generated streaming event types: `src/international-space-bar-server/openresponses/generated/types/*StreamingEvent.ts`.
+- Historical simple workflow reference only, not a future dependency: `src/international-space-bar-server/graphs/simple-workflow.graph.ts`.
+- Historical LangGraph adapter reference only, not a future dependency: `src/international-space-bar-server/openresponses/lang-graph-blocks.ts`.
+- LangGraph streaming docs fetched from source and verified during this draft: <https://raw.githubusercontent.com/langchain-ai/langgraphjs/main/docs/docs/concepts/streaming.md>.
+- LangGraph SDK stream mode type fetched from source commit `740ce21852b1cc84e9210294f1851624e9d51cfe` and verified during this draft: <https://github.com/langchain-ai/langgraphjs/blob/740ce21852b1cc84e9210294f1851624e9d51cfe/libs/sdk/src/types.stream.ts>.
+- OpenResponses generated streaming event types directory: `src/international-space-bar-server/openresponses/generated/types/`.
+  Specific generated types referenced by examples include:
+    - `ResponseCreatedStreamingEvent.ts`
+    - `ResponseOutputTextDeltaStreamingEvent.ts`
+    - `ResponseReasoningSummaryDeltaStreamingEvent.ts`
+    - `ResponseFunctionCallArgumentsDeltaStreamingEvent.ts`
+    - `ResponseCompletedStreamingEvent.ts`
