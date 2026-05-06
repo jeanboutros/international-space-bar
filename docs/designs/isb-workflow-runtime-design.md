@@ -13,7 +13,14 @@
 
 ## 1. Problem statement
 
-The repository is migrating away from `src/international-space-bar/`, and that tree is certain to be decommissioned. The exact target structure is still evolving, so the README migration note and this design's migration details should be reviewed before implementation work. The current direction is to move server-related files into `src/international-space-bar-server/`. Workflow code is expected to move into a dedicated workflows directory. Common/shared types and utilities are expected to move into a dedicated common directory. OpenResponses protocol code is expected to move into its own OpenResponses-focused directory.
+The repository is migrating away from `src/international-space-bar/`. That tree is certain to be decommissioned. The exact target structure is still evolving, so the README migration note and this design's migration details should be reviewed before implementation work.
+
+Current expected migration targets:
+
+- Server-related files move into `src/international-space-bar-server/`.
+- Workflow code moves into a dedicated workflows directory.
+- Common/shared types and utilities move into a dedicated common directory.
+- OpenResponses protocol code moves into its own OpenResponses-focused directory.
 
 Workflows need a new home that is independent from both the retiring tree and the NestJS server adapter:
 
