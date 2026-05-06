@@ -13,7 +13,7 @@
 
 ## 1. Problem statement
 
-The repository is migrating away from `src/international-space-bar/`. The README marks that tree as migration-in-progress legacy code that will be deleted, so this design treats it as retired input and excludes it from future workflow plans.
+The repository is migrating away from `src/international-space-bar/`. That tree is certain to be decommissioned, but the exact target structure is still evolving; the README migration note and this design's migration details should be reviewed before implementation work. The current direction is to move server-related files into `src/international-space-bar-server/`, workflow code into a dedicated workflows directory, common/shared types and utilities into a dedicated common directory, and OpenResponses protocol code into its own OpenResponses-focused directory.
 
 Workflows need a new home that is independent from both the retiring tree and the NestJS server adapter:
 
@@ -99,6 +99,11 @@ src/
       streaming-event-types.ts
     README.md
 
+  international-space-bar-common/
+    types/
+    services/
+    README.md
+
   international-space-bar-server/
     openresponses/
       responses.controller.ts
@@ -118,6 +123,7 @@ src/
 | `international-space-bar-workflows/<name>/subgraphs` | Sub-workflows/sub-graphs owned by that workflow.                                               |
 | `international-space-bar-workflows/<name>/skills`    | Markdown skills owned by that workflow or sub-workflow.                                        |
 | `international-space-bar-openresponses`              | Protocol conversion. No NestJS imports.                                                        |
+| `international-space-bar-common`                     | Shared cross-cutting types and utilities once the migration structure is finalized.            |
 | `international-space-bar-server`                     | HTTP/WebSocket/SSE transport only. May import workflow runtime ports and conversion functions. |
 
 ### 4.2 Dependency direction
