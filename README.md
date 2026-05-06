@@ -225,7 +225,7 @@ archive/legacy-ink-tui/              # Preserved Ink/React TUI (not in active ru
 scripts/                             # Compliance tests, schema tooling
 ```
 
-> **Migration in progress:** `src/international-space-bar/` is certain to be decommissioned, but the exact target structure is still evolving and these migration notes should be reviewed before implementation work. Server-related files will move into `src/international-space-bar-server/`; workflow code is expected to move into a dedicated workflows directory; common/shared types and utilities are expected to move into a dedicated common directory; and OpenResponses protocol code is expected to move into its own OpenResponses-focused directory.
+> **Migration in progress:** `src/international-space-bar/` is certain to be decommissioned. The exact target structure is still evolving, so these migration notes should be reviewed before implementation work. Server-related files will move into `src/international-space-bar-server/`. Workflow code is expected to move into a dedicated workflows directory. Common/shared types and utilities are expected to move into a dedicated common directory. OpenResponses protocol code is expected to move into its own OpenResponses-focused directory.
 
 ---
 
