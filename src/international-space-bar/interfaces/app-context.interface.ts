@@ -1,5 +1,5 @@
 import type { IConfig } from "./config.interface.js";
-import type { ILogger } from "./logger.interface.js";
+import type { ILogger } from "../../international-space-bar-common/interfaces/logger.interface.js";
 
 /**
  * Cross-cutting application context injected into agents, services, and other

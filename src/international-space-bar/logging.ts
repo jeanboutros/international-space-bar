@@ -1,7 +1,7 @@
 import pino, { type Logger } from "pino";
 import { build as prettyBuild } from "pino-pretty";
 import type { IConfig } from "./interfaces/config.interface.js";
-import type { ILogger } from "./interfaces/logger.interface.js";
+import type { ILogger } from "../international-space-bar-common/interfaces/logger.interface.js";
 import { getLogRingBuffer } from "./services/log-stream.js";
 
 type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
