@@ -19,7 +19,7 @@ logger:
     level: debug
 
 ollama:
-    baseUrl: https://ollama.com
+    baseUrl: http://localhost:11434
     apiKey: SECRET[OLLAMA_API_KEY]
 
 tavily:

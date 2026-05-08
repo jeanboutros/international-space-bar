@@ -3,9 +3,15 @@ import { ApplicationConfigModule } from "./application-config/application-config
 import { HealthController } from "./health/health.controller.js";
 import { LoggingModule } from "./logging/logging.module.js";
 import { OpenResponsesModule } from "./openresponses/openresponses.module.js";
+import { ApplicationContextModule } from "./application-config/application-context.module.js";
 
 @Module({
-    imports: [ApplicationConfigModule, LoggingModule, OpenResponsesModule],
+    imports: [
+        ApplicationConfigModule,
+        LoggingModule,
+        OpenResponsesModule,
+        ApplicationContextModule,
+    ],
     controllers: [HealthController],
 })
 export class AppModule {}

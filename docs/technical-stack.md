@@ -281,10 +281,10 @@ default_prompt: |
 
 Two tools share responsibility. **Never suppress a lint rule without a comment explaining why.**
 
-| Tool          | Owns                                                 | Trigger                                  |
-| ------------- | ---------------------------------------------------- | ---------------------------------------- |
-| **Prettier**  | Formatting, import organisation                      | `pnpm format`, `pnpm check`              |
-| **ESLint**    | Type-aware rules only                                | `pnpm lint`, `pnpm check`                |
+| Tool         | Owns                            | Trigger                     |
+| ------------ | ------------------------------- | --------------------------- |
+| **Prettier** | Formatting, import organisation | `pnpm format`, `pnpm check` |
+| **ESLint**   | Type-aware rules only           | `pnpm lint`, `pnpm check`   |
 
 The mandatory command after **every** code change:
 

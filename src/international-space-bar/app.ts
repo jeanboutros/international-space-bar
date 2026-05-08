@@ -35,7 +35,7 @@
 import { Config } from "./config.js";
 import type { AppContext } from "./interfaces/app-context.interface.js";
 import type { IConfig } from "./interfaces/config.interface.js";
-import type { ILogger } from "./interfaces/logger.interface.js";
+import type { ILogger } from "../international-space-bar-common/interfaces/logger.interface.js";
 import { Logging } from "./logging.js";
 
 /**
