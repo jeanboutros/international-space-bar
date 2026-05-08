@@ -34,9 +34,6 @@ function mockCtx(opts?: { abortSignal?: AbortSignal }): ResponseStream & {
         abortSignal: opts?.abortSignal,
         recorded,
         usageDeltas,
-    } as unknown as ResponseStream & {
-        readonly recorded: ItemField[];
-        readonly usageDeltas: { output_tokens?: number }[];
     };
 }
 

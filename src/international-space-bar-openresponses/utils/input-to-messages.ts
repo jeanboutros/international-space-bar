@@ -10,12 +10,7 @@
 // Uses generated types from openresponses/generated/ — never hand-roll
 // duplicates of generated schemas (see AGENTS.md "Generated types" convention).
 
-import {
-    AIMessage,
-    type BaseMessage,
-    HumanMessage,
-    SystemMessage,
-} from "@langchain/core/messages";
+import { AIMessage, type BaseMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 // ── Runtime type guards ─────────────────────────────────────────────────────
 // The port passes `readonly unknown[]` to stay framework-agnostic.
@@ -29,7 +24,10 @@ interface MessageLike {
 function isMessageLike(item: unknown): item is MessageLike {
     if (typeof item !== "object" || item === null) return false;
     const record = item as Record<string, unknown>;
-    return typeof record.role === "string" && (typeof record.content === "string" || Array.isArray(record.content));
+    return (
+        typeof record.role === "string" &&
+        (typeof record.content === "string" || Array.isArray(record.content))
+    );
 }
 
 /**
@@ -42,7 +40,7 @@ function extractContent(item: MessageLike): string {
     if (typeof item.content === "string") return item.content;
     return item.content
         .filter((part) => part.type === "input_text" && typeof part.text === "string")
-        .map((part) => part.text as string)
+        .map((part) => part.text!)
         .join("\n");
 }
 
