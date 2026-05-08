@@ -4,6 +4,8 @@ import { AppModule } from "./app.module.js";
 import { ApplicationConfigService } from "./application-config/application-config.service.js";
 import { PinoLoggerService } from "./logging/pino-logger.service.js";
 import { OpenResponsesWsAdapter } from "./openresponses/ws-adapter.js";
+import { APPLICATION_CONFIG, IApplicationConfig } from "./common/interfaces/application-config.interface.js";
+import { AppConfig } from "./application-config/config.schema.js";
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -16,7 +18,7 @@ async function bootstrap() {
     // Uses native ws library (not Socket.IO) for spec compliance.
     app.useWebSocketAdapter(new OpenResponsesWsAdapter(app));
 
-    const config = app.get(ApplicationConfigService);
+    const config = app.get<IApplicationConfig<AppConfig>>(APPLICATION_CONFIG);
     if (config.get("server.enableCors")) {
         const origins = config.get("server.corsOrigins");
         app.enableCors({ origin: origins });

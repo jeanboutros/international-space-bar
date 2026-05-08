@@ -12,51 +12,12 @@ import {
 import { CLI_ARGS, type CliArgs } from "./cli-args.js";
 import { type AppConfig, ConfigSchema } from "./config.schema.js";
 import { resolveConfigSecrets } from "./resolve-config-secrets.js";
-
-// ---------------------------------------------------------------------------
-// Typed key-path helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Strips index signatures from an object type, preserving only named keys.
- * Required because z.looseObject() adds [key: string]: unknown to the inferred
- * type — without stripping it, DotKeys<T> collapses to plain string.
- */
-type StripIndex<T> = {
-    [K in keyof T as string extends K ? never : K]: T[K];
-};
-
-/**
- * Recursively generates dot-separated key paths for all named properties of T.
- * NonNullable is applied at each recursion level so that optional parent objects
- * (e.g. server?: { port: number }) are traversed without collapsing to never.
- */
-type DotKeys<T> = {
-    [K in keyof StripIndex<T> & string]: NonNullable<StripIndex<T>[K]> extends Record<
-        string,
-        unknown
-    >
-        ? `${K}` | `${K}.${DotKeys<NonNullable<StripIndex<T>[K]>>}`
-        : `${K}`;
-}[keyof StripIndex<T> & string];
-
-/**
- * Resolves the leaf value type for a given dot-notation path K within type T.
- *
- * NOTE: For paths where a parent is optional (e.g. server?: { port: number }),
- * the resolved type may include undefined even if the leaf field itself is
- * required. At runtime, Sig1 throws and Sig2 returns the supplied default.
- */
-type DotValue<T, K extends string> = K extends `${infer Head}.${infer Tail}`
-    ? Head extends keyof StripIndex<T>
-        ? DotValue<NonNullable<StripIndex<T>[Head]>, Tail>
-        : never
-    : K extends keyof StripIndex<T>
-      ? StripIndex<T>[K]
-      : never;
-
-/** Sentinel that distinguishes "no default argument" from "default is undefined". */
-const MISSING = Symbol("MISSING");
+import {
+    IApplicationConfig,
+    MISSING,
+    DotKeys,
+    DotValue,
+} from "../common/interfaces/application-config.interface.js";
 
 /**
  * Resolves the project environment from CLI args (`-e` / `--environment`)
@@ -66,7 +27,7 @@ const MISSING = Symbol("MISSING");
  * Instantiated once as a global singleton.
  */
 @Injectable()
-export class ApplicationConfigService {
+export class ApplicationConfigService implements IApplicationConfig<AppConfig> {
     public readonly environment: ProjectEnvironment;
     private readonly config: Readonly<AppConfig>;
 

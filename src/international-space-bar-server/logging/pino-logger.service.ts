@@ -5,6 +5,7 @@ import pino from "pino";
 import { build as prettyBuild } from "pino-pretty";
 import { ApplicationConfigService } from "../application-config/application-config.service.js";
 import type { ILogger } from "../common/interfaces/index.js";
+import { APPLICATION_CONFIG } from "../common/interfaces/application-config.interface.js";
 
 /**
  * NestJS logging service backed by pino.
@@ -26,7 +27,7 @@ import type { ILogger } from "../common/interfaces/index.js";
 export class PinoLoggerService implements LoggerService, ILogger {
     private readonly pinoLogger: pino.Logger;
 
-    constructor(@Inject(ApplicationConfigService) configService: ApplicationConfigService) {
+    constructor(@Inject(APPLICATION_CONFIG) configService: ApplicationConfigService) {
         const config = configService.getConfig();
         const rawLevel = config.logger?.level;
         const resolvedLevel = rawLevel ?? "info";
@@ -154,8 +155,8 @@ export class PinoLoggerService implements LoggerService, ILogger {
             typeof context === "string"
                 ? { nestContext: context }
                 : typeof context === "object" && context !== null
-                  ? (context as Record<string, unknown>)
-                  : {};
+                    ? (context as Record<string, unknown>)
+                    : {};
         this.pinoLogger.info(ctx, String(message));
     }
 
@@ -165,8 +166,8 @@ export class PinoLoggerService implements LoggerService, ILogger {
             typeof context === "string"
                 ? { nestContext: context }
                 : typeof context === "object" && context !== null
-                  ? (context as Record<string, unknown>)
-                  : {};
+                    ? (context as Record<string, unknown>)
+                    : {};
         this.pinoLogger.trace(ctx, String(message));
     }
 }
