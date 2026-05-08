@@ -225,7 +225,7 @@ export async function* langGraphBlocks(
             for await (const event of stream) {
                 const parsed = parseStreamEvent(event);
                 if (logger) {
-                    logger.debug({ event, parsed }, 'Parsed LangGraph stream event');
+                    logger.debug({ event, parsed }, "Parsed LangGraph stream event");
                 }
 
                 if (parsed.type === "chat_model_stream") {
@@ -307,6 +307,10 @@ export async function* langGraphBlocks(
         }
     } finally {
         // Swallow producer errors — consumer error takes priority
-        await producer.catch((reason) => { logger?.error(`LangGraph producer error: ${reason instanceof Error ? reason.stack : reason}`); });
+        await producer.catch((reason) => {
+            logger?.error(
+                `LangGraph producer error: ${reason instanceof Error ? reason.stack : reason}`,
+            );
+        });
     }
 }

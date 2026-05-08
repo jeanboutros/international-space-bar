@@ -1,64 +1,94 @@
 import { Inject, Injectable } from "@nestjs/common";
-import {
-    AGENT_RUNTIME_PORT,
-    type AgentRuntimePort,
-    type ResponseStreamConfig,
-} from "./agent-runtime.port.js";
 import type {
     CreateResponseBody,
-    ResponseResource,
     ResponseStreamEvent,
 } from "./responses.types.js";
+import { toBaseMessages } from "../../international-space-bar-openresponses/utils/input-to-messages.js";
+import type {
+    WorkflowLoadContext,
+    WorkflowRequest,
+    WorkflowInferenceHints,
+} from "../../international-space-bar-workflows/interfaces/index.js";
+import { LazyWorkflowRuntime, WorkflowModuleLoader } from "../../international-space-bar-workflows/lazy-workflow-runtime.service.js";
+import { LOGGER, type ILogger } from "../common/interfaces/logger.port.js";
+import workflowRegistryEntries from "../../international-space-bar-workflows/registry.js";
 
 @Injectable()
 export class ResponsesService {
-    private readonly runtime: AgentRuntimePort;
+    private readonly workflowRuntime: LazyWorkflowRuntime;
 
-    constructor(@Inject(AGENT_RUNTIME_PORT) runtime: AgentRuntimePort) {
-        this.runtime = runtime;
+    constructor(@Inject(LOGGER) private readonly logger: ILogger) {
+        const context: WorkflowLoadContext = {
+            logger: this.logger,
+            now: () => new Date(),
+        };
+
+        const registry = workflowRegistryEntries;
+        this.workflowRuntime = new LazyWorkflowRuntime(registry, context);
     }
 
-    async create(body: CreateResponseBody, requestId: string): Promise<ResponseResource> {
-        return this.runtime.invoke({
-            model: body.model as string,
-            input: (body.input as string | readonly unknown[]) ?? "",
-            instructions: body.instructions as string | undefined,
-            requestId: requestId,
-            config: this.buildConfig(body),
-        });
-    }
-
-    createStream(
+    // Body is guaranteed to be valid by the controller's ZodValidationPipe.
+    async *createStream(
         body: CreateResponseBody,
         abortSignal: AbortSignal,
         requestId: string,
     ): AsyncIterable<ResponseStreamEvent> {
-        return this.runtime.stream({
-            model: body.model as string,
-            input: (body.input as string | readonly unknown[]) ?? "",
-            instructions:
-                body.instructions && typeof body.instructions === "string"
-                    ? body.instructions
-                    : JSON.stringify(body.instructions),
-            requestId: requestId,
-            abortSignal,
-            config: this.buildConfig(body),
-        });
+
+        // Build the workflow request from the incoming body and other parameters.
+        const request = this.buildWorkflowRequest(body, requestId, abortSignal);
+        // Get a runner for the specified workflow/model.
+        const runner = await this.workflowRuntime.runnerForModel(body.model as string);
+
+        for await (const chunk of runner.stream(request)) {
+            // TODO: replace with workflowChunkToOpenResponsesEvents() once the
+            // conversion package is implemented (§12 of the design).
+            yield {
+                type: "error",
+                sequence_number: 0,
+                error: {
+                    type: "WorkflowChunk",
+                    message: "Received a chunk from the workflow",
+                    details: JSON.stringify(chunk),
+                },
+            };
+        }
     }
 
-    private buildConfig(body: CreateResponseBody): ResponseStreamConfig {
+    private buildWorkflowRequest(
+        body: CreateResponseBody,
+        requestId: string,
+        abortSignal: AbortSignal,
+    ): WorkflowRequest {
+        const input = toBaseMessages(body.input as string | readonly unknown[]);
+        const instructions =
+            body.instructions && typeof body.instructions === "string"
+                ? body.instructions
+                : body.instructions != null
+                    ? JSON.stringify(body.instructions)
+                    : undefined;
+
         return {
-            model: body.model as string,
-            instructions: (body.instructions as string | undefined) ?? null,
-            temperature: (body.temperature as number | undefined) ?? null,
-            top_p: (body.top_p as number | undefined) ?? null,
-            max_output_tokens: (body.max_output_tokens as number | undefined) ?? null,
-            tools: (body.tools as readonly unknown[] | undefined) ?? [],
-            tool_choice: body.tool_choice ?? null,
-            truncation: (body.truncation as string | undefined) ?? null,
-            metadata: (body.metadata as Record<string, string> | undefined) ?? null,
-            store: (body.store as boolean | undefined) ?? true,
-            previous_response_id: (body.previous_response_id as string | undefined) ?? null,
+            requestId,
+            workflowId: body.model as string,
+            input,
+            instructions,
+            abortSignal,
+            metadata: (body.metadata as Record<string, unknown> | undefined) ?? undefined,
+            inferenceHints: this.buildInferenceHints(body),
         };
+    }
+
+    private buildInferenceHints(body: CreateResponseBody): WorkflowInferenceHints | undefined {
+        const hints: WorkflowInferenceHints = {
+            temperature: body.temperature as number | undefined,
+            topP: body.top_p as number | undefined,
+            maxOutputTokens: body.max_output_tokens as number | undefined,
+            clientTools: (body.tools as readonly unknown[] | undefined),
+            clientToolChoice: body.tool_choice ?? undefined,
+        };
+
+        // Only attach hints if at least one field is present.
+        const hasAny = Object.values(hints).some((v) => v !== undefined);
+        return hasAny ? hints : undefined;
     }
 }
